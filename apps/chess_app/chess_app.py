@@ -27,7 +27,23 @@ class ChessApp(Tk):
 
         # -------------BOARD FRAME(LEFT)-------------
         # frame for the chess board
-        self.board_frame = Frame(self)
+        if mode == 'guest':
+            # get board background color
+            with open(os.getcwd() + '\\apps\\chess_app\\all_settings\\guest\\default_game_settings.csv', 'r') as f:
+                reader = csv.reader(f, delimiter='-')  # file separated by '-' rather than comas
+                next(reader)
+                for row in reader:
+                    the_border_color = row[5]
+
+        if mode == 'user':
+            with open(os.getcwd() + '\\apps\\chess_app\\all_settings\\user\\user_game_settings.csv', 'r') as f:
+                reader = csv.reader(f, delimiter='-')  # file separated by '-' rather than comas
+                next(reader)
+                for row in reader:
+                    the_border_color = row[5]
+
+        # apply to frame
+        self.board_frame = Frame(self, bg=the_border_color)
         self.board_frame.pack(side=LEFT)
 
         # Widgets frame, here is where all the objects apart from the chess board are placed

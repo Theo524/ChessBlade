@@ -292,6 +292,10 @@ class Board(Frame):
                 if self.board[position]['piece']['piece_name'] == 'queen':
                     self.piece_highlighting(f'{position}', 'queen', 'black')
 
+                # king
+                if self.board[position]['piece']['piece_name'] == 'king':
+                    self.piece_highlighting(f'{position}', 'king', 'black')
+
             # If the piece is white
             if self.board[position]['piece']['piece_color'] == 'white':
                 print('\n-------------------ACTION-------------------')
@@ -331,6 +335,10 @@ class Board(Frame):
                 # queen
                 if self.board[position]['piece']['piece_name'] == 'queen':
                     self.piece_highlighting(f'{position}', 'queen', 'white')
+
+                # king
+                if self.board[position]['piece']['piece_name'] == 'king':
+                    self.piece_highlighting(f'{position}', 'king', 'white')
 
             # If the piece is black
             if self.board[position]['piece']['piece_color'] == 'black':
@@ -683,6 +691,49 @@ class Board(Frame):
                         if self.board[position]['piece']['piece_color'] == 'white':
                             break
 
+        if piece == 'king':
+            all_possible_king_moves = self.get_all_possible_moves('king', 'none', position)
+
+            if self.board[position]['piece']['piece_color'] == 'black':
+                # black piece
+                for move_pattern in all_possible_king_moves:
+                    # loop through each list in this list of all possible moves
+                    for position in move_pattern:
+                        # if there is no piece highlight the button to green
+                        if self.board[position]['piece']['piece_color'] is None:
+                            self.board[position]['button'].configure(bg='light green')
+                            self.board[position]['color'] = 'light green'
+
+                        # check if the piece is white, if so make it red
+                        if self.board[position]['piece']['piece_color'] == 'white':
+                            self.board[position]['button'].configure(bg='red')
+                            self.board[position]['color'] = 'red'
+                            continue
+
+                        # Detect a black piece, if there is one,we stop highlighting
+                        if self.board[position]['piece']['piece_color'] == 'black':
+                            continue
+
+            if self.board[position]['piece']['piece_color'] == 'white':
+                # white piece
+                for move_pattern in all_possible_king_moves:
+                    # loop through each list in this list of all possible moves
+                    for position in move_pattern:
+                        if self.board[position]['piece']['piece_color'] is None:
+                            # if there is no piece, highlight the button to green
+                            self.board[position]['button'].configure(bg='light green')
+                            self.board[position]['color'] = 'light green'
+
+                        # check if the piece is black, if it is make it red
+                        if self.board[position]['piece']['piece_color'] == 'black':
+                            self.board[position]['button'].configure(bg='red')
+                            self.board[position]['color'] = 'red'
+                            continue
+
+                        # Detect a black piece,if there is one,we stop highlighting
+                        if self.board[position]['piece']['piece_color'] == 'white':
+                            continue
+
         # prawns
         if color == 'black' and piece == 'prawn':
             # Prawns only move 2 up and 1 up to the side to delete piece
@@ -840,23 +891,23 @@ class Board(Frame):
             # up right diagonal
             my_letters_upwards_right_diagonal = self.letters[index_num + 1:]
             up_right = [f'{letter}{temp[1]}' for letter in my_letters_upwards_right_diagonal]
-            bishop_up_right = self.decrease_or_increase_row_by_one(up_right, 'increase')
+            bishop_up_right = self.decrease_or_increase_column(up_right, 'increase')
 
             # down right diagonal
             my_letters_downwards_right_diagonal = self.letters[index_num + 1:]
             down_right = [f'{letter}{temp[1]}' for letter in my_letters_downwards_right_diagonal]
-            bishop_down_right = self.decrease_or_increase_row_by_one(down_right, 'decrease')
+            bishop_down_right = self.decrease_or_increase_column(down_right, 'decrease')
 
             # up left diagonal
             reversed_letters = self.letters[:index_num]
             reversed_letters.reverse()
             up_left = [f'{letter}{temp[1]}' for letter in reversed_letters]
-            bishop_up_left = self.decrease_or_increase_row_by_one(up_left, 'increase')
+            bishop_up_left = self.decrease_or_increase_column(up_left, 'increase')
 
             # down left diagonal
             reversed_letters_down_left_diagonal = reversed_letters[:]
             down_left = [f'{letter}{temp[1]}' for letter in reversed_letters_down_left_diagonal]
-            bishop_down_left = self.decrease_or_increase_row_by_one(down_left, 'decrease')
+            bishop_down_left = self.decrease_or_increase_column(down_left, 'decrease')
 
             # all
             all_possible_bishop_moves = [bishop_up_right] + [bishop_down_right] + \
@@ -871,18 +922,18 @@ class Board(Frame):
             full_right = self.letters[index_num + 1:index_num + 3]
             up_right = [f'{letter}{temp[1]}' for letter in full_right]
             up_right.reverse()
-            knight_up_right = self.decrease_or_increase_row_by_one(up_right, 'increase')
+            knight_up_right = self.decrease_or_increase_column(up_right, 'increase')
 
             # down right corner
-            knight_down_right = self.decrease_or_increase_row_by_one(up_right, 'decrease')
+            knight_down_right = self.decrease_or_increase_column(up_right, 'decrease')
 
             # up left corner
             full_left = self.letters[index_num - 2: index_num]
             up_left = [f'{letter}{temp[1]}' for letter in full_left]
-            knight_up_left = self.decrease_or_increase_row_by_one(up_left, 'increase')
+            knight_up_left = self.decrease_or_increase_column(up_left, 'increase')
 
             # down left corner
-            knight_down_left = self.decrease_or_increase_row_by_one(up_left, 'decrease')
+            knight_down_left = self.decrease_or_increase_column(up_left, 'decrease')
 
             # all
             all_possible_knight_moves = [knight_up_right] + [knight_down_right] + \
@@ -918,29 +969,51 @@ class Board(Frame):
             # up right diagonal
             my_letters_upwards_right_diagonal = self.letters[index_num + 1:]
             up_right = [f'{letter}{temp[1]}' for letter in my_letters_upwards_right_diagonal]
-            queen_up_right = self.decrease_or_increase_row_by_one(up_right, 'increase')
+            queen_up_right = self.decrease_or_increase_column(up_right, 'increase')
 
             # down right diagonal
             my_letters_downwards_right_diagonal = self.letters[index_num + 1:]
             down_right = [f'{letter}{temp[1]}' for letter in my_letters_downwards_right_diagonal]
-            queen_down_right = self.decrease_or_increase_row_by_one(down_right, 'decrease')
+            queen_down_right = self.decrease_or_increase_column(down_right, 'decrease')
 
             # up left diagonal
             reversed_letters = self.letters[:index_num]
             reversed_letters.reverse()
             up_left = [f'{letter}{temp[1]}' for letter in reversed_letters]
-            queen_up_left = self.decrease_or_increase_row_by_one(up_left, 'increase')
+            queen_up_left = self.decrease_or_increase_column(up_left, 'increase')
 
             # down left diagonal
             reversed_letters_down_left_diagonal = reversed_letters[:]
             down_left = [f'{letter}{temp[1]}' for letter in reversed_letters_down_left_diagonal]
-            queen_down_left = self.decrease_or_increase_row_by_one(down_left, 'decrease')
+            queen_down_left = self.decrease_or_increase_column(down_left, 'decrease')
 
             # all
             all_possible_queen_moves = [queen_down_right] + [queen_right] + [queen_up_right] + [queen_up] + \
                                        [queen_up_left] + [queen_left] + [queen_down_left] + [queen_down]
 
             return all_possible_queen_moves
+
+        if piece == 'king':
+            king_full_row = [f'{temp[0]}{i}' for i in range(1, 9)]
+
+            # up
+            king_up_full = self.decrease_or_increase_row(king_full_row, 'increase')
+            king_up = [f'{i}' for i in king_up_full[int(temp[1]) - 2:int(temp[1]) + 1]]
+
+            # down
+            king_down_full = self.decrease_or_increase_row(king_full_row, 'decrease')
+            king_down = [f'{i}' for i in king_down_full[int(temp[1]) - 2:int(temp[1]) + 1]]
+
+            # left
+            king_left = self.decrease_or_increase_column([position], 'decrease')
+
+            # right
+            king_right = self.decrease_or_increase_column([position], 'increase')
+
+            # all
+            all_possible_king_moves = [king_up] + [king_down] + [king_left] + [king_right]
+
+            return all_possible_king_moves
 
         if piece == 'prawn' and piece_color == 'black':
             up = [f'{temp[0]}{i}' for i in range(1, 9)]
@@ -994,8 +1067,8 @@ class Board(Frame):
         return black_pieces, white_pieces
 
     @staticmethod
-    def decrease_or_increase_row_by_one(array, operation):
-        """Allows to increase or decrease a row of chess coordinates by one"""
+    def decrease_or_increase_column(array, operation):
+        """Allows to increase or decrease a column of chess coordinates by one"""
 
         # the new increased/decreased list
         new_array = []
@@ -1032,6 +1105,57 @@ class Board(Frame):
 
                 # append new value to array
                 new_array.append(coordinate[0] + new_coordinate)
+                count += 1
+
+        # return full new array
+        return new_array
+
+    def decrease_or_increase_row(self, array, operation):
+        """Allows to increase or decrease a row of chess coordinates by one"""
+
+        # the new increased/decreased list
+        new_array = []
+
+        count = 1
+        if operation == 'increase':
+            # increase operation
+            for coordinate in array:
+                # divide the position e.g. b5 into a list ['b', '5']
+                # to manipulate each part individually
+                coordinates = list(coordinate)
+
+                letter_index = self.letters.index(str(coordinates[0]))
+
+                # if we reach the endpoint 'h' which is index 7, break
+                if letter_index == 7:
+                    break
+
+                # take the letter part and increase it by one
+                new_letter = self.letters[letter_index + 1]
+
+                # append new value to array
+                new_array.append(new_letter + coordinate[1])
+                count += 1
+
+        count = 1
+        if operation == 'decrease':
+            # decrease operation
+            for coordinate in array:
+                # divide the position e.g. b5 into a list ['b', '5']
+                # to manipulate each part individually
+                coordinates = list(coordinate)
+
+                letter_index = self.letters.index(str(coordinates[0]))
+
+                # if we reach the endpoint 'a' which is index 0, break
+                if letter_index == 0:
+                    break
+
+                # take the letter part and increase it by one
+                new_letter = self.letters[letter_index - 1]
+
+                # append new value to array
+                new_array.append(new_letter + coordinate[1])
                 count += 1
 
         # return full new array
