@@ -1,0 +1,65 @@
+# A chess game that consists of a login system and the chessitself
+
+# Database
+// sql file called: 'users.db'
+// sql tables names used:
+// - users (name, password, email)
+// - user_settings
+// - user_stats
+
+# CLASSES
+
+- StartApp
+// Contains the Window object for the starting application
+// Allows the user to change frames
+
+- StartPage
+// Login, user can login
+// Register, user can register
+// Enter as guest user can enter game with no account
+
+- LoginApp
+// Contains Window object for starting Login process
+// Allows to change frames
+
+- LoginPage
+// Username, username can be entered
+// Password, password can be entered, hidden with asterisks
+// ForgotPassword, password recovery process
+// ShowPassword, hides or shows password
+// Login, Verify data and open app
+
+- ForgotPassword
+// Entry for username and email account
+// Continue, check if valid
+// if valid send email with passcode
+
+- VerifyPasscode
+// Entry requesting passcode
+// Continue, check if passcode is valid
+
+- NewPassword
+// Allow creation of new password
+
+- RegisterApp
+// Contains Window object for starting Registration process
+// Allows to change frames
+
+- RegisterPage
+// 5 entries requesting data
+// save data to database if valid
+
+- ChessApp
+// Contains Window object for chess game
+
+- BarMenu
+// Menu at top of ChessApp
+// Options: New game, Help, About
+
+- Board
+// Generates both virtual and visual chess board
+// Game of chess
+
+- Settings
+// Customization: board color, piece color
+// General: difficulty, time, game mode

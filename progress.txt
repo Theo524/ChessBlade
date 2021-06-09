@@ -1,0 +1,25 @@
+                       SETTINGS:
+PLAYER--                                      GAME--
+User                                          Difficulty
+number of games played                        Time limit
+Wins
+Loses
+Draws
+Ranking
+View leaderboards
+
+
+sql tables names used:
+- users (name, password, email)
+- user_settings
+- user_stats
+
+
+UPDATED COMMENTS MADE SO FAR AFTER CHANGES:
+main.py
+chess_app.py
+settings.py
+clock.py (some left to do)
+bar_menu.py
+board.py
+
