@@ -4,9 +4,13 @@ import os
 import sqlite3
 
 
-class Settings(Toplevel):
+class Settings(Tk):
     def __init__(self):
-        Toplevel.__init__(self)
+        Tk.__init__(self)
+
+        # attributes
+        self.title('Settings')
+        self.resizable(0, 0)
 
         # All the game settings will be contained within this notebook
         notebook = ttk.Notebook(self)
@@ -36,8 +40,8 @@ class Settings(Toplevel):
         self.difficulty = self.general_settings.get_difficulty()
         self.time = self.general_settings.get_time()
         self.game_type = self.general_settings.get_gamemode()
-
         self.player_color = self.customization_settings.get_piece_color()
+
         if self.player_color == 'black':
             self.opponent_color = 'white'
         else:
@@ -54,6 +58,8 @@ class Settings(Toplevel):
         confirm = messagebox.askyesno('Confirmation', 'Are you sure you want to apply these settings?')
         # if the user accepts, store settings, show informative feedback and destroy settings window
         if confirm:
+            print(f'{self.difficulty}-{self.time}-{self.game_type}-{self.player_color}-{self.opponent_color}'
+                            f'-{self.border_color}-{self.board_color}')
             # if user is in guest mode, apply new settings to system
             if game_mode == 'guest':
                 with open(os.getcwd() + '\\apps\\chess_app\\all_settings\\guest\\default_game_settings.csv', 'w') as f:
@@ -62,11 +68,11 @@ class Settings(Toplevel):
                     f.write(f'{self.difficulty}-{self.time}-{self.game_type}-{self.player_color}-{self.opponent_color}'
                             f'-{self.border_color}-{self.board_color}')
 
-            # if user is in guest mode, apply new settings to user account
+            # if user is in user mode, apply new settings to user account
             if game_mode == 'user':
                 # apply changes to db
                 self.apply_settings_user_db()
-                # save the new stats in a file
+                # save the new settings in a file
                 with open(os.getcwd() + '\\apps\\chess_app\\all_settings\\user\\user_game_settings.csv', 'w') as f:
                     f.write('Game_difficulty-time-game_mode-player_piece_color-opponent_piece_color-border_color-'
                             'board_color\n')
@@ -81,6 +87,8 @@ class Settings(Toplevel):
             pass
 
     def apply_settings_user_db(self):
+        """Apply settings to the user database"""
+
         # get the username
         with open(os.getcwd() + '\\apps\\login_system_app\\temp\\current_user.txt', 'r') as f:
             username = f.read()
@@ -115,8 +123,9 @@ class Settings(Toplevel):
 
         self.general_settings.difficulty_var.set(1)
         self.general_settings.gamemode_var.set(1)
+        self.customization_settings.border_color_var.set('black')
         self.customization_settings.player_color_var.set('black')
-        self.customization_settings.board_color_var.set('black')
+        self.customization_settings.board_color_var.set('brown')
 
 
 class GeneralSettings(ttk.Frame):
@@ -265,7 +274,7 @@ class CustomizationSettings(ttk.Frame):
                                 command=self.get_piece_color)
         black.pack(side=LEFT, padx=(5, 50))
 
-        # White buton
+        # White button
         white = ttk.Radiobutton(player_color_frame,
                                 text='white',
                                 variable=self.player_color_var,
@@ -273,38 +282,35 @@ class CustomizationSettings(ttk.Frame):
                                 command=self.get_piece_color)
         white.pack(side=LEFT)
 
-        # set default color to black
-        self.player_color_var.set(1)
-
         # ----------------BORDER_COLORS-----------------
-        border_color_frame = Frame(self)
-        border_color_frame.pack(pady=7)
+        border_color_frame = ttk.LabelFrame(self, text='Border colors')
+        border_color_frame.pack(fill="both", pady=5, padx=5)
 
         Label(border_color_frame, text='Chose border color').pack(side=LEFT, padx=5)
 
         # variable
         self.border_color_var = StringVar()
 
-        border_colors = ttk.Combobox(border_color_frame, textvariable=self.border_color_var, width=10)
-        border_colors.set('black')
+        self.border_colors = ttk.Combobox(border_color_frame, textvariable=self.border_color_var, width=10)
+        self.border_colors.set('black')
         # color options
-        border_colors['values'] = ('black', 'brown', 'green', 'purple', 'blue')
-        border_colors.pack()
+        self.border_colors['values'] = ('black', 'brown', 'green', 'purple', 'blue')
+        self.border_colors.pack(pady=(0, 6))
 
         # ----------------BOARD_COLORS-----------------
-        board_color_frame = Frame(self)
-        board_color_frame.pack(pady=7)
+        board_color_frame = ttk.LabelFrame(self, text='Board colors')
+        board_color_frame.pack(fill="both", pady=5, padx=5)
 
-        Label(board_color_frame, text='Chose border color').pack(side=LEFT, padx=5)
+        Label(board_color_frame, text='Chose board color').pack(side=LEFT, padx=5)
 
         # variable
         self.board_color_var = StringVar()
 
-        board_colors = ttk.Combobox(board_color_frame, textvariable=self.board_color_var, width=10)
-        board_colors.set('black')
+        self.board_colors = ttk.Combobox(board_color_frame, textvariable=self.board_color_var, width=10)
+        self.board_colors.set('brown')
         # color options
-        board_colors['values'] = ('black',  'brown', 'green', 'purple', 'blue')
-        board_colors.pack()
+        self.board_colors['values'] = ('black',  'brown', 'green', 'purple', 'blue')
+        self.board_colors.pack(pady=(0, 6))
 
     def get_piece_color(self):
         """Get the piece color"""
@@ -316,8 +322,9 @@ class CustomizationSettings(ttk.Frame):
 
     def get_board_color(self):
         """Get the board color"""
-        return self.board_color_var.get()
+        return self.board_colors.get()
 
     def get_border_color(self):
         """Get the border color"""
-        return self.border_color_var.get()
+        return self.border_colors.get()
+

@@ -1,6 +1,7 @@
 import time
 from tkinter import *
 from tkinter import messagebox
+import os
 
 """Credits timer function https://pythonguides.com/create-countdown-timer-using-python-tkinter/"""
 
@@ -13,8 +14,7 @@ class Clock(Frame):
         self.root = master
 
         # Retrieve the default game settings, to get the time value
-        with open("C://Users//theop//PycharmProjects//firstproject//crash course//Theo's login system//apps//"
-                  "chess_app//all_settings//guest//default_game_settings.csv", 'r') as f:
+        with open(os.getcwd() + "//apps//chess_app//all_settings//guest//default_game_settings.csv", 'r') as f:
             # Reads both lines in the file (header and row) and grabs the list at index 1, (row)
             data = f.readlines()[1].split('-')
             # This value is in the format hh:mm:ss, so it split into a list containing all the times slices
