@@ -23,27 +23,29 @@ class ChessApp(Tk):
         # self.resizable(0, 0)
         self.title('CHESS_GRAND_MASTER')
         self.protocol('WM_DELETE_WINDOW', self.end_new_game)
-        self.configure(menu=BarMenu(self).menu_bar)
+        menu = BarMenu(self)
+        self.configure(menu=menu)
 
         # -------------BOARD FRAME(LEFT)-------------
         # frame for the chess board
         if mode == 'guest':
-            # get board background color
+            # get board background color for guest mode
             with open(os.getcwd() + '\\apps\\chess_app\\all_settings\\guest\\default_game_settings.csv', 'r') as f:
                 reader = csv.reader(f, delimiter='-')  # file separated by '-' rather than comas
                 next(reader)
                 for row in reader:
-                    the_border_color = row[5]
+                    self.the_border_color = row[5]
 
         if mode == 'user':
+            # get board background color for user mode
             with open(os.getcwd() + '\\apps\\chess_app\\all_settings\\user\\user_game_settings.csv', 'r') as f:
                 reader = csv.reader(f, delimiter='-')  # file separated by '-' rather than comas
                 next(reader)
                 for row in reader:
-                    the_border_color = row[5]
+                    self.the_border_color = row[5]
 
         # apply to frame
-        self.board_frame = Frame(self, bg=the_border_color)
+        self.board_frame = Frame(self, bg=self.the_border_color)
         self.board_frame.pack(side=LEFT)
 
         # Widgets frame, here is where all the objects apart from the chess board are placed
@@ -52,6 +54,7 @@ class ChessApp(Tk):
         # Actual game board (we pass the 'widgets frame' instance to be able to update chess notation in real time)
         self.main_chess_board = Board(self.board_frame, self.widgets_frame)
         self.main_chess_board.grid(row=1, column=1)
+        self.main_chess_board.build()
 
         # -------------WIDGETS(right)-------------
         # CLOCK (doesn't update)
@@ -76,51 +79,12 @@ class ChessApp(Tk):
             # if mode is guest
 
             # ----------------SETTINGS-----------------
-            # get default game settings
-            with open(os.getcwd() + '\\apps\\chess_app\\all_settings\\guest\\default_game_settings.csv', 'r') as f:
-                reader = csv.reader(f, delimiter='-')  # file separated by '-' rather than comas
-                next(reader)
-                for row in reader:
-                    difficulty = row[0]
-                    game_type = row[2]
-                    player_piece_color = row[3]
-                    opponent_piece_color = row[4]
-                    self.the_border_color = row[5]
-
-            # --------------GAME STATISTICS BOX----------------
-            # box that contains game state data retrieved from settings
-            game_stats_frame = LabelFrame(self.widgets_frame, text='Game data', width=320, height=120)
-            game_stats_frame.pack(pady=(15, 0))
-
-            # - DATA
-            # Difficulty (first row)
-            Label(game_stats_frame, text=f'Difficulty:') \
-                .grid(column=0, row=0, padx=(5, 0), pady=3)
-            Label(game_stats_frame, text=f'{difficulty.upper()}', font='verdana 7 bold') \
-                .grid(column=1, row=0, padx=(0, 2), pady=3)
-
-            # Game type (second row)
-            Label(game_stats_frame, text=f'Game type:') \
-                .grid(column=0, row=1, padx=(5, 0))
-            Label(game_stats_frame, text=f'{game_type.upper()}', font='verdana 7 bold') \
-                .grid(column=1, row=1, padx=(0, 2))
-
-            # Player_1 piece color (first row)
-            Label(game_stats_frame, text=f'Player_1 piece color:') \
-                .grid(column=2, row=0, padx=(5, 0), pady=3)
-            Label(game_stats_frame, text=f'{player_piece_color.upper()}', font='verdana 7 bold') \
-                .grid(column=3, row=0, padx=(0, 2))
-
-            # Player_2 piece color (second row)
-            Label(game_stats_frame, text=f'Player_2 piece color:') \
-                .grid(column=2, row=1, padx=(5, 0), pady=3)
-            Label(game_stats_frame, text=f'{opponent_piece_color.upper()}', font='verdana 7 bold') \
-                .grid(column=3, row=1, padx=(0, 2))
+            # default game settings
 
             # --------------USER STATISTICS BOX----------------
             # Since the game mode is guest, we show the word 'GUEST' in capital letters and nothing else in this section
             player_stats_frame = LabelFrame(self.widgets_frame, text='Player history', width=320, height=180)
-            player_stats_frame.pack(pady=(30, 0))
+            player_stats_frame.pack(pady=5)
             Label(player_stats_frame, text='GUEST', font='verdana 30 bold').pack(pady=50, padx=80)
 
             # PLacing the chess board borders
@@ -130,46 +94,6 @@ class ChessApp(Tk):
             # if the game mode is user
             # --------------PLAYER_SETTINGS----------------
             # retrieve the settings for this user
-            with open(os.getcwd() + '\\apps\\chess_app\\all_settings\\user\\user_game_settings.csv', 'r') as f:
-                reader = csv.reader(f, delimiter='-')  # file separated by '-' rather than comas
-                next(reader)
-                for row in reader:
-                    difficulty = row[0]
-                    game_type = row[2]
-                    player_piece_color = row[3]
-                    opponent_piece_color = row[4]
-                    self.the_border_color = row[5]
-
-            # ----------------GAME_STATISTICS_BOX----------------
-            # contains game state data retrieved from the user settings
-            # which retrieves data from the settings file
-            game_stats_frame = LabelFrame(self.widgets_frame, text='Game data', width=320, height=120)
-            game_stats_frame.pack(pady=(15, 0))
-
-            # - DATA
-            # Difficulty (first row)
-            Label(game_stats_frame, text=f'Difficulty:') \
-                .grid(column=0, row=0, padx=(5, 0), pady=3)
-            Label(game_stats_frame, text=f'{difficulty.upper()}', font='verdana 7 bold') \
-                .grid(column=1, row=0, padx=(0, 2), pady=3)
-
-            # Game type (second row)
-            Label(game_stats_frame, text=f'Game type:') \
-                .grid(column=0, row=1, padx=(5, 0))
-            Label(game_stats_frame, text=f'{game_type.upper()}', font='verdana 7 bold') \
-                .grid(column=1, row=1, padx=(0, 2))
-
-            # Player_1 piece color (first row)
-            Label(game_stats_frame, text=f'Player_1 piece color:') \
-                .grid(column=2, row=0, padx=(5, 0), pady=3)
-            Label(game_stats_frame, text=f'{player_piece_color.upper()}', font='verdana 7 bold') \
-                .grid(column=3, row=0, padx=(0, 2))
-
-            # Player_2 piece color (second row)
-            Label(game_stats_frame, text=f'Player_2 piece color:') \
-                .grid(column=2, row=1, padx=(5, 0), pady=3)
-            Label(game_stats_frame, text=f'{opponent_piece_color.upper()}', font='verdana 7 bold') \
-                .grid(column=3, row=1, padx=(0, 2))
 
             # ------------USER_STATISTICS--------------
             # We first retrieve the user stats
@@ -178,11 +102,11 @@ class ChessApp(Tk):
                 next(reader)  # skip header
                 for row in reader:
                     # the row is a list containing the data
-                    self.number_of_games_played = row[0]
-                    self.wins = row[1]
-                    self.loses = row[2]
-                    self.draws = row[3]
-                    self.ranking = row[4]
+                    number_of_games_played = row[0]
+                    wins = row[1]
+                    loses = row[2]
+                    draws = row[3]
+                    ranking = row[4]
 
             # We get the name for this current user
             with open(os.getcwd() + '//apps//login_system_app//temp//current_user.txt', 'r') as f:
@@ -190,7 +114,7 @@ class ChessApp(Tk):
 
             # Create the frame
             player_stats_frame = LabelFrame(self.widgets_frame, text='Player history', width=320, height=180)
-            player_stats_frame.pack(pady=(18, 0))
+            player_stats_frame.pack(pady=5)
 
             # Place the username as a title at the top of the box frame
             Label(player_stats_frame, text=username, font='verdana 15 bold') \
@@ -201,25 +125,25 @@ class ChessApp(Tk):
             # number of games played
             Label(player_stats_frame, text='Number_of_games_played: ', font='calibri 10') \
                 .grid(column=0, row=2)
-            Label(player_stats_frame, text=self.number_of_games_played, font='verdana 10 bold') \
+            Label(player_stats_frame, text=number_of_games_played, font='verdana 10 bold') \
                 .grid(column=1, row=2, padx=(0, 28))
 
             # wins
             Label(player_stats_frame, text='Wins: ', font='calibri 10') \
                 .grid(column=2, row=2, padx=(15, 0))
-            Label(player_stats_frame, text=self.wins, font='verdana 10 bold') \
+            Label(player_stats_frame, text=wins, font='verdana 10 bold') \
                 .grid(column=3, row=2, padx=(0, 25))
 
             # loses
             Label(player_stats_frame, text='Loses: ', font='calibri 10') \
                 .grid(column=0, row=3)
-            Label(player_stats_frame, text=self.number_of_games_played, font='verdana 10 bold') \
+            Label(player_stats_frame, text=number_of_games_played, font='verdana 10 bold') \
                 .grid(column=1, row=3, padx=(0, 28))
 
             # draws
             Label(player_stats_frame, text='Draws: ', font='calibri 10') \
                 .grid(column=2, row=3, padx=(15, 0))
-            Label(player_stats_frame, text=self.draws, font='verdana 10 bold') \
+            Label(player_stats_frame, text=draws, font='verdana 10 bold') \
                 .grid(column=3, row=3, padx=(0, 25))
 
             # PLacing the chess board borders

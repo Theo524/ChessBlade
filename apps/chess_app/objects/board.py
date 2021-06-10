@@ -14,62 +14,62 @@ class Board(Frame):
     AI_turn = False
     moves = 1
 
-    # game settings variables (retrieve settings from files)
-    with open(os.getcwd() + '\\apps\\login_system_app\\temp\\mode.txt', 'r') as f:
-        game_mode = f.read()
-
-    if game_mode == 'guest':
-
-        # open default settings file
-        with open(os.getcwd() + '\\apps\\chess_app\\all_settings\\guest\\default_game_settings.csv', 'r') as f:
-            csv_reader = csv.reader(f, delimiter='-')
-            next(csv_reader)
-
-            for row in csv_reader:
-                # retrieve settings in file
-                difficulty = row[0]
-                time = row[1]
-                game_type = row[2]
-                player_piece_color = row[3]
-                opponent_piece_color = row[4]
-                border_color = row[5]
-                board_color = row[6]
-
-    elif game_mode == 'user':
-        # fetch settings for that specific user
-        with open(os.getcwd() + '\\apps\\chess_app\\all_settings\\user\\user_game_settings.csv', 'r') as f:
-            csv_reader = csv.reader(f, delimiter='-')
-            next(csv_reader)
-
-            for row in csv_reader:
-                # retrieve these personalized settings from user file
-                difficulty = row[0]
-                time = row[1]
-                game_type = row[2]
-                player_piece_color = row[3]
-                opponent_piece_color = row[4]
-                border_color = row[5]
-                board_color = row[6]
-
-
     # Trackers
     chess_notation = []
     deleted_pieces = []
     tracker = []
-    ai_board = []
+    #ai_board = []
 
     # data
     board = {}
     coordinates = []
 
-    # colors for board
-    board_colors = [
-            'white', board_color, 'white', board_color, 'white', board_color, 'white', board_color,
-            board_color, 'white', board_color, 'white', board_color, 'white', board_color, 'white',
-        ] * 4
-
     def __init__(self, master, widgets_frame):
         Frame.__init__(self, master, widgets_frame)
+
+        # game settings variables (retrieve settings from files)
+        with open(os.getcwd() + '\\apps\\login_system_app\\temp\\mode.txt', 'r') as f:
+            game_mode = f.read()
+
+        if game_mode == 'guest':
+
+            # open default settings file
+            with open(os.getcwd() + '\\apps\\chess_app\\all_settings\\guest\\default_game_settings.csv', 'r') as f:
+                csv_reader = csv.reader(f, delimiter='-')
+                next(csv_reader)
+
+                for row in csv_reader:
+                    print(row)
+                    # retrieve settings in file
+                    difficulty = row[0]
+                    time = row[1]
+                    game_type = row[2]
+                    player_piece_color = row[3]
+                    opponent_piece_color = row[4]
+                    border_color = row[5]
+                    board_color = row[6]
+
+        elif game_mode == 'user':
+            # fetch settings for that specific user
+            with open(os.getcwd() + '\\apps\\chess_app\\all_settings\\user\\user_game_settings.csv', 'r') as f:
+                csv_reader = csv.reader(f, delimiter='-')
+                next(csv_reader)
+
+                for row in csv_reader:
+                    # retrieve these personalized settings from user file
+                    difficulty = row[0]
+                    time = row[1]
+                    game_type = row[2]
+                    player_piece_color = row[3]
+                    opponent_piece_color = row[4]
+                    border_color = row[5]
+                    board_color = row[6]
+
+        # colors for board
+        self.board_colors = [
+                           'white', board_color, 'white', board_color, 'white', board_color, 'white', board_color,
+                           board_color, 'white', board_color, 'white', board_color, 'white', board_color, 'white',
+                       ] * 4
 
         # file paths
         self.pieces_file_path = os.getcwd() + '\\apps\\chess_app\\pieces'
@@ -87,7 +87,7 @@ class Board(Frame):
         # methods to implement game visuals
         # ---------------NOTEBOOK--------------
         # notebook for chess notation
-        self.notebook = ttk.Notebook(widgets_frame)
+        self.notebook = ttk.Notebook(widgets_frame, height=300)
         self.notebook.pack(pady=(7, 0), padx=5)
         # first tab
         self.notation_tab = Text(self.notebook, width=40, height=10)
@@ -100,9 +100,6 @@ class Board(Frame):
         # add both tabs to chess notebook
         self.notebook.add(self.notation_tab, text='Notation')
         self.notebook.add(self.deleted_pieces_tab, text='Deleted')
-
-        # build the board
-        self.build()
 
     def make_board(self):
         """Make the board dict"""

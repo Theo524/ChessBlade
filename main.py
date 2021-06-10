@@ -83,7 +83,7 @@ if __name__ == '__main__':
     with open(main_path + '\\apps\\login_system_app\\temp\\mode.txt') as f:
         mode = f.read()
 
-    # load settings
+    # load settings into files
     loadSettings(mode)
 
     # Set start_new_game to true
