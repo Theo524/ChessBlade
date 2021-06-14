@@ -859,31 +859,29 @@ class Board(Frame):
         # With this list we can get the new positions for this move by modifying only one part
         temp = list(position)
 
-        if piece == 'rook':
+        full_column = [f'{temp[0]}{i}' for i in range(1, 9)]
+        full_row = [f'{letter}{temp[1]}' for letter in self.letters]
 
+        index_in_col = full_column.index(position)
+        index_in_row = full_row.index(position)
+
+        if piece == 'rook':
             # up
-            up = [f'{temp[0]}{i}' for i in range(1, 9)]
-            index_rook_up = up.index(position)
-            rook_up = [f'{i}' for i in up[index_rook_up+1:]]
+            rook_up = [f'{i}' for i in full_column[index_in_col + 1:]]
 
             #  Down
-            down = up[:]
-            rook_down = [f'{i}' for i in down[:int(temp[1]) - 1]]
+            rook_down = [f'{i}' for i in full_column[:index_in_col]]
             rook_down.reverse()
 
             # right
-            right = [f'{letter}{temp[1]}' for letter in self.letters]
-            index_of_letter = right.index(f'{temp[0]}{temp[1]}')
-            rook_right = [f'{i}' for i in right[index_of_letter + 1:]]
+            rook_right = [f'{i}' for i in full_row[index_in_row + 1:]]
 
             # left
-            left = right[:]
-            index_of_letter = left.index(f'{temp[0]}{temp[1]}')
-            rook_left = [f'{i}' for i in left[:index_of_letter]]
+            rook_left = [f'{i}' for i in full_row[:index_in_row]]
             rook_left.reverse()
 
             # all possible moves combined
-            all_possible_rook_moves = [rook_right] + [rook_up] + [rook_left] + [rook_down]
+            all_possible_rook_moves = [rook_up] + [rook_down] + [rook_left] + [rook_right]
 
             return all_possible_rook_moves
 
