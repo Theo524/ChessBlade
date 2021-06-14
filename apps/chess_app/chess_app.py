@@ -21,7 +21,7 @@ class ChessApp(Tk):
 
         # -------------APP_ATTRIBUTES-------------
         # self.resizable(0, 0)
-        self.title('CHESS_GRAND_MASTER')
+        self.title('Chess by theo')
         self.protocol('WM_DELETE_WINDOW', self.end_new_game)
         menu = BarMenu(self)
         self.configure(menu=menu)
@@ -44,30 +44,39 @@ class ChessApp(Tk):
                 for row in reader:
                     self.the_border_color = row[5]
 
-        # apply to frame
-        self.board_frame = Frame(self, bg=self.the_border_color)
+        # -------------everything contained here--------------
+        self.game_frame = Frame(self)
+        self.game_frame.pack(side=TOP)
+
+        # Frame for board
+        self.board_frame = Frame(self.game_frame)
         self.board_frame.pack(side=LEFT)
 
         # Widgets frame, here is where all the objects apart from the chess board are placed
-        self.widgets_frame = Frame(self)
+        self.widgets_frame = Frame(self.game_frame)
 
-        # Actual game board (we pass the 'widgets frame' instance to be able to update chess notation in real time)
+        # Actual game board
+        # It is inside the board frame
+        # (we pass the 'widgets frame' instance to be able to create and update chess notation in real time)
         self.main_chess_board = Board(self.board_frame, self.widgets_frame)
-        self.main_chess_board.grid(row=1, column=1)
+        self.main_chess_board.pack()
+        # creates board
         self.main_chess_board.build()
 
         # -------------WIDGETS(right)-------------
         # CLOCK (doesn't update)
-        self.clock_frame = LabelFrame(self)
-        self.clock_frame.pack()
-        self.clock = Clock(self.clock_frame)
-        self.clock.pack()
+        #self.clock_frame = LabelFrame(self.widgets_frame)
+        #self.clock_frame.pack()
+        #self.clock = Clock(self.clock_frame)
+        #self.clock.pack()
 
         # We can now place the widgets frame
-        self.widgets_frame.pack()
+        self.widgets_frame.pack(side=LEFT)
 
         # Place the required box widgets
         self.place_player_stats_and_settings(mode)
+
+        # clock frame goes at the bottom
 
         # Don't uncomment this, the countdown works, but it makes the screen lag for some reason
         # self.clock.startCountdown()
@@ -88,7 +97,7 @@ class ChessApp(Tk):
             Label(player_stats_frame, text='GUEST', font='verdana 30 bold').pack(pady=50, padx=80)
 
             # PLacing the chess board borders
-            self.place_board_coordinates(self.the_border_color)
+            #self.place_board_coordinates(self.the_border_color)
 
         if mode == 'user':
             # if the game mode is user
@@ -147,47 +156,7 @@ class ChessApp(Tk):
                 .grid(column=3, row=3, padx=(0, 25))
 
             # PLacing the chess board borders
-            self.place_board_coordinates(self.the_border_color)
-
-    def place_board_coordinates(self, color):
-        """Coordinates for chess board labels in borders"""
-
-        # A list strings containing the letters from a to h (for the upper and lower row)
-        letters = string.ascii_lowercase[:8]
-        # A list of numbers from 1 to 8 (for the left and right side)
-        nums = list(range(1, 9))
-
-        # Upper row(letters, a-h)
-        high_row_of_letters = Frame(self.board_frame, bg=color)
-        high_row_of_letters.grid(row=0, column=1)
-        for i in range(8):
-            # Place all the letter in the upper row
-            Label(high_row_of_letters, text=letters[i], bg=color, fg='white', width=8)\
-                .pack(side=LEFT, padx=3)
-
-        # Lower row(letters, a-h)
-        lower_row_of_letters = Frame(self.board_frame, bg=color)
-        lower_row_of_letters.grid(row=2, column=1)
-        for i in range(8):
-            # place all the letters in the lower row
-            Label(lower_row_of_letters, text=letters[i], bg=color, fg='white', width=8)\
-                .pack(side=LEFT, padx=3)
-
-        # Left column(numbers, 1-8)
-        left_row_of_numbers = Frame(self.board_frame, bg=color)
-        left_row_of_numbers.grid(row=1, column=0)
-        for i in range(8):
-            # Place all the numbers
-            Label(left_row_of_numbers, text=nums[i], bg=color, fg='white', height=4, width=2)\
-                .pack(pady=1)
-
-        # Right column(numbers, 1-8)
-        right_row_of_numbers = Frame(self.board_frame, bg=color)
-        right_row_of_numbers.grid(row=1, column=2)
-        # Place all the numbers
-        for i in range(8):
-            Label(right_row_of_numbers, text=nums[i], bg=color, fg='white', height=4, width=2)\
-                .pack(pady=1)
+            #self.place_board_coordinates(self.the_border_color)
 
     def end_new_game(self):
         # Set start_new_game to false, so the game loop can be ended

@@ -65,6 +65,9 @@ class Board(Frame):
                     border_color = row[5]
                     board_color = row[6]
 
+        # border
+        self.configure(highlightthickness=15, highlightbackground=border_color)
+
         # colors for board
         self.board_colors = [
                            'white', board_color, 'white', board_color, 'white', board_color, 'white', board_color,
@@ -132,6 +135,9 @@ class Board(Frame):
             #                        'piece': {'piece name': --actual name of piece--, 'piece color': --piece color--},
             #                        'color': --color of the button--]}}
             self.board[current_position] = {'button': Button(self, bg=self.board_colors[i],
+                                                             text=f'\t        {current_position}',
+                                                             font=('arial', 7),
+                                                             compound=BOTTOM,
                                                              activebackground='light blue',
                                                              relief=SOLID,
                                                              highlightthickness=2,

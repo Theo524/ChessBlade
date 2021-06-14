@@ -4,9 +4,9 @@ import os
 import sqlite3
 
 
-class Settings(Tk):
+class Settings(Toplevel):
     def __init__(self):
-        Tk.__init__(self)
+        Toplevel.__init__(self)
 
         # attributes
         self.title('Settings')
