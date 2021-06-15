@@ -18,7 +18,7 @@ class Board(Frame):
     chess_notation = []
     deleted_pieces = []
     tracker = []
-    #ai_board = []
+    # ai_board = []
 
     # data
     board = {}
@@ -497,7 +497,7 @@ class Board(Frame):
             self.board[position]['color'] = self.board_colors[i]
             i += 1
 
-    def piece_highlighting(self, position, piece, color):
+    def piece_highlighting(self, position, piece, piece_color):
         """Highlights all possible moves for a given piece"""
 
         # We highlight the piece color to blue, so it is evident what piece the user selected
@@ -737,9 +737,11 @@ class Board(Frame):
                             continue
 
         # prawns
-        if color == 'black' and piece == 'prawn':
+        if piece_color == 'black' and piece == 'prawn':
             # Prawns only move 2 up and 1 up to the side to delete piece
             all_prawns = self.get_all_possible_moves('prawn', 'black', position)
+            print(position)
+            print(all_prawns)
 
             # The moves generated in a list which was part of a larger list
             prawn_up = all_prawns[0]
@@ -771,7 +773,7 @@ class Board(Frame):
                     self.board[position]['button'].configure(bg='red')
                     self.board[position]['color'] = 'red'
 
-        if color == 'white' and piece == 'prawn':
+        if piece_color == 'white' and piece == 'prawn':
             # Prawns only move 2 up and 1 up to the side to delete piece
             all_prawns = self.get_all_possible_moves('prawn', 'white', position)
 
@@ -990,34 +992,34 @@ class Board(Frame):
             return all_possible_king_moves
 
         if piece == 'prawn' and piece_color == 'black':
-            up = [f'{temp[0]}{i}' for i in range(1, 9)]
-            index_of_coordinate = up.index(position)
-            prawn_up = [f'{i}' for i in up[index_of_coordinate + 1:index_of_coordinate + 3]]
+            up_one = self.move_row([position], 'increase')
+            up_two = self.move_row(self.move_row([position], 'increase'), 'increase')
+            prawn_up = [up_one[0], up_two[0]]
+            print(prawn_up)
 
             # diagonal
-            one_up = prawn_up[0]
-            side = [f'{letter}{str(int(temp[1]) + 1)}' for letter in self.letters]
-            index_of_diagonal = side.index(one_up)
-            right_diagonal = [f'{i}' for i in side[index_of_diagonal + 1:index_of_diagonal + 2]]
-            left_diagonal = [f'{i}' for i in side[index_of_diagonal - 1:index_of_diagonal]]
+            right_diagonal = self.move_column(self.move_row([position], 'increase'), 'increase')
+            left_diagonal = self.move_column(self.move_row([position], 'increase'), 'decrease')
+
+            all_possible_prawn_moves = [prawn_up] + [right_diagonal] + [left_diagonal]
 
             # all
-            return prawn_up, right_diagonal, left_diagonal
+            return all_possible_prawn_moves
 
         if piece == 'prawn' and piece_color == 'white':
-            up = [f'{temp[0]}{i}' for i in range(1, 9)]
-            index_of_coordinate = up.index(position)
-            prawn_up = [f'{i}' for i in up[index_of_coordinate - 2:index_of_coordinate]]
+            # up
+            down_one = self.move_row([position], 'decrease')
+            down_two = self.move_row(self.move_row([position], 'decrease'), 'decrease')
+            prawn_up = [down_one[0], down_two[0]]
 
             # diagonal
-            one_up = prawn_up[-1]
-            side = [f'{letter}{one_up[1]}' for letter in self.letters]
-            index_of_diagonal = side.index(one_up)
-            right_diagonal = [f'{i}' for i in side[index_of_diagonal + 1:index_of_diagonal + 2]]
-            left_diagonal = [f'{i}' for i in side[index_of_diagonal - 1:index_of_diagonal]]
+            right_diagonal = self.move_column(self.move_row([position], 'decrease'), 'increase')
+            left_diagonal = self.move_column(self.move_row([position], 'decrease'), 'decrease')
+
+            all_possible_prawn_moves = [prawn_up] + [right_diagonal] + [left_diagonal]
 
             # all
-            return prawn_up, right_diagonal, left_diagonal
+            return all_possible_prawn_moves
 
     def get_piece_img(self):
         """Easy way to access file paths for pieces"""
@@ -1041,7 +1043,7 @@ class Board(Frame):
         return black_pieces, white_pieces
 
     @staticmethod
-    def move_column(array, operation):
+    def move_row(array, operation):
         """Allows to increase or decrease a column of chess coordinates by one"""
 
         # the new increased/decreased list
@@ -1084,7 +1086,7 @@ class Board(Frame):
         # return full new array
         return new_array
 
-    def move_row(self, array, operation):
+    def move_column(self, array, operation):
         """Allows to increase or decrease a row of chess coordinates by one"""
 
         # the new increased/decreased list
