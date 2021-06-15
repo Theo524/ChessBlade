@@ -497,7 +497,6 @@ class Board(Frame):
             self.board[position]['color'] = self.board_colors[i]
             i += 1
 
-    # only king piece left to be done for black and white pieces
     def piece_highlighting(self, position, piece, color):
         """Highlights all possible moves for a given piece"""
 
@@ -887,28 +886,23 @@ class Board(Frame):
 
         if piece == 'bishop':
 
-            index_num = self.letters.index(temp[0])
-
             # up right diagonal
-            my_letters_upwards_right_diagonal = self.letters[index_num + 1:]
-            up_right = [f'{letter}{temp[1]}' for letter in my_letters_upwards_right_diagonal]
-            bishop_up_right = self.decrease_or_increase_column(up_right, 'increase')
+            up_right = [i for i in full_row[index_in_row + 1:]]
+            bishop_up_right = self.get_diagonal(up_right, 'go up')
 
             # down right diagonal
-            my_letters_downwards_right_diagonal = self.letters[index_num + 1:]
-            down_right = [f'{letter}{temp[1]}' for letter in my_letters_downwards_right_diagonal]
-            bishop_down_right = self.decrease_or_increase_column(down_right, 'decrease')
+            down_right = [i for i in full_row[index_in_row + 1:]]
+            bishop_down_right = self.get_diagonal(down_right, 'go down')
 
             # up left diagonal
-            reversed_letters = self.letters[:index_num]
-            reversed_letters.reverse()
-            up_left = [f'{letter}{temp[1]}' for letter in reversed_letters]
-            bishop_up_left = self.decrease_or_increase_column(up_left, 'increase')
+            up_left = [i for i in full_row[:index_in_row]]
+            up_left.reverse()
+            bishop_up_left = self.get_diagonal(up_left, 'go up')
 
             # down left diagonal
-            reversed_letters_down_left_diagonal = reversed_letters[:]
-            down_left = [f'{letter}{temp[1]}' for letter in reversed_letters_down_left_diagonal]
-            bishop_down_left = self.decrease_or_increase_column(down_left, 'decrease')
+            down_left = [i for i in full_row[:index_in_row]]
+            down_left.reverse()
+            bishop_down_left = self.get_diagonal(down_left, 'go down')
 
             # all
             all_possible_bishop_moves = [bishop_up_right] + [bishop_down_right] + \
@@ -917,76 +911,60 @@ class Board(Frame):
             return all_possible_bishop_moves
 
         if piece == 'knight':
-            index_num = self.letters.index(temp[0])
+            # Generate moves, by moving positions in board (clockwise)
+            move_one = self.move_column(self.move_row(self.move_row([position], 'increase'), 'increase'), 'increase')
+            move_two = self.move_row(self.move_column(self.move_column([position], 'increase'), 'increase'), 'increase')
 
-            # up right corner
-            full_right = self.letters[index_num + 1:index_num + 3]
-            up_right = [f'{letter}{temp[1]}' for letter in full_right]
-            up_right.reverse()
-            knight_up_right = self.decrease_or_increase_column(up_right, 'increase')
+            move_three = self.move_row(self.move_column(self.move_column([position], 'increase'), 'increase'),
+                                       'decrease')
+            move_four = self.move_column(self.move_row(self.move_row([position], 'decrease'), 'decrease'), 'increase')
 
-            # down right corner
-            knight_down_right = self.decrease_or_increase_column(up_right, 'decrease')
+            move_five = self.move_column(self.move_row(self.move_row([position], 'decrease'), 'decrease'), 'decrease')
+            move_six = self.move_row(self.move_column(self.move_column([position], 'decrease'), 'decrease'), 'decrease')
 
-            # up left corner
-            full_left = self.letters[index_num - 2: index_num]
-            up_left = [f'{letter}{temp[1]}' for letter in full_left]
-            knight_up_left = self.decrease_or_increase_column(up_left, 'increase')
+            move_seven = self.move_row(self.move_column(self.move_column([position], 'decrease'), 'decrease'),
+                                       'increase')
+            move_eight = self.move_column(self.move_row(self.move_row([position], 'increase'), 'increase'), 'decrease')
 
-            # down left corner
-            knight_down_left = self.decrease_or_increase_column(up_left, 'decrease')
-
-            # all
-            all_possible_knight_moves = [knight_up_right] + [knight_down_right] + \
-                                        [knight_up_left] + [knight_down_left]
+            all_possible_knight_moves = [move_one] + [move_two] + [move_three] + [move_four] + [move_five] + \
+                                        [move_six] + [move_seven] + [move_eight]
 
             return all_possible_knight_moves
 
         if piece == 'queen':
+            # basically a copy of the rook and the bishops moves
 
             # up
-            up = [f'{temp[0]}{i}' for i in range(1, 9)]
-            queen_up = [f'{i}' for i in up[int(temp[1]):]]
+            queen_up = [f'{i}' for i in full_column[index_in_col + 1:]]
 
             #  Down
-            down = up[:]
-            queen_down = [f'{i}' for i in down[:int(temp[1]) - 1]]
+            queen_down = [f'{i}' for i in full_column[:index_in_col]]
             queen_down.reverse()
 
             # right
-            right = [f'{letter}{temp[1]}' for letter in self.letters]
-            index_of_letter = right.index(f'{temp[0]}{temp[1]}')
-            queen_right = [f'{i}' for i in right[index_of_letter + 1:]]
+            queen_right = [f'{i}' for i in full_row[index_in_row + 1:]]
 
             # left
-            left = right[:]
-            index_of_letter = left.index(f'{temp[0]}{temp[1]}')
-            queen_left = [f'{i}' for i in left[:index_of_letter]]
+            queen_left = [f'{i}' for i in full_row[:index_in_row]]
             queen_left.reverse()
 
-            # diagonals
-            index_num = self.letters.index(temp[0])
-
             # up right diagonal
-            my_letters_upwards_right_diagonal = self.letters[index_num + 1:]
-            up_right = [f'{letter}{temp[1]}' for letter in my_letters_upwards_right_diagonal]
-            queen_up_right = self.decrease_or_increase_column(up_right, 'increase')
+            up_right = [i for i in full_row[index_in_row + 1:]]
+            queen_up_right = self.get_diagonal(up_right, 'go up')
 
             # down right diagonal
-            my_letters_downwards_right_diagonal = self.letters[index_num + 1:]
-            down_right = [f'{letter}{temp[1]}' for letter in my_letters_downwards_right_diagonal]
-            queen_down_right = self.decrease_or_increase_column(down_right, 'decrease')
+            down_right = [i for i in full_row[index_in_row + 1:]]
+            queen_down_right = self.get_diagonal(down_right, 'go down')
 
             # up left diagonal
-            reversed_letters = self.letters[:index_num]
-            reversed_letters.reverse()
-            up_left = [f'{letter}{temp[1]}' for letter in reversed_letters]
-            queen_up_left = self.decrease_or_increase_column(up_left, 'increase')
+            up_left = [i for i in full_row[:index_in_row]]
+            up_left.reverse()
+            queen_up_left = self.get_diagonal(up_left, 'go up')
 
             # down left diagonal
-            reversed_letters_down_left_diagonal = reversed_letters[:]
-            down_left = [f'{letter}{temp[1]}' for letter in reversed_letters_down_left_diagonal]
-            queen_down_left = self.decrease_or_increase_column(down_left, 'decrease')
+            down_left = [i for i in full_row[:index_in_row]]
+            down_left.reverse()
+            queen_down_left = self.get_diagonal(down_left, 'go down')
 
             # all
             all_possible_queen_moves = [queen_down_right] + [queen_right] + [queen_up_right] + [queen_up] + \
@@ -995,24 +973,19 @@ class Board(Frame):
             return all_possible_queen_moves
 
         if piece == 'king':
-            king_full_row = [f'{temp[0]}{i}' for i in range(1, 9)]
-
-            # up
-            king_up_full = self.decrease_or_increase_row(king_full_row, 'increase')
-            king_up = [f'{i}' for i in king_up_full[int(temp[1]) - 2:int(temp[1]) + 1]]
-
-            # down
-            king_down_full = self.decrease_or_increase_row(king_full_row, 'decrease')
-            king_down = [f'{i}' for i in king_down_full[int(temp[1]) - 2:int(temp[1]) + 1]]
-
-            # left
-            king_left = self.decrease_or_increase_column([position], 'decrease')
-
-            # right
-            king_right = self.decrease_or_increase_column([position], 'increase')
+            # clockwise pattern for king
+            move_one = self.move_row([position], 'increase')
+            move_two = self.move_column(self.move_row([position], 'increase'), 'increase')
+            move_three = self.move_column([position], 'increase')
+            move_four = self.move_row(self.move_column([position], 'increase'), 'decrease')
+            move_five = self.move_column([position], 'decrease')
+            move_six = self.move_row(self.move_column([position], 'decrease'), 'decrease')
+            move_seven = self.move_column([position], 'decrease')
+            move_eight = self.move_row(self.move_column([position], 'decrease'), 'increase')
 
             # all
-            all_possible_king_moves = [king_up] + [king_down] + [king_left] + [king_right]
+            all_possible_king_moves = [move_one] + [move_two] + [move_three] + [move_four] + [move_five] + \
+                                      [move_six] + [move_seven] + [move_eight]
 
             return all_possible_king_moves
 
@@ -1068,7 +1041,7 @@ class Board(Frame):
         return black_pieces, white_pieces
 
     @staticmethod
-    def decrease_or_increase_column(array, operation):
+    def move_column(array, operation):
         """Allows to increase or decrease a column of chess coordinates by one"""
 
         # the new increased/decreased list
@@ -1111,7 +1084,7 @@ class Board(Frame):
         # return full new array
         return new_array
 
-    def decrease_or_increase_row(self, array, operation):
+    def move_row(self, array, operation):
         """Allows to increase or decrease a row of chess coordinates by one"""
 
         # the new increased/decreased list
@@ -1160,6 +1133,30 @@ class Board(Frame):
                 count += 1
 
         # return full new array
+        return new_array
+
+    @staticmethod
+    def get_diagonal(array, direction):
+        value = 1
+        new_array = []
+        if direction == 'go up':
+            for pos in array:
+                coordinate = list(pos)
+                new_val = int(coordinate[1]) + value
+                if new_val == 9:
+                    break
+                new_array.append(coordinate[0] + str(new_val))
+                value += 1
+
+        if direction == 'go down':
+            for pos in array:
+                coordinate = list(pos)
+                new_val = int(coordinate[1]) - value
+                if new_val == 0:
+                    break
+                new_array.append(coordinate[0] + str(new_val))
+                value += 1
+
         return new_array
 
     def build(self):
