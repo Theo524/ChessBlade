@@ -1,5 +1,5 @@
 from tkinter import *
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, colorchooser
 import os
 import sqlite3
 
@@ -326,11 +326,8 @@ class CustomizationSettings(ttk.Frame):
         # variable
         self.board_color_var = StringVar()
 
-        self.board_colors = ttk.Combobox(board_color_frame, textvariable=self.board_color_var, width=10)
-        self.board_colors.set('brown')
-        # color options
-        self.board_colors['values'] = ('black',  'brown', 'green', 'purple', 'blue')
-        self.board_colors.pack(pady=(0, 6))
+        board_color_button = Button(board_color_frame, text="Select board color", command=self.set_board_color)
+        board_color_button.pack(side=LEFT, pady=(0, 6), padx=(15, 0))
 
     def get_piece_color(self):
         """Get the piece color"""
@@ -340,9 +337,16 @@ class CustomizationSettings(ttk.Frame):
         elif self.player_color_var.get() == 1:
             return 'black'
 
+    def set_board_color(self):
+        """Chose a color for the board"""
+
+        board_color_code = colorchooser.askcolor(title="Choose color")
+        self.board_color_var.set(board_color_code[1])
+
     def get_board_color(self):
-        """Get the board color"""
-        return self.board_colors.get()
+        """Get the board color from colorchoser widget"""
+
+        return self.board_color_var.get()
 
     def get_border_color(self):
         """Get the border color"""
