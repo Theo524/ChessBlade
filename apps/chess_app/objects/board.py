@@ -783,15 +783,12 @@ class Board(Frame):
             right_diagonal = all_prawns[2]
 
             for position in prawn_up:
-                # if there is no piece we highlight green
-                if self.board[position]['piece']['piece_color'] is None \
-                        and self.board[position]['color'] in ['white', 'black']:
-                    self.board[f'{position}']['button'].configure(bg='light green')
-                    self.board[f'{position}']['color'] = 'light green'
-
                 # if the piece is white we stop highlighting
-                if self.board[position]['piece']['piece_color'] == 'white':
+                if self.board[position]['piece']['piece_color'] in ['white', 'black']:
                     break
+
+                self.board[f'{position}']['button'].configure(bg='light green')
+                self.board[f'{position}']['color'] = 'light green'
 
             for position in left_diagonal:
                 # if the piece is black, highlight red
