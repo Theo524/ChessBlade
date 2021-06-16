@@ -66,7 +66,7 @@ class Board(Frame):
                     board_color = row[6]
 
         # border
-        self.configure(highlightthickness=15, highlightbackground=border_color)
+        self.configure(highlightthickness=2, highlightbackground=border_color)
 
         # colors for board
         self.board_colors = [
@@ -90,7 +90,7 @@ class Board(Frame):
         # methods to implement game visuals
         # ---------------NOTEBOOK--------------
         # notebook for chess notation
-        self.notebook = ttk.Notebook(widgets_frame, height=300)
+        self.notebook = ttk.Notebook(widgets_frame, height=400)
         self.notebook.pack(pady=(7, 0), padx=5)
         # first tab
         self.notation_tab = Text(self.notebook, width=40, height=10)
