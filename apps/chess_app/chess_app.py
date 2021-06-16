@@ -7,6 +7,7 @@ import string
 import os
 import csv
 from tkinter import ttk
+from PIL import ImageTk, Image
 
 
 class ChessApp(Tk):
@@ -35,6 +36,7 @@ class ChessApp(Tk):
                 next(reader)
                 for row in reader:
                     self.the_border_color = row[5]
+                    self.board_color = row[6]
 
         if mode == 'user':
             # get board background color for user mode
@@ -42,7 +44,9 @@ class ChessApp(Tk):
                 reader = csv.reader(f, delimiter='-')  # file separated by '-' rather than comas
                 next(reader)
                 for row in reader:
+                    print(row)
                     self.the_border_color = row[5]
+                    self.board_color = row[6]
 
         # -------------everything contained here--------------
         self.game_frame = Frame(self)
@@ -55,6 +59,12 @@ class ChessApp(Tk):
         # Widgets frame, here is where all the objects apart from the chess board are placed
         self.widgets_frame = Frame(self.game_frame)
 
+        # clock temp
+        self.clock_frame = LabelFrame(self.widgets_frame)
+        self.clock_frame.pack(ipadx=30)
+        self.temp = Label(self.clock_frame, text='time goes here', font='calibri 20')
+        self.temp.pack()
+
         # Actual game board
         # It is inside the board frame
         # (we pass the 'widgets frame' instance to be able to create and update chess notation in real time)
@@ -65,13 +75,11 @@ class ChessApp(Tk):
 
         # -------------WIDGETS(right)-------------
         # CLOCK (doesn't update)
-        #self.clock_frame = LabelFrame(self.widgets_frame)
-        #self.clock_frame.pack()
         #self.clock = Clock(self.clock_frame)
         #self.clock.pack()
 
         # We can now place the widgets frame
-        self.widgets_frame.pack(side=LEFT)
+        self.widgets_frame.pack(side=LEFT, padx=20)
 
         # Place the required box widgets
         self.place_player_stats_and_settings(mode)
