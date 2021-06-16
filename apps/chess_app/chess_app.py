@@ -44,6 +44,7 @@ class ChessApp(Tk):
                 reader = csv.reader(f, delimiter='-')  # file separated by '-' rather than comas
                 next(reader)
                 for row in reader:
+                    print(row)
                     self.the_border_color = row[5]
                     self.board_color = row[6]
 

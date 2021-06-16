@@ -62,7 +62,7 @@ def loadSettings(game_mode):
             my_file.write('Game_difficulty-time-game_mode-player_piece_color-opponent_piece_color-border_color-'
                           'board_color\n')
             my_file.write(f"{settings[0][1]}-{settings[0][2]}-{settings[0][3]}-{settings[0][4]}-{settings[0][5]}-"
-                          f"{settings[0][6]}{settings[0][7]}")
+                          f"{settings[0][6]}-{settings[0][7]}")
 
         # write stats to user_stats.csv file
         user_stats = game_settings_path + '\\user\\user_stats.csv'
