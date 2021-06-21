@@ -1,6 +1,6 @@
 from tkinter import *
 import os
-from settings import Settings
+from apps.chess_app.objects.settings import Settings
 
 
 class BarMenu(Menu):
