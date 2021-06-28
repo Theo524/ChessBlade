@@ -80,6 +80,10 @@ class Board(Frame):
 
         # list containing letters from a to h
         self.letters = list(string.ascii_lowercase[:8])
+        self.alphabet = list(string.ascii_letters)
+
+        # nums str
+        self.nums = [str(i) for i in range(10)]
 
         # Will store pieces coordinates in 1d array
         self.pieces = []
@@ -165,68 +169,93 @@ class Board(Frame):
                 x = 0
 
     def place_default_pieces_on_screen(self):
-        """Place the pieces on the screen"""
+        """Place default starting pieces on the screen"""
 
         # Thanks to the method 'place_piece' I've made, we can easily move and delete any piece from the screen
         # We enter the piece, the color and the position we want to place it at as parameters
 
-        # ------------BLACK------------
-        # Black rooks
-        self.place_piece('rook', 'black', 'a1')
-        self.place_piece('rook', 'black', 'h1')
+        # use a FEN string (Forsyth-Edwards Notation)
+        staring_fen_string = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'
+        self.place_fen_string(staring_fen_string)
 
-        # BLack bishops
-        self.place_piece('bishop', 'black', 'b1')
-        self.place_piece('bishop', 'black', 'g1')
 
-        # Black knights
-        self.place_piece('knight', 'black', 'c1')
-        self.place_piece('knight', 'black', 'f1')
+    def place_fen_string(self, fen_str):
+        """Convert fen string to place pieces"""
 
-        # Black king
-        self.place_piece('king', 'black', 'e1')
+        # Thanks to the method 'place_piece' I've made, we can easily move and delete any piece from the screen
+        # We enter the piece, the color and the position we want to place it at as parameters
 
-        # Black queen
-        self.place_piece('queen', 'black', 'd1')
-
-        # Black prawns
-        for letter in self.letters:
-            # update the letter in a linear fashion so all 8 prawn are placed horizontally
-            self.place_piece('prawn', 'black', f'{letter}2')
-
-        # ------------WHITE------------
-        # White rook
-        self.place_piece('rook', 'white', 'a8')
-        self.place_piece('rook', 'white', 'h8')
-
-        # White bishops
-        self.place_piece('bishop', 'white', 'b8')
-        self.place_piece('bishop', 'white', 'g8')
-
-        # White knights
-        self.place_piece('knight', 'white', 'c8')
-        self.place_piece('knight', 'white', 'f8')
-
-        # White king
-        self.place_piece('king', 'white', 'e8')
-
-        # White queen
-        self.place_piece('queen', 'white', 'd8')
-
-        # White prawn
-        for letter in self.letters:
-            self.place_piece('prawn', 'white', f'{letter}7')
-
-        # ------------Empty spaces------------
-        # These represent the blank buttons, if this weren't done, the button would look tiny
-        # as the dimension have been set by the images themselves
-        for num in range(3, 7):
+        # create two lists, one for a dict containing useful data and another for key vals
+        coordinates_copy = self.coordinates[:]
+        coordinates = []
+        for row in range(8):
+            temp = []
             for letter in self.letters:
-                self.place_piece(piece='blank', color='blank', position=f"{letter}{num}")
+                temp.append({f'{letter}{row + 1}': 'blank'})
+            coordinates.append(temp)
 
-        # pieces placed in the middle of the board for testing
-        self.place_piece('rook', 'black', 'e4')
-        self.place_piece('prawn', 'white', 'e6')
+        # reverse them so they match required indexes
+        coordinates.reverse()
+        coordinates_copy.reverse()
+
+        # fen value
+        full_str = list(fen_str)
+
+        # coordinates
+        x = 0
+        y = 0
+
+        # iterate trough each value in the fen string
+        for symbol in full_str:
+            if symbol in ['/']:
+                # if bracket
+                # move one row down
+                y += 1
+
+                # and return to starting col
+                x = 0
+
+            if symbol in self.alphabet:
+                # if letter, assign letter to dictionary
+                coordinates[y][x] = {f'{coordinates_copy[y][x]}': symbol}
+                x += 1
+
+            if symbol in self.nums:
+                # if number move jump spaces
+                x += int(symbol)
+
+        # place pieces on board
+        for row in coordinates:
+            for val in row:
+                # get the key as a list (position)
+                position = [key for key in val.keys()]
+                # get the piece as a list
+                piece = [value for value in val.values()]
+
+                # convert the lists to str
+                piece = ''.join(piece)
+                position = ''.join(position)
+
+                # get the color from the letter type
+                # according to the rules - white, lower case and black uppercase
+                if piece in list(string.ascii_lowercase):
+                    color = 'white'
+                elif piece in list(string.ascii_uppercase):
+                    color = 'black'
+                else:
+                    color = 'blank'
+
+                piece_dict = {'P': 'prawn', 'p': 'prawn',
+                              'R': 'rook', 'r': 'rook',
+                              'N': 'knight', 'n': 'knight',
+                              'B': 'bishop', 'b': 'bishop',
+                              'Q': 'queen', 'q': 'queen',
+                              'K': 'king', 'k': 'king',
+                              'blank': 'blank'}
+
+
+                # finally place the piece
+                self.place_piece(piece_dict[piece], color, position)
 
     def place_buttons(self):
         """Place the actual buttons on the screen"""
