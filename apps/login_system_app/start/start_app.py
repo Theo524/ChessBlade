@@ -5,7 +5,7 @@ from .register.register_app import RegisterApp
 import os
 from tkinter import ttk
 from ttkthemes import ThemedStyle
-
+from random import choice
 
 
 class StartApp(Tk):
@@ -15,13 +15,19 @@ class StartApp(Tk):
         Tk.__init__(self)
         self.my_state = True
 
+        self.resizable(0, 0)
+
         #themes
         self.style = ThemedStyle(self)
-        #themes = style.get_themes()
-        #themes.sort()
-        #my_theme = themes[-1]
-        self.style.set_theme('breeze')
-        # ('breeze', 'arc', 'adapta', 'radiance', 'yaru')
+        themes = self.style.get_themes()
+        themes.sort()
+        print(themes)
+        my_theme = choice(themes)
+        #self.style.set_theme
+        self.style.theme_use('scidsand')
+        print(my_theme)
+        # ('breeze', 'arc', 'adapta', 'radiance', 'yaru', 'scidgrey')
+
 
         # set paths for file handling
         self.database = os.getcwd() + '\\database\\users.db'

@@ -3,6 +3,7 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
+from apps.custom_widgets.placeholder_entry import PlaceholderEntry
 import hashlib
 import smtplib
 import random
@@ -17,8 +18,8 @@ class LoginSystem(Frame):
         Frame.__init__(self, master)
 
         # themes
-        self.master.master.style.configure('login_page.TButton', font=('Arial', 7, 'italic'), foreground='blue')
-        self.master.master.style.configure('login_page.TCheckbutton', font=('Arial', 10))
+        self.master.master.style.configure('login_page.TButton', font=('Calibri', 13,))
+        self.master.master.style.configure('login_page.TCheckbutton', font=('Calibri', 10))
 
         # container
         self.scene = ttk.Frame(self)
@@ -49,18 +50,18 @@ class LoginSystem(Frame):
         self.username_frame = ttk.Frame(self.main_window)
         self.username_frame.pack(pady=20)
 
-        ttk.Label(self.username_frame, text='Username', font='arial 11').pack(expand=True, side=LEFT)
+        #ttk.Label(self.username_frame, text='Username', font='arial 11').pack(expand=True, side=LEFT)
         self.user_name_var = StringVar()
-        self.username_entry = ttk.Entry(self.username_frame, textvariable=self.user_name_var)
+        self.username_entry = PlaceholderEntry(self.username_frame, 'Username',textvariable=self.user_name_var)
         self.username_entry.pack(expand=True, side=LEFT, padx=10)
 
         # Password (MIDDLE FRAME)
         self.password_frame = ttk.Frame(self.main_window)
         self.password_frame.pack(pady=10)
 
-        ttk.Label(self.password_frame, text='Password', font='arial 11').pack(expand=True, side=LEFT)
+        #ttk.Label(self.password_frame, text='Password', font='arial 11').pack(expand=True, side=LEFT)
         self.password_var = StringVar()
-        self.password_entry = ttk.Entry(self.password_frame, textvariable=self.password_var, show="*")
+        self.password_entry = PlaceholderEntry(self.password_frame, 'Password', textvariable=self.password_var, show="")
         self.password_entry.pack(expand=True, side=LEFT, padx=10)
 
         # Extra/additional settings - 'forgotten password', 'show password' (MIDDLE FRAME)
@@ -73,15 +74,17 @@ class LoginSystem(Frame):
                                          command=self.show)
         self.show_password.pack(side=LEFT, padx=30)
         # Forgot password
-        self.forgot_password = ttk.Button(self.extra, text='Forgot your password?', style='login_page.TButton',
+        self.forgot_password = Button(self.extra, text='Forgot your password?', relief=FLAT, bg='#dadada', fg='blue',
+                                      font=('Calibri', 9, 'italic'),
                                       command=lambda: master.switch_frame(ForgotPassword))
         self.forgot_password.pack(side=LEFT)
 
         # Login button (MIDDLE FRAME)
         self.login_frame = ttk.Frame(self.main_window)
         self.login_frame.pack(pady=20)
-        self.login_button = ttk.Button(self.login_frame, text='Login', command=self.verify_credentials)
-        self.login_button.pack()
+        self.login_button = ttk.Button(self.login_frame, text='Login', command=self.verify_credentials,
+                                       style='login_page.TButton')
+        self.login_button.pack(ipady=3, ipadx=15)
 
         # ----------------------app layout/lower frame----------------------
         self.lower_window = Frame(self.scene, height=20)
