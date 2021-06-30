@@ -10,25 +10,29 @@ class StartWindow(Frame):
         Frame.__init__(self, master)
         self.master = master
 
+        # container
+        self.scene = ttk.Frame(self)
+        self.scene.pack()
+
         # themes
         self.master.style.configure('start_page.TButton', font=('Arial', 15))
 
         # Title
-        ttk.Label(self, text="CHESS GAME", font=('Arial', 30)).pack(side="top", padx=30, pady=15)
+        ttk.Label(self.scene, text="CHESS GAME", font=('Arial', 30)).pack(side="top", padx=30, pady=15)
 
         # Login Button
-        ttk.Button(self, text="Login", command=self.login, style='start_page.TButton').pack(pady=20, ipady=5, ipadx=10)
+        ttk.Button(self.scene, text="Login", command=self.login, style='start_page.TButton').pack(pady=20, ipady=5, ipadx=10)
 
         # Registration button
-        ttk.Button(self, text="Register", command=self.register, style='start_page.TButton')\
+        ttk.Button(self.scene, text="Register", command=self.register, style='start_page.TButton')\
             .pack(pady=20, ipady=5, ipadx=10)
 
         # Guest mode button
-        ttk.Button(self, text="Enter as guest", command=self.set_mode_guest, style='start_page.TButton')\
+        ttk.Button(self.scene, text="Enter as guest", command=self.set_mode_guest, style='start_page.TButton')\
             .pack(pady=20, ipady=5, ipadx=10)
 
         # Just my name at the bottom
-        Label(self, text="Developed by Theo Brown", font=('Calibri', 10))\
+        Label(self.scene, text="Developed by Theo Brown", font=('Calibri', 10))\
             .pack()
 
     def set_mode_guest(self):

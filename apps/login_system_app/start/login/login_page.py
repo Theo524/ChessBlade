@@ -20,13 +20,16 @@ class LoginSystem(Frame):
         self.master.master.style.configure('login_page.TButton', font=('Arial', 7, 'italic'), foreground='blue')
         self.master.master.style.configure('login_page.TCheckbutton', font=('Arial', 10))
 
+        # container
+        self.scene = ttk.Frame(self)
+        self.scene.pack()
 
         # files needed
         self.database = self.master.database
         self.temp_files = self.master.temp_files
 
         # ----------------------app layout/upper frame----------------------
-        self.upper_window = Frame(self, height=50, width=300)
+        self.upper_window = ttk.Frame(self.scene, height=50, width=300)
         self.upper_window.pack()
         # button to return to start page
         ttk.Button(self.upper_window, text='🢀', cursor='tcross',
@@ -34,11 +37,11 @@ class LoginSystem(Frame):
 
         # ----------------------app layout/middle frame(main data)----------------------
         # every item is placed inside this frame
-        self.main_window = Frame(self)
+        self.main_window = ttk.Frame(self.scene)
         self.main_window.pack()
 
         # Title (MIDDLE FRAME)
-        self.title_frame = Frame(self.main_window)
+        self.title_frame = ttk.Frame(self.main_window)
         self.title_frame.pack(pady=10)
         ttk.Label(self.title_frame, text='LOGIN', font='arial 20').pack(expand=True)
 
@@ -81,7 +84,7 @@ class LoginSystem(Frame):
         self.login_button.pack()
 
         # ----------------------app layout/lower frame----------------------
-        self.lower_window = Frame(self, height=20)
+        self.lower_window = Frame(self.scene, height=20)
         self.lower_window.pack()
 
     def return_to_start(self):
