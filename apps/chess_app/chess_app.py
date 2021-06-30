@@ -3,11 +3,9 @@ from apps.chess_app.objects.bar_menu import BarMenu
 from apps.chess_app.objects.clock import Clock
 
 from tkinter import *
-import string
 import os
 import csv
 from tkinter import ttk
-from PIL import ImageTk, Image
 
 
 class ChessApp(Tk):
@@ -68,7 +66,7 @@ class ChessApp(Tk):
         # Actual game board
         # It is inside the board frame
         # (we pass the 'widgets frame' instance to be able to create and update chess notation in real time)
-        self.main_chess_board = Board(self.board_frame, self.widgets_frame)
+        self.main_chess_board = Board(self.board_frame, widgets_frame=self.widgets_frame)
         self.main_chess_board.pack()
         # creates board
         self.main_chess_board.build()

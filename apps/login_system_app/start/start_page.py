@@ -1,4 +1,6 @@
 from tkinter import *
+from tkinter import ttk
+from ttkthemes import ThemedStyle
 
 
 class StartWindow(Frame):
@@ -8,23 +10,29 @@ class StartWindow(Frame):
         Frame.__init__(self, master)
         self.master = master
 
+        # container
+        self.scene = ttk.Frame(self)
+        self.scene.pack()
+
+        # themes
+        self.master.style.configure('start_page.TButton', font=('Arial', 15))
+
         # Title
-        Label(self, text="CHESS GAME", font=('Helvetica', 18, "bold")).pack(side="top", fill="x", pady=5, padx=20)
+        ttk.Label(self.scene, text="CHESS GAME", font=('Arial', 30)).pack(side="top", padx=30, pady=15)
 
         # Login Button
-        Button(self, text="Login", font=('Helvetica', 15), command=self.login)\
-            .pack(pady=15)
+        ttk.Button(self.scene, text="Login", command=self.login, style='start_page.TButton').pack(pady=20, ipady=5, ipadx=10)
 
         # Registration button
-        Button(self, text="Register", font=('Helvetica', 15), command=self.register)\
-            .pack(pady=15)
+        ttk.Button(self.scene, text="Register", command=self.register, style='start_page.TButton')\
+            .pack(pady=20, ipady=5, ipadx=10)
 
         # Guest mode button
-        Button(self, text="Enter as guest", font=('Helvetica', 15), command=self.set_mode_guest)\
-            .pack(pady=15, padx=30)
+        ttk.Button(self.scene, text="Enter as guest", command=self.set_mode_guest, style='start_page.TButton')\
+            .pack(pady=20, ipady=5, ipadx=10)
 
         # Just my name at the bottom
-        Label(self, text="Developed by Theo Brown", font=('Calibri', 7))\
+        Label(self.scene, text="Developed by Theo Brown", font=('Calibri', 10))\
             .pack()
 
     def set_mode_guest(self):

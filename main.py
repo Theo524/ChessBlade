@@ -3,6 +3,10 @@ from apps.chess_app.chess_app import ChessApp
 
 import os
 import sqlite3
+from tkinter import ttk
+from ttkthemes import ThemedStyle
+from random import choice
+
 
 # Working directory for the current script
 main_path = os.getcwd()
@@ -75,6 +79,7 @@ def loadSettings(game_mode):
 if __name__ == '__main__':
     # Start the application
     start = StartApp()
+
     start.mainloop()
     # Once logged in or entered in guest mode, destroy the startapp
     start.destroy()

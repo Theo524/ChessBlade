@@ -1,9 +1,8 @@
 from tkinter import *
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 import string
 import os
 from PIL import Image, ImageTk
-from tkinter import ttk
 import csv
 
 
@@ -24,8 +23,10 @@ class Board(Frame):
     board = {}
     coordinates = []
 
-    def __init__(self, master, widgets_frame):
-        Frame.__init__(self, master, widgets_frame)
+    def __init__(self, master, **kwargs):
+        Frame.__init__(self, master)
+
+        self.widgets_frame = kwargs['widgets_frame']
 
         # game settings variables (retrieve settings from files)
         with open(os.getcwd() + '\\apps\\login_system_app\\temp\\mode.txt', 'r') as f:
@@ -91,10 +92,16 @@ class Board(Frame):
         # Dictionaries storing piece images file names
         self.black_pieces, self.white_pieces = self.get_piece_img()
 
-        # methods to implement game visuals
+        # add notation if needed
+        if self.widgets_frame:
+            self.add_notation_tab()
+
+    def add_notation_tab(self):
+        """implement side game visuals"""
+
         # ---------------NOTEBOOK--------------
         # notebook for chess notation
-        self.notebook = ttk.Notebook(widgets_frame, height=400, width=500)
+        self.notebook = ttk.Notebook(self.widgets_frame, height=400, width=500)
         self.notebook.pack(pady=(7, 0), padx=5)
         # first tab
         self.notation_tab = Text(self.notebook, width=40, height=10)
@@ -176,8 +183,8 @@ class Board(Frame):
 
         # use a FEN string (Forsyth-Edwards Notation)
         staring_fen_string = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'
-        self.place_fen_string(staring_fen_string)
 
+        self.place_fen_string(staring_fen_string)
 
     def place_fen_string(self, fen_str):
         """Convert fen string to place pieces"""

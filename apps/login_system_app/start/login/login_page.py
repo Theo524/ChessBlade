@@ -16,29 +16,37 @@ class LoginSystem(Frame):
     def __init__(self, master):
         Frame.__init__(self, master)
 
+        # themes
+        self.master.master.style.configure('login_page.TButton', font=('Arial', 7, 'italic'), foreground='blue')
+        self.master.master.style.configure('login_page.TCheckbutton', font=('Arial', 10))
+
+        # container
+        self.scene = ttk.Frame(self)
+        self.scene.pack()
+
         # files needed
         self.database = self.master.database
         self.temp_files = self.master.temp_files
 
         # ----------------------app layout/upper frame----------------------
-        self.upper_window = Frame(self, height=50, width=300)
+        self.upper_window = ttk.Frame(self.scene, height=50, width=300)
         self.upper_window.pack()
         # button to return to start page
-        Button(self.upper_window, text='🢀', relief=GROOVE, cursor='tcross',
+        ttk.Button(self.upper_window, text='🢀', cursor='tcross',
                command=self.return_to_start).place(x=0, y=0)
 
         # ----------------------app layout/middle frame(main data)----------------------
         # every item is placed inside this frame
-        self.main_window = Frame(self)
+        self.main_window = ttk.Frame(self.scene)
         self.main_window.pack()
 
         # Title (MIDDLE FRAME)
-        self.title_frame = Frame(self.main_window)
+        self.title_frame = ttk.Frame(self.main_window)
         self.title_frame.pack(pady=10)
-        Label(self.title_frame, text='LOGIN', font='arial 20').pack(expand=True)
+        ttk.Label(self.title_frame, text='LOGIN', font='arial 20').pack(expand=True)
 
         # Username (MIDDLE FRAME)
-        self.username_frame = Frame(self.main_window)
+        self.username_frame = ttk.Frame(self.main_window)
         self.username_frame.pack(pady=20)
 
         ttk.Label(self.username_frame, text='Username', font='arial 11').pack(expand=True, side=LEFT)
@@ -47,36 +55,36 @@ class LoginSystem(Frame):
         self.username_entry.pack(expand=True, side=LEFT, padx=10)
 
         # Password (MIDDLE FRAME)
-        self.password_frame = Frame(self.main_window)
+        self.password_frame = ttk.Frame(self.main_window)
         self.password_frame.pack(pady=10)
 
-        Label(self.password_frame, text='Password', font='arial 11').pack(expand=True, side=LEFT)
+        ttk.Label(self.password_frame, text='Password', font='arial 11').pack(expand=True, side=LEFT)
         self.password_var = StringVar()
         self.password_entry = ttk.Entry(self.password_frame, textvariable=self.password_var, show="*")
         self.password_entry.pack(expand=True, side=LEFT, padx=10)
 
         # Extra/additional settings - 'forgotten password', 'show password' (MIDDLE FRAME)
-        self.extra = Frame(self.main_window)
+        self.extra = ttk.Frame(self.main_window)
         self.extra.pack()
         # Show/hide password
         self.show_password_var = IntVar()
-        self.show_password = Checkbutton(self.extra, text='Show password', font='arial 7 bold',
+        self.show_password = ttk.Checkbutton(self.extra, text='Show password', style='login_page.TCheckbutton',
                                          variable=self.show_password_var, onvalue=1, offvalue=0,
                                          command=self.show)
         self.show_password.pack(side=LEFT, padx=30)
         # Forgot password
-        self.forgot_password = Button(self.extra, text='Forgot your password?', font='arial 6 italic', fg='blue',
-                                      command=lambda: master.switch_frame(ForgotPassword), relief=FLAT)
+        self.forgot_password = ttk.Button(self.extra, text='Forgot your password?', style='login_page.TButton',
+                                      command=lambda: master.switch_frame(ForgotPassword))
         self.forgot_password.pack(side=LEFT)
 
         # Login button (MIDDLE FRAME)
-        self.login_frame = Frame(self.main_window)
+        self.login_frame = ttk.Frame(self.main_window)
         self.login_frame.pack(pady=20)
         self.login_button = ttk.Button(self.login_frame, text='Login', command=self.verify_credentials)
         self.login_button.pack()
 
         # ----------------------app layout/lower frame----------------------
-        self.lower_window = Frame(self, height=20)
+        self.lower_window = Frame(self.scene, height=20)
         self.lower_window.pack()
 
     def return_to_start(self):

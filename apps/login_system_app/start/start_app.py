@@ -3,6 +3,9 @@ from .start_page import StartWindow
 from .login.login_app import LoginApp
 from .register.register_app import RegisterApp
 import os
+from tkinter import ttk
+from ttkthemes import ThemedStyle
+
 
 
 class StartApp(Tk):
@@ -11,6 +14,14 @@ class StartApp(Tk):
 
         Tk.__init__(self)
         self.my_state = True
+
+        #themes
+        self.style = ThemedStyle(self)
+        #themes = style.get_themes()
+        #themes.sort()
+        #my_theme = themes[-1]
+        self.style.set_theme('breeze')
+        # ('breeze', 'arc', 'adapta', 'radiance', 'yaru')
 
         # set paths for file handling
         self.database = os.getcwd() + '\\database\\users.db'
