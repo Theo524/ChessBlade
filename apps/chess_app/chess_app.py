@@ -3,11 +3,9 @@ from apps.chess_app.objects.bar_menu import BarMenu
 from apps.chess_app.objects.clock import Clock
 
 from tkinter import *
-import string
 import os
 import csv
 from tkinter import ttk
-from PIL import ImageTk, Image
 
 
 class ChessApp(Tk):
