@@ -11,11 +11,11 @@ import sqlite3
 import requests
 
 
-class LoginSystem(Frame):
+class LoginSystem(ttk.Frame):
     """Login to account"""
 
     def __init__(self, master):
-        Frame.__init__(self, master)
+        ttk.Frame.__init__(self, master)
 
         # themes
         self.master.master.style.configure('login_page.TButton', font=('Calibri', 13,))
@@ -53,7 +53,7 @@ class LoginSystem(Frame):
         #ttk.Label(self.username_frame, text='Username', font='arial 11').pack(expand=True, side=LEFT)
         self.user_name_var = StringVar()
         self.username_entry = PlaceholderEntry(self.username_frame, 'Username',textvariable=self.user_name_var)
-        self.username_entry.pack(expand=True, side=LEFT, padx=10)
+        self.username_entry.pack(expand=True, side=LEFT, padx=10, ipadx=10)
 
         # Password (MIDDLE FRAME)
         self.password_frame = ttk.Frame(self.main_window)
@@ -62,7 +62,7 @@ class LoginSystem(Frame):
         #ttk.Label(self.password_frame, text='Password', font='arial 11').pack(expand=True, side=LEFT)
         self.password_var = StringVar()
         self.password_entry = PlaceholderEntry(self.password_frame, 'Password', textvariable=self.password_var, show="")
-        self.password_entry.pack(expand=True, side=LEFT, padx=10)
+        self.password_entry.pack(expand=True, side=LEFT, padx=10, ipadx=10)
 
         # Extra/additional settings - 'forgotten password', 'show password' (MIDDLE FRAME)
         self.extra = ttk.Frame(self.main_window)
