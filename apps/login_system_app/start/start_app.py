@@ -15,10 +15,13 @@ class StartApp(Tk):
         Tk.__init__(self)
         self.my_state = True
 
+        # Attributes
         self.resizable(0, 0)
+        self.title('Welcome')
 
         #themes
         self.style = ThemedStyle(self)
+        #self.style.configure('Placeholder.TEntry', font=('Arial', 30, 'bold'))
         themes = self.style.get_themes()
         themes.sort()
         print(themes)

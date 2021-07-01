@@ -5,23 +5,26 @@ from tkinter import ttk
 from tkcalendar import DateEntry
 from tkinter import messagebox
 from datetime import date
+from apps.custom_widgets.placeholder_entry import PlaceholderEntry
 import hashlib
 import string
 import smtplib
 import sqlite3
 
 
-class RegisterSystem(Frame):
+class RegisterSystem(ttk.Frame):
     def __init__(self, master):
-        Frame.__init__(self, master)
+        ttk.Frame.__init__(self, master)
 
         self.database = self.master.database
 
+        self.master.master.style.configure('error_label.TLabel', foreground='red', font=('Arial', 7))
+
         # ----------------------App layout/upper frame----------------------
-        self.upper_window = Frame(self, height=50, width=350)
+        self.upper_window = ttk.Frame(self, height=50, width=350)
         self.upper_window.pack()
         # Button to return to start page
-        Button(self.upper_window, text='🢀', relief=GROOVE, cursor='tcross',
+        ttk.Button(self.upper_window, text='🢀',
                command=self.return_to_start).place(x=0, y=0)
 
         # ----------------------App layout/middle frame----------------------
@@ -29,100 +32,102 @@ class RegisterSystem(Frame):
         # All the widgets are placed here
         # This frame will consist of more frames
         # Every frame will have a label an entry and an error frame (highlighted in red)
-        self.main_window = Frame(self)
+        self.main_window = ttk.Frame(self)
         self.main_window.pack()
 
         # Title (MIDDLE FRAME)
-        self.title_frame = Frame(self.main_window)
-        self.title_frame.pack()
-        Label(self.title_frame, text='REGISTER', font='arial 20').pack(expand=True)
+        self.title_frame = ttk.Frame(self.main_window)
+        self.title_frame.pack(pady=(0, 20))
+        ttk.Label(self.title_frame, text='CREATE ACCOUNT', font='arial 20').pack(expand=True)
 
         # New username (MIDDLE FRAME)
-        self.new_user_frame = Frame(self.main_window)
+        self.new_user_frame = ttk.Frame(self.main_window)
         self.new_user_frame.pack(pady=10)
 
-        ttk.Label(self.new_user_frame, text='New username\t ').pack(expand=True, side=LEFT)
+        #ttk.Label(self.new_user_frame, text='New username\t ').pack(expand=True, side=LEFT)
         self.new_user_name_var = StringVar()
-        self.new_username_entry = ttk.Entry(self.new_user_frame, textvariable=self.new_user_name_var)
-        self.new_username_entry.pack(expand=True, side=LEFT)
+        self.new_username_entry = PlaceholderEntry(self.new_user_frame, 'New Username',
+                                                   textvariable=self.new_user_name_var)
 
-        self.new_user_name_error_frame = Frame(self.main_window, height=1)
+        self.new_username_entry.pack(expand=True, ipadx=15)
+
+        self.new_user_name_error_frame = ttk.Frame(self.main_window, height=1)
         self.new_user_name_error_frame.pack()
         self.new_user_name_error_var = StringVar()
-        self.new_user_name_error = Label(self.new_user_name_error_frame, textvariable=self.new_user_name_error_var,
-                                         fg='red', font='arial 7')
+        self.new_user_name_error = ttk.Label(self.new_user_name_error_frame, textvariable=self.new_user_name_error_var,
+                                             style='error_label.TLabel')
 
         # New password (MIDDLE FRAME)
-        self.new_password_frame = Frame(self.main_window)
+        self.new_password_frame = ttk.Frame(self.main_window)
         self.new_password_frame.pack(pady=10)
 
-        Label(self.new_password_frame, text='New password\t ').pack(expand=True, side=LEFT)
+        #Label(self.new_password_frame, text='New password\t ').pack(expand=True, side=LEFT)
         self.new_password = StringVar()
-        self.new_password_entry = ttk.Entry(self.new_password_frame, textvariable=self.new_password)
-        self.new_password_entry.pack(expand=True, side=LEFT)
+        self.new_password_entry = PlaceholderEntry(self.new_password_frame, 'New Password', textvariable=self.new_password)
+        self.new_password_entry.pack(expand=True, ipadx=15)
 
-        self.password_error_frame = Frame(self.main_window, height=1)
+        self.password_error_frame = ttk.Frame(self.main_window, height=1)
         self.password_error_frame.pack()
         self.password_error_var = StringVar()
-        self.password_error = Label(self.password_error_frame, textvariable=self.password_error_var,
-                                    fg='red', font='arial 7')
+        self.password_error = ttk.Label(self.password_error_frame, textvariable=self.password_error_var,
+                                        style='error_label.TLabel')
 
         # Confirm new password (MIDDLE FRAME)
-        self.confirm_password_frame = Frame(self.main_window)
+        self.confirm_password_frame = ttk.Frame(self.main_window)
         self.confirm_password_frame.pack(pady=10)
 
-        Label(self.confirm_password_frame, text='Confirm pass\t ').pack(expand=True, side=LEFT)
+        #Label(self.confirm_password_frame, text='Confirm pass\t ').pack(expand=True, side=LEFT)
         self.confirmed_password = StringVar()
-        self.confirmed_password_entry = ttk.Entry(self.confirm_password_frame, textvariable=self.confirmed_password,
-                                                  show="*")
-        self.confirmed_password_entry.pack(expand=True, side=LEFT)
+        self.confirmed_password_entry = PlaceholderEntry(self.confirm_password_frame, 'Confirm password',
+                                                         textvariable=self.confirmed_password)
+        self.confirmed_password_entry.pack(expand=True, ipadx=15)
 
-        self.confirmed_password_error_frame = Frame(self.main_window, height=1)
+        self.confirmed_password_error_frame = ttk.Frame(self.main_window, height=1)
         self.confirmed_password_error_frame.pack()
         self.confirmed_password_error_var = StringVar()
-        self.confirmed_password_error = Label(self.confirmed_password_error_frame,
-                                              textvariable=self.confirmed_password_error_var, fg='red', font='arial 7')
+        self.confirmed_password_error = ttk.Label(self.confirmed_password_error_frame,
+                                                  textvariable=self.confirmed_password_error_var,
+                                                  style='error_label.TLabel')
 
         # Email (MIDDLE FRAME)
-        self.email_frame = Frame(self.main_window)
+        self.email_frame = ttk.Frame(self.main_window)
         self.email_frame.pack(pady=10)
 
         self.email_var = StringVar()
-        self.email_address = Label(self.email_frame, text='Email address\t')
-        self.email_address.pack(side=LEFT)
-        self.email_address_entry = Entry(self.email_frame, fg='grey', textvariable=self.email_var)
-        self.email_var.set('@gmail.com')
-        self.email_address_entry.pack(expand=True, side=LEFT)
+        #self.email_address = Label(self.email_frame, text='Email address\t')
+        #self.email_address.pack(side=LEFT)
+        self.email_address_entry = PlaceholderEntry(self.email_frame, 'Email address (@gmail.com)', textvariable=self.email_var)
+        self.email_address_entry.pack(expand=True, ipadx=15)
 
-        self.email_error_frame = Frame(self.main_window, height=1)
+        self.email_error_frame = ttk.Frame(self.main_window, height=1)
         self.email_error_frame.pack()
         self.email_error_var = StringVar()
-        self.email_error = Label(self.email_error_frame, textvariable=self.email_error_var, fg='red', font='arial 7')
+        self.email_error = ttk.Label(self.email_error_frame, textvariable=self.email_error_var,
+                                     style='error_label.TLabel')
 
         # Date of birth (MIDDLE FRAME)
-        self.dob_frame = Frame(self.main_window)
+        self.dob_frame = ttk.Frame(self.main_window)
         self.dob_frame.pack(pady=10)
 
-        self.dob = Label(self.dob_frame, text='Date of birth\t')
-        self.dob.pack(side=LEFT)
-        self.dob_entry = DateEntry(self.dob_frame, date_pattern='dd/MM/yyyy', width=17, bg="darkblue",
-                                   fg="white", year=2000)
-        self.dob_entry.pack(expand=True, side=LEFT)
+        #self.dob = Label(self.dob_frame, text='Date of birth\t')
+        self.dob_entry = DateEntry(self.dob_frame, date_pattern='dd/MM/yyyy', width=17, bg="darkblue")
+        self.dob_entry.pack(expand=True)
 
-        self.dob_error_frame = Frame(self.main_window, height=1)
+        self.dob_error_frame = ttk.Frame(self.main_window, height=1)
         self.dob_error_frame.pack()
         self.dob_error_var = StringVar()
-        self.dob_error = Label(self.dob_error_frame, textvariable=self.dob_error_var, fg='red', font='arial 7')
+        self.dob_error = ttk.Label(self.dob_error_frame, textvariable=self.dob_error_var,
+                                   style='error_label.TLabel')
 
         # Register all details (MIDDLE FRAME)
-        self.save_data_frame = Frame(self.main_window)
+        self.save_data_frame = ttk.Frame(self.main_window)
         self.save_data_frame.pack(pady=10)
 
         self.save_button = ttk.Button(self.save_data_frame, text='Save', command=self.store_data)
         self.save_button.pack()
 
         # ----------------------App layout/lower frame----------------------
-        self.lower_frame = Frame(self, height=50)
+        self.lower_frame = ttk.Frame(self, height=50)
         self.lower_frame.pack()
 
     def return_to_start(self):

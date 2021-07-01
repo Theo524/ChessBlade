@@ -10,6 +10,10 @@ class LoginApp(Toplevel):
         self._frame = None
         self.parent = parent
 
+        # Attributes
+        self.resizable(0, 0)
+        self.title('Login')
+
         # database and temporal files paths
         self.database = self.parent.database
         self.temp_files = self.parent.temp_files

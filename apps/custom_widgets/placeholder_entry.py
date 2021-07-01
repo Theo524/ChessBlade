@@ -14,12 +14,12 @@ class PlaceholderEntry(ttk.Entry):
         if self["style"] == "Placeholder.TEntry":
             self.delete("0", "end")
             self["style"] = "TEntry"
-            if self.placeholder == 'Password':
+            if self.placeholder in ['Password', 'Confirm password']:
                 self.configure(show='*')
 
     def _add_placeholder(self, e):
          if not self.get():
             self.insert("0", self.placeholder)
             self["style"] = "Placeholder.TEntry"
-            if self.placeholder == 'Password':
+            if self.placeholder in ['Password', 'Confirm password']:
                 self.configure(show='')
