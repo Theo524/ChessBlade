@@ -16,6 +16,7 @@ class StartWindow(Frame):
 
         # themes
         self.master.style.configure('start_page.TButton', font=('Arial', 15))
+        self.master.style.configure("Placeholder.TEntry", foreground='grey')
 
         # Title
         ttk.Label(self.scene, text="CHESS GAME", font=('Arial', 30)).pack(side="top", padx=30, pady=15)
