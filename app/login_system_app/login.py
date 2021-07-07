@@ -60,7 +60,7 @@ class LoginSystem(ttk.Frame):
         self.upper_window = ttk.Frame(self.scene, height=50, width=300)
         self.upper_window.pack()
         # button to return to start page
-        ttk.Button(self.upper_window, text='🢀', cursor='tcross',
+        ttk.Button(self.upper_window, text=<--', cursor='tcross',
                command=self.return_to_start).place(x=0, y=0)
 
         # ----------------------app layout/middle frame(main data)----------------------
