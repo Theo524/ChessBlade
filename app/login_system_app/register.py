@@ -41,7 +41,7 @@ class RegisterSystem(ttk.Frame):
         self.upper_window = ttk.Frame(self, height=50, width=350)
         self.upper_window.pack()
         # Button to return to start page
-        ttk.Button(self.upper_window, text='🢀',
+        ttk.Button(self.upper_window, text='<--',
                command=self.return_to_start).place(x=0, y=0)
 
         # ----------------------App layout/middle frame----------------------
