@@ -206,7 +206,7 @@ class ForgotPassword(Frame):
         # ---------------------App layout/upper frame---------------------
         self.upper_window = Frame(self, height=50, width=350)
         self.upper_window.pack()
-        Button(self.upper_window, text='🢀', relief=GROOVE, cursor='tcross',
+        Button(self.upper_window, text='<--', relief=GROOVE, cursor='tcross',
                command=lambda: master.switch_frame(LoginSystem)).place(x=0, y=0)
 
         # ---------------------App layout/middle frame---------------------
@@ -418,7 +418,7 @@ class VerifyPasscode(Frame):
         # ---------------------App layout/upper frame---------------------
         self.upper_window = Frame(self, height=50, width=350)
         self.upper_window.pack()
-        Button(self.upper_window, text='🢀', relief=GROOVE, cursor='tcross',
+        Button(self.upper_window, text='<--', relief=GROOVE, cursor='tcross',
                command=self.return_to_login).place(x=0, y=0)
 
         # ---------------------App layout/middle frame---------------------
@@ -479,7 +479,7 @@ class NewPassword(Frame):
         # ---------------------App layout/upper frame---------------------
         self.upper_window = Frame(self, height=50, width=350)
         self.upper_window.pack()
-        Button(self.upper_window, text='🢀', relief=GROOVE, cursor='tcross',
+        Button(self.upper_window, text='<--', relief=GROOVE, cursor='tcross',
                command=self.start).place(x=0, y=0)
 
         # ---------------------App layout/middle frame---------------------
