@@ -1,12 +1,8 @@
-from apps.login_system_app.start.start_app import StartApp
-from apps.chess_app.chess_app import ChessApp
+from app.login_system_app.start import StartApp
+from app.chess_app.chess_app import ChessApp
 
 import os
 import sqlite3
-from tkinter import ttk
-from ttkthemes import ThemedStyle
-from random import choice
-
 
 # Working directory for the current script
 main_path = os.getcwd()
@@ -14,9 +10,9 @@ main_path = os.getcwd()
 # set files to be used
 # login system paths
 database = main_path + '//database//users.db'
-temp_files = main_path + '//apps//login_system_app//temp'
+temp_files = main_path + '//app//login_system_app//temp'
 # chess paths
-game_settings_path = main_path + '\\apps\\chess_app\\all_settings'
+game_settings_path = main_path + '\\app\\chess_app\\all_settings'
 
 
 def loadSettings(game_mode):
@@ -85,18 +81,18 @@ if __name__ == '__main__':
     start.destroy()
 
     # Retrieve the game mode the game should be in (guest or user, set by the startapp)
-    with open(main_path + '\\apps\\login_system_app\\temp\\mode.txt') as f:
+    with open(main_path + '\\app\\login_system_app\\temp\\mode.txt') as f:
         mode = f.read()
 
     # load settings into files
     loadSettings(mode)
 
     # Set start_new_game to true
-    with open(main_path + '\\apps\\chess_app\\all_settings\\data.txt', 'w') as f:
+    with open(main_path + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
         f.write('new_game:yes')
 
     # read the data from that file
-    with open(main_path + '\\apps\\chess_app\\all_settings\\data.txt', 'r') as f:
+    with open(main_path + '\\app\\chess_app\\all_settings\\data.txt', 'r') as f:
         response = f.read().split(':')[1]
 
     # while the response remains as 'yes'
@@ -106,5 +102,5 @@ if __name__ == '__main__':
 
         # Get new response once the chess app has been closed
         # Response on whether to start a new app
-        with open(main_path + '\\apps\\chess_app\\all_settings\\data.txt', 'r') as f:
+        with open(main_path + '\\app\\chess_app\\all_settings\\data.txt', 'r') as f:
             response = f.read().split(':')[1]
