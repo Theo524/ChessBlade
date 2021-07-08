@@ -9,13 +9,13 @@ main_path = os.getcwd()
 
 # set files to be used
 # login system paths
-database = main_path + '//database//users.db'
-temp_files = main_path + '//app//login_system_app//temp'
+database = main_path + '\\database\\users.db'
+temp_files = main_path + '\\app\\login_system_app\\temp'
 # chess paths
 game_settings_path = main_path + '\\app\\chess_app\\all_settings'
 
 
-def loadSettings(game_mode):
+def load_settings(game_mode):
     """Load settings from db to files, depending on gamemode"""
 
     if game_mode == 'guest':
@@ -85,7 +85,7 @@ if __name__ == '__main__':
         mode = f.read()
 
     # load settings into files
-    loadSettings(mode)
+    load_settings(mode)
 
     # Set start_new_game to true
     with open(main_path + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:

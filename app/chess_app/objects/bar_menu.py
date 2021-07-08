@@ -40,14 +40,14 @@ class BarMenu(Menu):
     def new_game(self):
         # os.path.normpath(os.getcwd() + os.sep + os.pardir)
         # Set new game file to 'yes' and destroy window, so a new ChessAPp is run
-        with open(os.getcwd() + '//apps//chess_app//all_settings//data.txt', 'w') as f:
+        with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
             f.write('new_game:yes')
 
         self.master.destroy()
 
     def exit(self):
         # Set new game file to 'no' and destroy window so the looping chess app stops
-        with open(os.getcwd() + '//apps//chess_app//all_settings//data.txt', 'w') as f:
+        with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
             f.write('new_game:no')
 
         self.master.destroy()
