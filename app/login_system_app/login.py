@@ -48,6 +48,10 @@ class LoginSystem(ttk.Frame):
         self.master.master.style.configure('login_page.TButton', font=('Calibri', 13,))
         self.master.master.style.configure('login_page.TCheckbutton', font=('Calibri', 10))
 
+        # window attribuutes
+        self.master.title('Login')
+
+
         # container
         self.scene = ttk.Frame(self)
         self.scene.pack()
@@ -60,7 +64,7 @@ class LoginSystem(ttk.Frame):
         self.upper_window = ttk.Frame(self.scene, height=50, width=300)
         self.upper_window.pack()
         # button to return to start page
-        ttk.Button(self.upper_window, text='<--', cursor='tcross',
+        ttk.Button(self.upper_window, text='<--', cursor="hand2",
                command=self.return_to_start).place(x=0, y=0)
 
         # ----------------------app layout/middle frame(main data)----------------------
@@ -98,23 +102,24 @@ class LoginSystem(ttk.Frame):
         self.show_password_var = IntVar()
         self.show_password = ttk.Checkbutton(self.extra, text='Show password', style='login_page.TCheckbutton',
                                          variable=self.show_password_var, onvalue=1, offvalue=0,
-                                         command=self.show)
+                                         command=self.show, cursor="hand2")
         self.show_password.pack(side=LEFT, padx=30)
         # Forgot password
-        self.forgot_password = Button(self.extra, text='Forgot your password?', relief=FLAT, bg='#dadada', fg='blue',
-                                      font=('Calibri', 9, 'italic'),
-                                      command=lambda: master.switch_frame(ForgotPassword))
+        self.forgot_password = Label(self.extra, text='Forgot your password?', fg='blue', bg='#dadada',
+                                      font=('Calibri', 9, 'italic'), cursor="hand2")
+
+        self.forgot_password.bind("<Button-1>", lambda e: master.switch_frame(ForgotPassword))
         self.forgot_password.pack(side=LEFT)
 
         # Login button (MIDDLE FRAME)
         self.login_frame = ttk.Frame(self.main_window)
         self.login_frame.pack(pady=20)
         self.login_button = ttk.Button(self.login_frame, text='Login', command=self.verify_credentials,
-                                       style='login_page.TButton')
+                                       style='login_page.TButton', cursor="hand2")
         self.login_button.pack(ipady=3, ipadx=15)
 
         # ----------------------app layout/lower frame----------------------
-        self.lower_window = Frame(self.scene, height=20)
+        self.lower_window = ttk.Frame(self.scene, height=20)
         self.lower_window.pack()
 
     def return_to_start(self):
@@ -193,75 +198,79 @@ class LoginSystem(ttk.Frame):
                 return False
 
 
-class ForgotPassword(Frame):
+class ForgotPassword(ttk.Frame):
     """Enter recovery email and username for forgotten password
     send passcode to email"""
 
     def __init__(self, master):
-        Frame.__init__(self, master)
+        ttk.Frame.__init__(self, master)
 
         self.database = self.master.database
         self.temp_files = self.master.temp_files
 
         # ---------------------App layout/upper frame---------------------
-        self.upper_window = Frame(self, height=50, width=350)
+        self.upper_window = ttk.Frame(self, height=50, width=450)
         self.upper_window.pack()
-        Button(self.upper_window, text='<--', relief=GROOVE, cursor='tcross',
-               command=lambda: master.switch_frame(LoginSystem)).place(x=0, y=0)
+        ttk.Button(self.upper_window, text='<--',
+               command=lambda: master.switch_frame(LoginSystem), cursor='hand2').place(x=0, y=0)
 
         # ---------------------App layout/middle frame---------------------
-        self.main_window = Frame(self)
+        self.main_window = ttk.Frame(self)
         self.main_window.pack()
 
-        # Title (MIDDLE FRAME)
-        self.title_frame = Frame(self.main_window)
-        self.title_frame.pack()
+        # change title
+        self.master.title('Recover password')
 
-        Label(self.title_frame, text='Recover password', font='arial 20').pack(expand=True)
-        Label(self.title_frame,
-              text='To recover your password,\nEnter your username and '
-                   'the recovery email address you registered with,\n'
-                   'A passcode will be sent to this account',
-              font='arial 10', fg='grey').pack(expand=True)
+        # Title (MIDDLE FRAME)
+        self.title_frame = ttk.Frame(self.main_window)
+        self.title_frame.pack()
+        ttk.Label(self.title_frame, text='Recover password', font='arial 20').pack(expand=True)
+
+        # Info
+        self.info_frame = ttk.Frame(self.main_window)
+        self.info_frame.pack(pady=10)
+        ttk.Label(self.info_frame, text='To recover your password,', font='arial 10').pack(expand=True)
+        ttk.Label(self.info_frame, text='Enter your username and the email address', font='arial 10').pack(expand=True)
+        ttk.Label(self.info_frame, text='You registered with.',  font='arial 10').pack(expand=True)
+        ttk.Label(self.info_frame, text='A passcode will be sent to this account', font='arial 10').pack(expand=True)
 
         # Recover password (MIDDLE FRAME)
         # All data is placed on this frame
-        self.recover_password_frame = Frame(self.main_window)
+        self.recover_password_frame = ttk.Frame(self.main_window)
         self.recover_password_frame.pack(pady=10)
+
         # Username
-        self.user_frame = Frame(self.recover_password_frame)
+        self.user_frame = ttk.Frame(self.recover_password_frame)
         self.user_frame.pack(pady=3)
 
-        Label(self.user_frame, text='Username\t ').pack(expand=True, side=LEFT)
         self.user_recover_password_var = StringVar()
-        self.user_recover_password_entry = ttk.Entry(self.user_frame, textvariable=self.user_recover_password_var)
+        self.user_recover_password_entry = PlaceholderEntry(self.user_frame, 'Username', textvariable=self.user_recover_password_var)
         self.user_recover_password_entry.pack(expand=True)
+
         # Email
-        self.email_frame = Frame(self.recover_password_frame)
+        self.email_frame = ttk.Frame(self.recover_password_frame)
         self.email_frame.pack()
 
-        Label(self.email_frame, text='Email address\t ').pack(expand=True, side=LEFT)
         self.email_recover_password_var = StringVar()
-        self.email_recover_password_var.set('@gmail.com')
-        self.email_recover_password_entry = Entry(self.email_frame, fg='grey',
+        self.email_recover_password_entry = PlaceholderEntry(self.email_frame, 'Email address',
                                                   textvariable=self.email_recover_password_var)
         self.email_recover_password_entry.pack(expand=True)
 
         # error display frame
-        self.recover_password_error_frame = Frame(self.main_window)
+        self.recover_password_error_frame = ttk.Frame(self.main_window)
         self.recover_password_error_frame.pack()
         self.recover_password_error_var = StringVar()
-        self.recover_password_error = Label(self.recover_password_error_frame,
-                                            textvariable=self.recover_password_error_var, fg='red')
+        self.recover_password_error = ttk.Label(self.recover_password_error_frame,
+                                            textvariable=self.recover_password_error_var, style='error_label.TLabel')
 
         # Verification button (MIDDLE FRAME)
-        Button(self.main_window, text='Continue', command=self.get_email).pack()
+        ttk.Button(self.main_window, text='Continue', cursor='hand2', command=self.get_email).pack()
 
         # ---------------------App layout/lower frame---------------------
-        self.lower_frame = Frame(self, height=50)
+        self.lower_frame = ttk.Frame(self, height=50)
         self.lower_frame.pack()
 
-    def check_email(self):
+    def check_email_in_db(self):
         """Check whether the email entered is in database"""
 
         conn = sqlite3.connect(self.database)
@@ -287,7 +296,7 @@ class ForgotPassword(Frame):
         # if the data is in the database, we send the email verification
         if in_database:
             # Generate 4 digit random number
-            code = [str(random.randint(0, 11)) for _ in range(4)]
+            code = [str(random.randint(0, 10)) for _ in range(4)]
             passcode = ''.join(code)
 
             # Send passcode to user email
@@ -341,7 +350,7 @@ class ForgotPassword(Frame):
                 # Send passcode to user email
                 receiver_address = email
                 subject = "Passcode verification"
-                body = f"Hello {user}!\nHere is yor passcode\n{passcode}\nWith regards,\n\nChessMaster"
+                body = f"Hello {user}!\nHere is your passcode\n{passcode}\nWith regards,\n\nChessMaster"
 
                 # Endpoint for the SMTP Gmail server
                 smtp_server = smtplib.SMTP('smtp.gmail.com', 587)
@@ -393,7 +402,7 @@ class ForgotPassword(Frame):
         """Retrieve email input from user"""
 
         # Check if it valid
-        valid = self.check_email()
+        valid = self.check_email_in_db()
 
         # If it is valid, we move to the next window
         if valid:
@@ -402,48 +411,51 @@ class ForgotPassword(Frame):
         else:
             # if the email is invalid we add a warning message
             self.recover_password_error_frame.pack()
-            self.recover_password_error.pack(pady=10)
-            messagebox.showerror('Error', 'THe data you entered is invalid')
-            self.recover_password_error_var.set("Invalid data (Make sre you have registered)")
+            self.recover_password_error.pack(pady=(0, 10))
+            self.recover_password_error_var.set("Invalid data (Make sure you have created an account previously)")
+            messagebox.showerror('Error', 'The data you entered is invalid')
 
 
-class VerifyPasscode(Frame):
+class VerifyPasscode(ttk.Frame):
     """Receive sent passcode and verify"""
 
     def __init__(self, master):
-        Frame.__init__(self, master)
+        ttk.Frame.__init__(self, master)
 
         self.temp_files = self.master.temp_files
 
+        # window attributes
+        self.master.title('Recover password')
+
         # ---------------------App layout/upper frame---------------------
-        self.upper_window = Frame(self, height=50, width=350)
+        self.upper_window = ttk.Frame(self, height=50, width=350)
         self.upper_window.pack()
-        Button(self.upper_window, text='<--', relief=GROOVE, cursor='tcross',
+        ttk.Button(self.upper_window, text='<--', cursor='hand2',
                command=self.return_to_login).place(x=0, y=0)
 
         # ---------------------App layout/middle frame---------------------
-        self.main_window = Frame(self)
+        self.main_window = ttk.Frame(self)
         self.main_window.pack()
 
         # Title (MIDDLE FRAME)
         self.title_frame = Frame(self.main_window)
         self.title_frame.pack()
 
-        Label(self.title_frame, text='Code has been sent', font='arial 20').pack(expand=True)
+        ttk.Label(self.title_frame, text='Passcode sent', font='arial 20').pack(expand=True)
 
         # Passcode (MIDDLE FRAME)
-        Label(self.main_window, text='Check your recovery email address, a passcode has been sent.\n'
-                                     'Enter the passcode below',
-              font='arial 9').pack(pady=10)
+        ttk.Label(self.main_window, text='Check your email,',font='arial 9').pack(pady=(10, 0))
+        ttk.Label(self.main_window, text='A passcode has been sent.',font='arial 9').pack()
+        ttk.Label(self.main_window, text='Enter the passcode below', font='arial 9').pack()
 
         self.passcode_var = StringVar()
         self.passcode_entry = ttk.Entry(self.main_window, textvariable=self.passcode_var)
         self.passcode_entry.pack(expand=True, pady=10)
-        Button(self.main_window, text='continue', command=self.check_passcode).pack(expand=True)
+        ttk.Button(self.main_window, text='Continue', cursor='hand2', command=self.check_passcode).pack(expand=True)
 
         # ----------------------app layout/lower frame----------------------
-        self.lower_window = Frame(self, height=20)
-        self.lower_window.pack()
+        self.lower_window = ttk.Frame(self)
+        self.lower_window.pack(ipady=10)
 
     def return_to_login(self):
         """Return to Login page"""

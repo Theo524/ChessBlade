@@ -420,4 +420,3 @@ class RegisterSystem(ttk.Frame):
         self.email_error_frame.pack_forget()
         self.confirmed_password_error_frame.pack_forget()
         self.email_error_frame.pack_forget()
-
