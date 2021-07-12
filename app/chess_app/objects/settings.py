@@ -5,7 +5,7 @@ import sqlite3
 
 
 class Settings(Toplevel):
-    def __init__(self):
+    def __init__(self, mode):
         Toplevel.__init__(self)
 
         # attributes
@@ -72,7 +72,7 @@ class Settings(Toplevel):
             requirements_not_met += 1
 
         # get game mode
-        with open(os.getcwd() + '\\apps\\login_system_app\\temp\\mode.txt', 'r') as f:
+        with open(os.getcwd() + '\\app\\login_system_app\\temp\\mode.txt', 'r') as f:
             game_mode = f.read()
 
         # Confirmation message
@@ -83,7 +83,7 @@ class Settings(Toplevel):
             if requirements_not_met == 0:
                 # if user is in guest mode, apply new settings to system
                 if game_mode == 'guest':
-                    with open(os.getcwd() + '\\apps\\chess_app\\all_settings\\guest\\default_game_settings.csv', 'w') as f:
+                    with open(os.getcwd() + '\\app\\chess_app\\all_settings\\guest\\default_game_settings.csv', 'w') as f:
                         f.write('Game_difficulty, time, game_mode, player_piece_color, opponent_piece_color, border_color,'
                                 'board_color\n')
                         f.write(f'{self.difficulty}-{self.time}-{self.game_type}-{self.player_color}-{self.opponent_color}'
@@ -94,7 +94,7 @@ class Settings(Toplevel):
                     # apply changes to db
                     self.apply_settings_user_db()
                     # save the new settings in a file
-                    with open(os.getcwd() + '\\apps\\chess_app\\all_settings\\user\\user_game_settings.csv', 'w') as f:
+                    with open(os.getcwd() + '\\app\\chess_app\\all_settings\\user\\user_game_settings.csv', 'w') as f:
                         f.write('Game_difficulty-time-game_mode-player_piece_color-opponent_piece_color-border_color-'
                                 'board_color\n')
                         f.write(f'{self.difficulty}-{self.time}-{self.game_type}-{self.player_color}-{self.opponent_color}'
@@ -114,7 +114,7 @@ class Settings(Toplevel):
         """Apply settings to the user database"""
 
         # get the username
-        with open(os.getcwd() + '\\apps\\login_system_app\\temp\\current_user.txt', 'r') as f:
+        with open(os.getcwd() + '\\app\\login_system_app\\temp\\current_user.txt', 'r') as f:
             username = f.read()
 
         # Open the sql database and retrieve all the data this user has

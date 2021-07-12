@@ -67,7 +67,7 @@ class Board(Frame):
                     board_color = row[6]
 
         # border
-        self.configure(highlightthickness=2, highlightbackground=border_color)
+        self.configure(highlightthickness=5, highlightbackground=border_color)
 
         # colors for board
         self.board_colors = [
@@ -92,6 +92,12 @@ class Board(Frame):
         # Dictionaries storing piece images file names
         self.black_pieces, self.white_pieces = self.get_piece_img()
 
+        # deleted_pieces tracking pos
+        self.b_x = 0
+        self.b_y = 0
+        self.w_x = 0
+        self.w_y = 0
+
         # add notation if needed
         if self.widgets_frame:
             self.add_notation_tab()
@@ -101,19 +107,28 @@ class Board(Frame):
 
         # ---------------NOTEBOOK--------------
         # notebook for chess notation
-        self.notebook = ttk.Notebook(self.widgets_frame, height=400, width=500)
+        self.notebook = ttk.Notebook(self.widgets_frame, height=600, width=600)
         self.notebook.pack(pady=(7, 0), padx=5)
+
         # first tab
-        self.notation_tab = Text(self.notebook, width=40, height=10)
+        self.notation_tab = Text(self.notebook)
         self.notation_tab.pack()
 
-        # second tab
-        self.deleted_pieces_tab = Text(self.notebook, width=40, height=10)
+        # third tab
+        self.deleted_pieces_tab = Text(self.notebook)
         self.deleted_pieces_tab.pack()
 
-        # add both tabs to chess notebook
+        # second tab
+        self.deleted_tab_visual = Frame(self.notebook, bg=self.board_colors[1])
+        self.deleted_tab_visual.configure(highlightthickness=5, highlightbackground='black')
+
+        self.deleted_tab_visual.pack()
+
+        # add  tabs to chess notebook
         self.notebook.add(self.notation_tab, text='Notation')
-        self.notebook.add(self.deleted_pieces_tab, text='Deleted')
+        self.notebook.add(self.deleted_tab_visual, text='Deleted pieces')
+        self.notebook.add(self.deleted_pieces_tab, text='Deleted pieces (text)')
+
 
     def make_board(self):
         """Make the board dict"""
@@ -455,6 +470,21 @@ class Board(Frame):
             # --------NOTATION----------
             # This time we add an 'x' in the middle to show that a piece is being destroyed
             self.chess_notation.append(f'{old_piece_name[0].upper()}x{position}')
+            # also add piece image
+            # w_x and w_y represent white x and white y
+            if self.board[position]['piece']['piece_color'] == 'black':
+                img = PhotoImage(file=self.black_pieces[f'{piece_name}'])
+            else:
+                img = PhotoImage(file=self.white_pieces[f'{piece_name}'])
+            l = Label(self.deleted_tab_visual, image=img)
+            l.configure(borderwidth=5, bg=self.board_colors[1])
+            l.grid(column=self.b_x, row=self.b_y)
+            l.image = img
+            l = None
+            self.b_x += 1
+            if self.b_x == 8:
+                self.b_x = 0
+                self.b_y += 1
 
             # add the move to chess notation
             if self.moves % 2 == 0:
@@ -1054,6 +1084,7 @@ class Board(Frame):
             # all
             return all_possible_prawn_moves
 
+    @staticmethod
     def get_piece_img(self):
         """Easy way to access file paths for pieces"""
 

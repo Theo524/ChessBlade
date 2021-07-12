@@ -1,6 +1,4 @@
 from tkinter import *
-
-from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 from app.login_system_app.register import RegisterSystem
