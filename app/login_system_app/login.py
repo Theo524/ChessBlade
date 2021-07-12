@@ -3,6 +3,7 @@ from tkinter import *
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
+from app.login_system_app.register import RegisterSystem
 from app.resources.custom_widgets.placeholder_entry import PlaceholderEntry
 import hashlib
 import smtplib
@@ -479,54 +480,57 @@ class VerifyPasscode(ttk.Frame):
             messagebox.showerror('Error', 'Incorrect passcode')
 
 
-class NewPassword(Frame):
-    """Create new passwword"""
+class NewPassword(ttk.Frame):
+    """Create new password"""
+
     def __init__(self, master):
-        Frame.__init__(self, master)
+        ttk.Frame.__init__(self, master)
 
         # files
         self.database = self.master.database
         self.temp_files = self.master.temp_files
 
         # ---------------------App layout/upper frame---------------------
-        self.upper_window = Frame(self, height=50, width=350)
+        self.upper_window = ttk.Frame(self, height=50, width=350)
         self.upper_window.pack()
-        Button(self.upper_window, text='<--', relief=GROOVE, cursor='tcross',
-               command=self.start).place(x=0, y=0)
+        ttk.Button(self.upper_window, text='<--', cursor='hand2',
+                   command=self.start).place(x=0, y=0)
 
         # ---------------------App layout/middle frame---------------------
-        self.main_window = Frame(self)
+        self.main_window = ttk.Frame(self)
         self.main_window.pack()
 
         # Title (MIDDLE FRAME)
-        self.title_frame = Frame(self.main_window)
+        self.title_frame = ttk.Frame(self.main_window)
         self.title_frame.pack()
 
-        Label(self.title_frame, text='Success!', font='arial 20').pack(expand=True)
+        ttk.Label(self.title_frame, text='Success!', font='arial 20').pack(expand=True)
 
         # Passcode (MIDDLE FRAME)
-        Label(self.main_window, text='Enter your new password here.',
+        ttk.Label(self.main_window, text='Enter your new password here.',
               font='arial 7 bold italic').pack(pady=10)
 
         self.new_pass_var = StringVar()
-        self.new_pass_entry = ttk.Entry(self.main_window, textvariable=self.new_pass_var, show='*')
+        self.new_pass_entry = PlaceholderEntry(self.main_window, 'New password', textvariable=self.new_pass_var, show='')
         self.new_pass_entry.pack(expand=True, pady=10)
 
-        self.show_password = Checkbutton(self.main_window, text='Show Password', font='arial 7 bold',
-                                         variable=self.new_pass_var, command=self.show)
+        self.show_pass_var = IntVar()
+        self.show_password = ttk.Checkbutton(self.main_window, text='Show Password',
+                                             variable=self.show_pass_var, command=self.show, onvalue=1, offvalue=0,
+                                             cursor='hand2')
         self.show_password.pack(side=LEFT, padx=30)
 
-        Button(self.main_window, text='continue', command=self.set_new_pass).pack(expand=True)
+        ttk.Button(self.main_window, text='continue', cursor='hand2', command=self.set_new_pass).pack(expand=True)
 
         # ----------------------app layout/lower frame----------------------
-        self.lower_window = Frame(self, height=20)
+        self.lower_window = ttk.Frame(self, height=20)
         self.lower_window.pack()
 
     def show(self):
         """Show or hide password entry"""
 
         # if the checkbutton is activated, reveal password
-        if self.new_pass_var.get() == 1:
+        if self.show_pass_var.get() == 1:
             self.new_pass_entry.config(show='')
 
         else:
@@ -535,35 +539,47 @@ class NewPassword(Frame):
     def set_new_pass(self):
         """set new password"""
 
-        new_pass = self.hash_pass(self.new_pass_var.get())
+        password = self.new_pass_var.get()
 
-        # get the email and username
-        email_file = self.temp_files + '\\password_recovery\\email.txt'
-        with open(email_file, 'r') as f:
-            email = f.read()
 
-        user_file = self.temp_files + '\\password_recovery\\username.txt'
-        with open(user_file, 'r') as f:
-            username = f.read()
+        valid = RegisterSystem.check_pass(password)
 
-        password_file = self.temp_files + '\\password_recovery\\password.txt'
-        with open(password_file, 'r') as f:
-            old_pass = f.read()
+        if valid:
+            # convert password
+            new_pass = self.hash_pass(password)
 
-        conn = sqlite3.connect(self.database)
-        c = conn.cursor()
+            # get the email and username
+            email_file = self.temp_files + '\\password_recovery\\email.txt'
+            with open(email_file, 'r') as f:
+                email = f.read()
 
-        # Replace password in db
-        with conn:
-            c.execute("SELECT * FROM users WHERE username=:username AND password=:password AND email=:email",
-                      {'username': username, 'password': old_pass, 'email': email})
+            user_file = self.temp_files + '\\password_recovery\\username.txt'
+            with open(user_file, 'r') as f:
+                username = f.read()
 
-            data = c.fetchall()
-            c.execute("""UPDATE users SET password=:password WHERE username=:username AND email=:email""",
-                      {'username': username, 'password': new_pass, 'email': email})
+            password_file = self.temp_files + '\\password_recovery\\password.txt'
+            with open(password_file, 'r') as f:
+                old_pass = f.read()
 
-        # Return to login
-        self.master.switch_frame(LoginSystem)
+            conn = sqlite3.connect(self.database)
+            c = conn.cursor()
+
+            # Replace password in db
+            with conn:
+                c.execute("SELECT * FROM users WHERE username=:username AND password=:password AND email=:email",
+                          {'username': username, 'password': old_pass, 'email': email})
+
+                data = c.fetchall()
+                c.execute("""UPDATE users SET password=:password WHERE username=:username AND email=:email""",
+                          {'username': username, 'password': new_pass, 'email': email})
+
+            messagebox.showinfo('Success', 'Your new password has been set')
+            # Return to login
+            self.master.switch_frame(LoginSystem)
+
+        else:
+            messagebox.showerror('Error', 'The password should contain 2 of each:\n- Upper case leters'
+                                 '\n- Lower case letters\n- Numbers\n- Symbols')
 
     @staticmethod
     def hash_pass(password):
