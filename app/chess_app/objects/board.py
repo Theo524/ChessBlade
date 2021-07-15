@@ -7,25 +7,25 @@ import csv
 
 
 class Board(Frame):
-    # Game attributes
-    player_one_turn = True
-    player_two_turn = False
-    AI_turn = False
-    moves = 1
-
-    # Trackers
-    chess_notation = []
-    deleted_pieces = []
-    tracker = []
-    # ai_board = []
-
-    # data
-    board = {}
-    coordinates = []
 
     def __init__(self, master, **kwargs):
         Frame.__init__(self, master)
 
+        # Game attributes
+        self.player_one_turn = True
+        self.player_two_turn = False
+        self.AI_turn = False
+        self.moves = 1
+
+        # Trackers
+        self.chess_notation = []
+        self.deleted_pieces = []
+        self.tracker = []
+        # ai_board = []
+
+        # data
+        self.board = {}
+        self.coordinates = []
         self.widgets_frame = kwargs['widgets_frame']
 
         # game settings variables (retrieve settings from files)
@@ -42,13 +42,13 @@ class Board(Frame):
                 for row in csv_reader:
                     print(row)
                     # retrieve settings in file
-                    difficulty = row[0]
-                    time = row[1]
-                    game_type = row[2]
-                    player_piece_color = row[3]
-                    opponent_piece_color = row[4]
-                    border_color = row[5]
-                    board_color = row[6]
+                    self.difficulty = row[0]
+                    self.time = row[1]
+                    self.game_type = row[2]
+                    self.player_piece_color = row[3]
+                    self.opponent_piece_color = row[4]
+                    self.border_color = row[5]
+                    self.board_color = row[6]
 
         elif game_mode == 'user':
             # fetch settings for that specific user
@@ -58,21 +58,21 @@ class Board(Frame):
 
                 for row in csv_reader:
                     # retrieve these personalized settings from user file
-                    difficulty = row[0]
-                    time = row[1]
-                    game_type = row[2]
-                    player_piece_color = row[3]
-                    opponent_piece_color = row[4]
-                    border_color = row[5]
-                    board_color = row[6]
+                    self.difficulty = row[0]
+                    self.time = row[1]
+                    self.game_type = row[2]
+                    self.player_piece_color = row[3]
+                    self.opponent_piece_color = row[4]
+                    self.border_color = row[5]
+                    self.board_color = row[6]
 
         # border
-        self.configure(highlightthickness=5, highlightbackground=border_color)
+        self.configure(highlightthickness=5, highlightbackground=self.border_color)
 
         # colors for board
         self.board_colors = [
-                           'white', board_color, 'white', board_color, 'white', board_color, 'white', board_color,
-                           board_color, 'white', board_color, 'white', board_color, 'white', board_color, 'white',
+                           'white', self.board_color, 'white', self.board_color, 'white', self.board_color, 'white', self.board_color,
+                           self.board_color, 'white', self.board_color, 'white', self.board_color, 'white', self.board_color, 'white',
                        ] * 4
 
         # file paths
@@ -83,7 +83,7 @@ class Board(Frame):
         self.letters = list(string.ascii_lowercase[:8])
         self.alphabet = list(string.ascii_letters)
 
-        # nums str
+        # nums list of str
         self.nums = [str(i) for i in range(10)]
 
         # Will store pieces coordinates in 1d array
@@ -128,7 +128,6 @@ class Board(Frame):
         self.notebook.add(self.notation_tab, text='Notation')
         self.notebook.add(self.deleted_tab_visual, text='Deleted pieces')
         self.notebook.add(self.deleted_pieces_tab, text='Deleted pieces (text)')
-
 
     def make_board(self):
         """Make the board dict"""
@@ -279,6 +278,8 @@ class Board(Frame):
                 # finally place the piece
                 self.place_piece(piece_dict[piece], color, position)
 
+
+
     def place_buttons(self):
         """Place the actual buttons on the screen"""
 
@@ -314,6 +315,9 @@ class Board(Frame):
         # HIGHLIGHTING MOVES
         # allowing turns (two player mode)
         # if self.game_type == 'two_player'
+        if self.moves % 2 == 0:
+            self.get_game_fen_string()
+
         if self.player_one_turn:
             if self.board[position]['piece']['piece_color'] == 'black':
                 # if the button piece is black
@@ -1084,7 +1088,6 @@ class Board(Frame):
             # all
             return all_possible_prawn_moves
 
-    @staticmethod
     def get_piece_img(self):
         """Easy way to access file paths for pieces"""
 
@@ -1105,6 +1108,117 @@ class Board(Frame):
         # We return both lists, now we can access any image
         # For example, black rook would be 'black_pieces['rook']', this returns its file path
         return black_pieces, white_pieces
+
+    def get_game_fen_string(self):
+        fen_list = []
+        count = 0
+
+        for position in self.pieces:
+            if count % 8 == 0:
+                fen_list.append('/')
+            # current_piece
+            piece = self.board[position]['piece']['piece_name']
+            color = self.board[position]['piece']['piece_color']
+            if piece is None:
+                fen_list.append('0')
+            else:
+                if color == 'black':
+                    if piece == 'knight':
+                        fen_list.append('N')
+                    else:
+                        fen_list.append(piece[0].upper())
+                elif color == 'white':
+                    if piece == 'knight':
+                        fen_list.append('n')
+                    else:
+                        fen_list.append(piece[0].lower())
+
+            count += 1
+
+        fen_list = ''.join(fen_list).split('/')
+
+
+        # make it to a 2d array
+        fen_final_array = []
+        for row in fen_list:
+            temp = []
+            for val in row:
+                temp.append(val)
+            fen_final_array.append(temp)
+
+        fen_string = []
+        for val in fen_final_array:
+            # formatted array
+            arr = self.group_zeros(val)
+            fen_string.append(arr)
+
+        final = []
+        temp = []
+        for val in fen_string:
+            new_row = ''.join(val)
+            final.append(new_row)
+
+        b = '/'.join(final)
+
+    def group_zeros(self, my_array):
+        """Replace zero'"""
+
+        # 2d array
+        comp = []
+
+        # list within the 2d array
+        empty_indexes = []
+
+        # index tracker
+        c = 0
+
+        # get all empty indexes in the list
+        # the indexes of empty positions in the list
+        for val in my_array:
+            if val == '0':
+                # if there is a '0' in the position, it rep[resents an empty position, so we store its index through c
+                empty_indexes.append(c)
+
+            if val in string.ascii_letters:
+                # if a letter was found, it means, we ended a sequence so we append the previous list
+                # and make a new one
+                comp.append(empty_indexes)
+                empty_indexes = []
+            c += 1
+
+        # clean empty lists '[]' for lists like this [[], [], [1, 2], [4]]
+        cleaned_indexes_of_values = list(filter(self.remove_nones, comp))
+
+        # groups lists like [[1, 2, 3], [5], [7, 8]] into number of items such as [3, 1, 2]
+        grouped_values = list(map(self.add_groups, cleaned_indexes_of_values))
+
+        # get only the first index of the listed indexes so from [[1, 2, 3], [6]]
+        # get only [1, 6]
+        indexes = [ind[0] for ind in cleaned_indexes_of_values]
+
+        # original array without empty spaces
+        array = [val for val in my_array if val != '0']
+
+        c = 0
+        # insert number of spaces into their respective indexes
+        for i in indexes:
+            array.insert(i, str(grouped_values[c]))
+            c += 1
+        return array
+
+    @staticmethod
+    def add_groups(value):
+        """Sum of grouped values"""
+        return len(value)
+
+    @staticmethod
+    def remove_nones(val):
+        """Remove None from array"""
+        if val is None:
+            return False
+
+        else:
+            return val
 
     @staticmethod
     def move_row(array, operation):
@@ -1229,3 +1343,4 @@ class Board(Frame):
         self.make_board()
         self.place_default_pieces_on_screen()
         self.place_buttons()
+        self.get_game_fen_string()
