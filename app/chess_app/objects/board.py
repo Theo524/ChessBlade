@@ -21,18 +21,64 @@ class Board(Frame):
         self.chess_notation = []
         self.deleted_pieces = []
         self.tracker = []
+
+
         # ai_board = []
 
-        # data
-        self.board = {}
-        self.coordinates = []
+        # data structures
+        self.board = {}  # game board around which game revolves
+        self.coordinates = []  # 2d array of all chess positions
+        self.pieces = []  # array of all chess positions
+
+        # required data
+        self.letters = list(string.ascii_lowercase[:8])  # chess letters (a-h)
+        self.alphabet = list(string.ascii_letters)  # alphabet
+        self.nums = [str(i) for i in range(10)]  # Numbers as str (0-9)
+
+        # frame containing chess notation tab
         self.widgets_frame = kwargs['widgets_frame']
 
-        # game settings variables (retrieve settings from files)
-        with open(os.getcwd() + '\\app\\login_system_app\\temp\\mode.txt', 'r') as f:
-            game_mode = f.read()
+        # game mode
+        mode = master.master.mode
 
-        if game_mode == 'guest':
+        # game_settings
+        self.difficulty = None
+        self.time = None
+        self.game_type = None
+        self.player_piece_color = None
+        self.opponent_piece_color = None
+        self.border_color = None
+        self.board_color = None
+        self.set_game_settings(mode)  # sets game settings
+
+        # colors for board
+        self.board_colors = [
+                           'white', self.board_color, 'white', self.board_color, 'white', self.board_color, 'white', self.board_color,
+                           self.board_color, 'white', self.board_color, 'white', self.board_color, 'white', self.board_color, 'white',
+                       ] * 4
+
+        # file paths
+        self.pieces_file_path = os.getcwd() + '\\app\\chess_app\\pieces'
+        self.settings_file_path = os.getcwd() + '\\app\\chess_app\\all_settings'
+
+        # Dictionaries storing piece images file names
+        self.black_pieces, self.white_pieces = self.get_piece_img()
+
+        # Frame attributes border
+        self.configure(highlightthickness=5, highlightbackground=self.border_color)
+
+        # deleted_pieces tracking pos
+        self.b_x = 0
+        self.b_y = 0
+        self.w_x = 0
+        self.w_y = 0
+
+        # add notation if needed
+        if self.widgets_frame:
+            self.add_notation_tab()
+
+    def set_game_settings(self, mode):
+        if mode == 'guest':
 
             # open default settings file
             with open(os.getcwd() + '\\app\\chess_app\\all_settings\\guest\\default_game_settings.csv', 'r') as f:
@@ -50,13 +96,14 @@ class Board(Frame):
                     self.border_color = row[5]
                     self.board_color = row[6]
 
-        elif game_mode == 'user':
+        elif mode == 'user':
             # fetch settings for that specific user
             with open(os.getcwd() + '\\app\\chess_app\\all_settings\\user\\user_game_settings.csv', 'r') as f:
                 csv_reader = csv.reader(f, delimiter='-')
                 next(csv_reader)
 
                 for row in csv_reader:
+                    print(row)
                     # retrieve these personalized settings from user file
                     self.difficulty = row[0]
                     self.time = row[1]
@@ -65,42 +112,6 @@ class Board(Frame):
                     self.opponent_piece_color = row[4]
                     self.border_color = row[5]
                     self.board_color = row[6]
-
-        # border
-        self.configure(highlightthickness=5, highlightbackground=self.border_color)
-
-        # colors for board
-        self.board_colors = [
-                           'white', self.board_color, 'white', self.board_color, 'white', self.board_color, 'white', self.board_color,
-                           self.board_color, 'white', self.board_color, 'white', self.board_color, 'white', self.board_color, 'white',
-                       ] * 4
-
-        # file paths
-        self.pieces_file_path = os.getcwd() + '\\app\\chess_app\\pieces'
-        self.settings_file_path = os.getcwd() + '\\app\\chess_app\\all_settings'
-
-        # list containing letters from a to h
-        self.letters = list(string.ascii_lowercase[:8])
-        self.alphabet = list(string.ascii_letters)
-
-        # nums list of str
-        self.nums = [str(i) for i in range(10)]
-
-        # Will store pieces coordinates in 1d array
-        self.pieces = []
-
-        # Dictionaries storing piece images file names
-        self.black_pieces, self.white_pieces = self.get_piece_img()
-
-        # deleted_pieces tracking pos
-        self.b_x = 0
-        self.b_y = 0
-        self.w_x = 0
-        self.w_y = 0
-
-        # add notation if needed
-        if self.widgets_frame:
-            self.add_notation_tab()
 
     def add_notation_tab(self):
         """implement side game visuals"""
@@ -277,8 +288,6 @@ class Board(Frame):
 
                 # finally place the piece
                 self.place_piece(piece_dict[piece], color, position)
-
-
 
     def place_buttons(self):
         """Place the actual buttons on the screen"""
@@ -1107,6 +1116,7 @@ class Board(Frame):
 
         # We return both lists, now we can access any image
         # For example, black rook would be 'black_pieces['rook']', this returns its file path
+
         return black_pieces, white_pieces
 
     def get_game_fen_string(self):
