@@ -21,8 +21,6 @@ class StartApp(Tk):
         # themes
         self.style = ThemedStyle(self)
         self.style.theme_use('scidsand')
-        # ('breeze', 'arc', 'adapta', 'radiance',
-        # 'yaru', 'scidgrey')
 
         # set paths for file handling
         self.database = os.getcwd() + '\\database\\users.db'
@@ -34,8 +32,6 @@ class StartApp(Tk):
         self.login.withdraw()
         self.reg = RegisterApp(parent=self)
         self.reg.withdraw()
-
-        self._frame = None
 
         # starting frame
         frame = StartWindow(self)

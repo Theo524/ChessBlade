@@ -11,6 +11,8 @@ import requests
 
 
 class LoginApp(Toplevel):
+    """Window container"""
+
     def __init__(self, parent):
         """Login Application container"""
 
@@ -80,7 +82,6 @@ class LoginSystem(ttk.Frame):
         self.username_frame = ttk.Frame(self.main_window)
         self.username_frame.pack(pady=20)
 
-        #ttk.Label(self.username_frame, text='Username', font='arial 11').pack(expand=True, side=LEFT)
         self.user_name_var = StringVar()
         self.username_entry = PlaceholderEntry(self.username_frame, 'Username',textvariable=self.user_name_var)
         self.username_entry.pack(expand=True, side=LEFT, padx=10, ipadx=10)
@@ -89,7 +90,6 @@ class LoginSystem(ttk.Frame):
         self.password_frame = ttk.Frame(self.main_window)
         self.password_frame.pack(pady=10)
 
-        #ttk.Label(self.password_frame, text='Password', font='arial 11').pack(expand=True, side=LEFT)
         self.password_var = StringVar()
         self.password_entry = PlaceholderEntry(self.password_frame, 'Password', textvariable=self.password_var, show="")
         self.password_entry.pack(expand=True, side=LEFT, padx=10, ipadx=10)
@@ -198,8 +198,7 @@ class LoginSystem(ttk.Frame):
 
 
 class ForgotPassword(ttk.Frame):
-    """Enter recovery email and username for forgotten password
-    send passcode to email"""
+    """Start for password recovery"""
 
     def __init__(self, master):
         ttk.Frame.__init__(self, master)

@@ -25,18 +25,23 @@ class Board(Frame):
 
         # ai_board = []
 
-        # data structures
-        self.board = {}  # game board around which game revolves
-        self.coordinates = []  # 2d array of all chess positions
-        self.pieces = []  # array of all chess positions
-
         # required data
         self.letters = list(string.ascii_lowercase[:8])  # chess letters (a-h)
         self.alphabet = list(string.ascii_letters)  # alphabet
         self.nums = [str(i) for i in range(10)]  # Numbers as str (0-9)
 
+        # data structures
+        self.board = {}  # game board around which game revolves
+        self.coordinates = []  # 2d array of all chess positions
+        self.pieces = []  # 1d array of all chess positions
+        self.add_chess_pieces_positions()
+
         # frame containing chess notation tab
-        self.widgets_frame = kwargs['widgets_frame']
+        if kwargs:
+            self.widgets_frame = kwargs['widgets_frame']
+        else:
+            self.widgets_frame = Frame(self.master)
+
 
         # game mode
         mode = master.master.mode
@@ -53,9 +58,9 @@ class Board(Frame):
 
         # colors for board
         self.board_colors = [
-                           'white', self.board_color, 'white', self.board_color, 'white', self.board_color, 'white', self.board_color,
-                           self.board_color, 'white', self.board_color, 'white', self.board_color, 'white', self.board_color, 'white',
-                       ] * 4
+                                'white', self.board_color, 'white', self.board_color, 'white', self.board_color, 'white', self.board_color,
+                                self.board_color, 'white', self.board_color, 'white', self.board_color, 'white', self.board_color, 'white',
+                            ] * 4
 
         # file paths
         self.pieces_file_path = os.getcwd() + '\\app\\chess_app\\pieces'
@@ -76,6 +81,25 @@ class Board(Frame):
         # add notation if needed
         if self.widgets_frame:
             self.add_notation_tab()
+
+    def add_chess_pieces_positions(self):
+        """Populate 1d and 2d array chess"""
+
+        # get coordinates, e.g. 'a1', 'b1', etc into a 2 dimensional array
+        for row in range(8):
+            temp = []
+            for letter in self.letters:
+                temp.append(f'{letter}{row + 1}')
+            self.coordinates.append(temp)
+
+        for row in self.coordinates:
+            print(row, ',')
+
+        # get coordinates, e.g. 'a1', 'b1', etc into a 1 dimensional array
+        one_d_array = []
+        for row in self.coordinates:
+            for piece in row:
+                self.pieces.append(piece)
 
     def set_game_settings(self, mode):
         if mode == 'guest':
@@ -143,13 +167,6 @@ class Board(Frame):
     def make_board(self):
         """Make the board dict"""
 
-        # get coordinates, e.g. 'a1', 'b1', etc into a 2 dimensional array
-        for row in range(8):
-            temp = []
-            for letter in self.letters:
-                temp.append(f'{letter}{row + 1}')
-            self.coordinates.append(temp)
-
         # Create a dictionary with the main key being a coordinate
         # Assign coordinates to their corresponding button
         x = 0
@@ -160,23 +177,14 @@ class Board(Frame):
             # in terms of y and x (from self.coordinates)
             current_position = self.coordinates[y][x]
 
-            # Append the current coordinate to a similar list, but this time it is one dimensional
-            self.pieces.append(current_position)
-
-            # Essential part
-            # Adds a new value to the empty dictionary 'self.board'
-            # The main key (current_position) is the current coordinate, 'a8' in the first iteration
-            # Format for future reference ('<>' represents a class object, '--' represent values, '' represent the keys)
-            # dict = {'coordinate': {'button': <Button object>,
-            #                        'piece': {'piece name': --actual name of piece--, 'piece color': --piece color--},
-            #                        'color': --color of the button--]}}
+            # make board
             self.board[current_position] = {'button': Button(self, bg=self.board_colors[i],
                                                              text=f'\t        {current_position}',
                                                              font=('arial', 7),
                                                              compound=BOTTOM,
                                                              activebackground='light blue',
                                                              relief=SOLID,
-                                                             highlightthickness=2,
+                                                             bd=1,
                                                              cursor='tcross',
                                                              highlightbackground="black",
                                                              highlightcolor="black",
@@ -186,10 +194,7 @@ class Board(Frame):
                                             'color': self.board_colors[i],
                                             'selected': False
                                             }
-            # illustration:
-            # [[...],
-            #  [a7, b7, c7, d7, e7, f7, g7, h7],
-            #  [a8, b8, c8, d8, e8, f8, g8, h8]]
+
             # coordinates in first iteration are 'x=0, y=7', where the data is 'a8'
             # next coordinates are 'x=1, y=7' where the val is 'b8'
             # hence we move to the next item in the current list by adding 1 to x
@@ -308,13 +313,7 @@ class Board(Frame):
                 y += 1
 
     def update_current_piece(self, position):
-        """Command assigned to every button, to move pieces,
-        acts based on what button of the board what the player has clicked"""
-
-        if self.tracker:
-            print('\n-------------------TRACKER-------------------')
-            print(self.tracker[-1])
-            print('---------------END_OF_TRACKER----------------\n')
+        """Command assigned to every button in the board"""
 
         # color of the button, piece and piece color the user just clicked
         current_button_color = self.board[position]['color']
@@ -324,97 +323,89 @@ class Board(Frame):
         # HIGHLIGHTING MOVES
         # allowing turns (two player mode)
         # if self.game_type == 'two_player'
-        if self.moves % 2 == 0:
-            self.get_game_fen_string()
+        if self.game_type == 'two_player':
+            if self.player_one_turn:
+                if self.board[position]['piece']['piece_color'] == self.player_piece_color:
+                    self.reset_board_colors()
 
-        if self.player_one_turn:
-            if self.board[position]['piece']['piece_color'] == 'black':
-                # if the button piece is black
-                print('\n-------------------ACTION-------------------')
-                print('Action: Player selected piece')
-                print(f'Selected piece: {piece_name}')
-                print(f'Piece color: {piece_color}')
-                print('-------------------END-------------------')
-                self.reset_board_colors()
+                    # We only allow black pieces to be highlighted
 
-                # We only allow black pieces to be highlighted
+                    # rooks
+                    if self.board[position]['piece']['piece_name'] == 'rook':
+                        self.piece_highlighting(f'{position}', 'rook', self.player_piece_color)
 
-                # rooks
-                if self.board[position]['piece']['piece_name'] == 'rook':
-                    self.piece_highlighting(f'{position}', 'rook', 'black')
+                    # prawn
+                    if self.board[position]['piece']['piece_name'] == 'prawn':
+                        self.piece_highlighting(f'{position}', 'prawn', self.player_piece_color)
 
-                # prawn
-                if self.board[position]['piece']['piece_name'] == 'prawn':
-                    self.piece_highlighting(f'{position}', 'prawn', 'black')
+                    # bishop
+                    if self.board[position]['piece']['piece_name'] == 'bishop':
+                        self.piece_highlighting(f'{position}', 'bishop', self.player_piece_color)
 
-                # bishop
-                if self.board[position]['piece']['piece_name'] == 'bishop':
-                    self.piece_highlighting(f'{position}', 'bishop', 'black')
+                    # knight
+                    if self.board[position]['piece']['piece_name'] == 'knight':
+                        self.piece_highlighting(f'{position}', 'knight', self.player_piece_color)
 
-                # knight
-                if self.board[position]['piece']['piece_name'] == 'knight':
-                    self.piece_highlighting(f'{position}', 'knight', 'black')
+                    # queen
+                    if self.board[position]['piece']['piece_name'] == 'queen':
+                        self.piece_highlighting(f'{position}', 'queen', self.player_piece_color)
 
-                # queen
-                if self.board[position]['piece']['piece_name'] == 'queen':
-                    self.piece_highlighting(f'{position}', 'queen', 'black')
+                    # king
+                    if self.board[position]['piece']['piece_name'] == 'king':
+                        self.piece_highlighting(f'{position}', 'king', self.player_piece_color)
 
-                # king
-                if self.board[position]['piece']['piece_name'] == 'king':
-                    self.piece_highlighting(f'{position}', 'king', 'black')
+                # If the piece is white
+                if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
+                    print('\n-------------------ACTION-------------------')
+                    print('Action: Player selected piece')
+                    print(f'Selected piece: {piece_name}')
+                    print(f'Piece color: {piece_color}')
+                    print('-------------------END-------------------')
+                    self.reset_board_colors()
 
-            # If the piece is white
-            if self.board[position]['piece']['piece_color'] == 'white':
-                print('\n-------------------ACTION-------------------')
-                print('Action: Player selected piece')
-                print(f'Selected piece: {piece_name}')
-                print(f'Piece color: {piece_color}')
-                print('-------------------END-------------------')
-                self.reset_board_colors()
+            if self.player_two_turn:
+                if self.board[position]['piece']['piece_color'] == 'white':
+                    print('\n-------------------ACTION-------------------')
+                    print('Action: Player selected piece')
+                    print(f'Selected piece: {piece_name}')
+                    print(f'Piece color: {piece_color}')
+                    print('-------------------END-------------------')
+                    self.reset_board_colors()
 
-        if self.player_two_turn:
-            if self.board[position]['piece']['piece_color'] == 'white':
-                print('\n-------------------ACTION-------------------')
-                print('Action: Player selected piece')
-                print(f'Selected piece: {piece_name}')
-                print(f'Piece color: {piece_color}')
-                print('-------------------END-------------------')
-                self.reset_board_colors()
+                    # We only allow white pieces to be highlighted
 
-                # We only allow white pieces to be highlighted
+                    # rooks
+                    if self.board[position]['piece']['piece_name'] == 'rook':
+                        self.piece_highlighting(f'{position}', 'rook', 'white')
 
-                # rooks
-                if self.board[position]['piece']['piece_name'] == 'rook':
-                    self.piece_highlighting(f'{position}', 'rook', 'white')
+                    # prawn
+                    if self.board[position]['piece']['piece_name'] == 'prawn':
+                        self.piece_highlighting(f'{position}', 'prawn', 'white')
 
-                # prawn
-                if self.board[position]['piece']['piece_name'] == 'prawn':
-                    self.piece_highlighting(f'{position}', 'prawn', 'white')
+                    # bishop
+                    if self.board[position]['piece']['piece_name'] == 'bishop':
+                        self.piece_highlighting(f'{position}', 'bishop', 'white')
 
-                # bishop
-                if self.board[position]['piece']['piece_name'] == 'bishop':
-                    self.piece_highlighting(f'{position}', 'bishop', 'white')
+                    # knight
+                    if self.board[position]['piece']['piece_name'] == 'knight':
+                        self.piece_highlighting(f'{position}', 'knight', 'white')
 
-                # knight
-                if self.board[position]['piece']['piece_name'] == 'knight':
-                    self.piece_highlighting(f'{position}', 'knight', 'white')
+                    # queen
+                    if self.board[position]['piece']['piece_name'] == 'queen':
+                        self.piece_highlighting(f'{position}', 'queen', 'white')
 
-                # queen
-                if self.board[position]['piece']['piece_name'] == 'queen':
-                    self.piece_highlighting(f'{position}', 'queen', 'white')
+                    # king
+                    if self.board[position]['piece']['piece_name'] == 'king':
+                        self.piece_highlighting(f'{position}', 'king', 'white')
 
-                # king
-                if self.board[position]['piece']['piece_name'] == 'king':
-                    self.piece_highlighting(f'{position}', 'king', 'white')
-
-            # If the piece is black
-            if self.board[position]['piece']['piece_color'] == 'black':
-                print('\n-------------------ACTION-------------------')
-                print('Action: Player selected piece')
-                print(f'Selected piece: {piece_name}')
-                print(f'Piece color: {piece_color}')
-                print('-------------------END-------------------')
-                self.reset_board_colors()
+                # If the piece is black
+                if self.board[position]['piece']['piece_color'] == 'black':
+                    print('\n-------------------ACTION-------------------')
+                    print('Action: Player selected piece')
+                    print(f'Selected piece: {piece_name}')
+                    print(f'Piece color: {piece_color}')
+                    print('-------------------END-------------------')
+                    self.reset_board_colors()
 
         # If the color of the button is green
         # It would mean the player had already clicked a piece previously which marked possible moves in green
@@ -533,7 +524,7 @@ class Board(Frame):
 
         # Whenever the user clicks a non piece or empty space
         # reset the board colors
-        if current_button_color in ['white', 'black'] and piece_name is None:
+        if current_button_color in ['white', self.board_colors[1]] and piece_name is None:
 
             # message
             messagebox.showerror('Error', f'{position} is an invalid move')
@@ -568,13 +559,15 @@ class Board(Frame):
         """Reset board colors to normal(to eliminate highlighting)"""
 
         i = 0
+        coordinates = self.coordinates[:]
+        coordinates.reverse()
         # iterate through the entire board and set the color of each button back to its corresponding one
         # by iterating over the board colors at the same time
-        for position in self.pieces:
-            self.board[position]['button'].configure(bg=self.board_colors[i],
-                                                     relief=SOLID)
-            self.board[position]['color'] = self.board_colors[i]
-            i += 1
+        for row in coordinates:
+            for col in row:
+                self.board[col]['button'].configure(bg=self.board_colors[i])
+                self.board[col]['color'] = self.board_colors[i]
+                i += 1
 
     def piece_highlighting(self, position, piece, piece_color):
         """Highlights all possible moves for a given piece"""
@@ -587,75 +580,74 @@ class Board(Frame):
             # rook moves horizontally and vertically in a straight line
 
             # The function returns a list of possible moves for the piece
-            # 'self.get_all_possible_moves' is definitely the longest and hardest function I've made in this project
             all_possible_rook_moves = self.get_all_possible_moves('rook', 'none', position)
 
-            if self.board[position]['piece']['piece_color'] == 'black':
+            if piece_color == self.player_piece_color:
                 # black piece
                 for move_pattern in all_possible_rook_moves:
                     # loop through each list in this list of all possible moves
                     for position in move_pattern:
                         # if the piece is not black
-                        if self.board[position]['piece']['piece_color'] != 'black':
+                        if self.board[position]['piece']['piece_color'] != self.player_piece_color:
                             # Highlight the button, by converting it to 'light green'
                             self.board[position]['button'].configure(bg='light green')
                             # Set the color variable of that button to light green (no longer black/white)
                             self.board[position]['color'] = 'light green'
 
                         # check if the piece is white
-                        if self.board[position]['piece']['piece_color'] == 'white':
+                        if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
                             # if it is white, highlight it with red so it becomes availible to delete
                             self.board[position]['button'].configure(bg='red')
                             self.board[position]['color'] = 'red'
                             break
 
                         # Detect a black piece, if there is one,we stop highlighting
-                        if self.board[position]['piece']['piece_color'] == 'black' \
+                        if self.board[position]['piece']['piece_color'] == self.player_piece_color \
                                 and self.board[position]['piece']['piece_name'] != 'rook':
                             break
 
-            if self.board[position]['piece']['piece_color'] == 'white':
+            if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
                 # white piece
                 for move_pattern in all_possible_rook_moves:
                     # loop through each list in this list of all possible moves
                     for position in move_pattern:
                         # if the piece is not white
-                        if self.board[position]['piece']['piece_color'] != 'white':
+                        if self.board[position]['piece']['piece_color'] != self.opponent_piece_color:
                             # Highlight the button, by converting it to 'light green'
                             self.board[position]['button'].configure(bg='light green')
                             # Set the color variable of that button to light green (no longer black/white)
                             self.board[position]['color'] = 'light green'
 
                         # check if the piece is black
-                        if self.board[position]['piece']['piece_color'] == 'black':
+                        if self.board[position]['piece']['piece_color'] == self.player_piece_color:
                             self.board[position]['button'].configure(bg='red')
                             self.board[position]['color'] = 'red'
                             break
 
                         # Detect a white piece, if there is one,we stop highlighting
-                        if self.board[position]['piece']['piece_color'] == 'white' \
+                        if self.board[position]['piece']['piece_color'] == self.opponent_piece_color \
                                 and self.board[position]['piece']['piece_name'] != 'rook':
                             break
 
         # bishop
         if piece == 'bishop':
             # bishop moves diagonally in all directions
-            all_possible_bishop_moves = self.get_all_possible_moves('bishop', 'white', position)
+            all_possible_bishop_moves = self.get_all_possible_moves('bishop', 'none', position)
 
-            if self.board[position]['piece']['piece_color'] == 'black':
+            if self.board[position]['piece']['piece_color'] == self.player_piece_color:
                 # black piece
                 for move_pattern in all_possible_bishop_moves:
                     # loop through each list in this list of all possible moves
                     for position in move_pattern:
                         # check if enemy piece
-                        if self.board[position]['piece']['piece_color'] == 'white':
+                        if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
                             # if enemy piece, highlight to red
                             self.board[position]['button'].configure(bg='red')
                             self.board[position]['color'] = 'red'
                             break
 
                         # check if black piece
-                        if self.board[position]['piece']['piece_color'] == 'black':
+                        if self.board[position]['piece']['piece_color'] == self.player_piece_color:
                             # if black piece stop highlighting
                             break
 
@@ -664,18 +656,18 @@ class Board(Frame):
                             self.board[position]['button'].configure(bg='light green')
                             self.board[position]['color'] = 'light green'
 
-            if self.board[position]['piece']['piece_color'] == 'white':
+            if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
 
                 for move_pattern in all_possible_bishop_moves:
                     for position in move_pattern:
                         # check if enemy piece
-                        if self.board[position]['piece']['piece_color'] == 'black':
+                        if self.board[position]['piece']['piece_color'] == self.player_piece_color:
                             self.board[position]['button'].configure(bg='red')
                             self.board[position]['color'] = 'red'
                             break
 
                         # check if black piece
-                        if self.board[position]['piece']['piece_color'] == 'white':
+                        if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
                             break
 
                         if self.board[position]['piece']['piece_color'] is None:
@@ -687,19 +679,19 @@ class Board(Frame):
             # knight moves two blocks forward and marks the side in all directions
             all_possible_knight_moves = self.get_all_possible_moves('knight', 'none', position)
 
-            if self.board[position]['piece']['piece_color'] == 'black':
+            if self.board[position]['piece']['piece_color'] == self.player_piece_color:
                 # black piece
                 for move_pattern in all_possible_knight_moves:
                     # loop through each list in this list of all possible moves
                     for position in move_pattern:
                         # if the piece is white, highlight red and mark as enemy
-                        if self.board[position]['piece']['piece_color'] == 'white':
+                        if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
                             self.board[position]['button'].configure(bg='red')
                             self.board[position]['color'] = 'red'
                             continue
 
                         # if the piece is black, move to the next move
-                        if self.board[position]['piece']['piece_color'] == 'black':
+                        if self.board[position]['piece']['piece_color'] == self.player_piece_color:
                             continue
 
                         # if there is no piece, highlight and mark green
@@ -707,19 +699,19 @@ class Board(Frame):
                             self.board[position]['button'].configure(bg='light green')
                             self.board[position]['color'] = 'light green'
 
-            if self.board[position]['piece']['piece_color'] == 'white':
+            if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
                 # white piece
                 for move_pattern in all_possible_knight_moves:
                     # loop through each list in this list of all possible moves
                     for position in move_pattern:
                         # if the piece is black, highlight red and mark as enemy
-                        if self.board[position]['piece']['piece_color'] == 'black':
+                        if self.board[position]['piece']['piece_color'] == self.player_piece_color:
                             self.board[position]['button'].configure(bg='red')
                             self.board[position]['color'] = 'red'
                             continue
 
                         # if the piece is white, move to the next move
-                        if self.board[position]['piece']['piece_color'] == 'white':
+                        if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
                             continue
 
                         # if there is no piece, highlight and mark green green
@@ -732,7 +724,7 @@ class Board(Frame):
             # queen moves are just a combination of a rook and a bishop
             all_possible_queen_moves = self.get_all_possible_moves('queen', 'none', position)
 
-            if self.board[position]['piece']['piece_color'] == 'black':
+            if self.board[position]['piece']['piece_color'] == self.player_piece_color:
                 # black piece
                 for move_pattern in all_possible_queen_moves:
                     # loop through each list in this list of all possible moves
@@ -743,16 +735,16 @@ class Board(Frame):
                             self.board[position]['color'] = 'light green'
 
                         # check if the piece is white, if so make it red
-                        if self.board[position]['piece']['piece_color'] == 'white':
+                        if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
                             self.board[position]['button'].configure(bg='red')
                             self.board[position]['color'] = 'red'
                             break
 
                         # Detect a black piece, if there is one,we stop highlighting
-                        if self.board[position]['piece']['piece_color'] == 'black':
+                        if self.board[position]['piece']['piece_color'] == self.player_piece_color:
                             break
 
-            if self.board[position]['piece']['piece_color'] == 'white':
+            if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
                 # white piece
                 for move_pattern in all_possible_queen_moves:
                     # loop through each list in this list of all possible moves
@@ -763,19 +755,20 @@ class Board(Frame):
                             self.board[position]['color'] = 'light green'
 
                         # check if the piece is black, if it is make it red
-                        if self.board[position]['piece']['piece_color'] == 'black':
+                        if self.board[position]['piece']['piece_color'] == self.player_piece_color:
                             self.board[position]['button'].configure(bg='red')
                             self.board[position]['color'] = 'red'
                             break
 
                         # Detect a black piece,if there is one,we stop highlighting
-                        if self.board[position]['piece']['piece_color'] == 'white':
+                        if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
                             break
 
+        # king
         if piece == 'king':
             all_possible_king_moves = self.get_all_possible_moves('king', 'none', position)
 
-            if self.board[position]['piece']['piece_color'] == 'black':
+            if self.board[position]['piece']['piece_color'] == self.player_piece_color:
                 # black piece
                 for move_pattern in all_possible_king_moves:
                     # loop through each list in this list of all possible moves
@@ -786,16 +779,16 @@ class Board(Frame):
                             self.board[position]['color'] = 'light green'
 
                         # check if the piece is white, if so make it red
-                        if self.board[position]['piece']['piece_color'] == 'white':
+                        if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
                             self.board[position]['button'].configure(bg='red')
                             self.board[position]['color'] = 'red'
                             continue
 
                         # Detect a black piece, if there is one,we stop highlighting
-                        if self.board[position]['piece']['piece_color'] == 'black':
+                        if self.board[position]['piece']['piece_color'] == self.player_piece_color:
                             continue
 
-            if self.board[position]['piece']['piece_color'] == 'white':
+            if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
                 # white piece
                 for move_pattern in all_possible_king_moves:
                     # loop through each list in this list of all possible moves
@@ -806,13 +799,13 @@ class Board(Frame):
                             self.board[position]['color'] = 'light green'
 
                         # check if the piece is black, if it is make it red
-                        if self.board[position]['piece']['piece_color'] == 'black':
+                        if self.board[position]['piece']['piece_color'] == self.player_piece_color:
                             self.board[position]['button'].configure(bg='red')
                             self.board[position]['color'] = 'red'
                             continue
 
                         # Detect a black piece,if there is one,we stop highlighting
-                        if self.board[position]['piece']['piece_color'] == 'white':
+                        if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
                             continue
 
         # prawns
@@ -931,7 +924,6 @@ class Board(Frame):
 
     def get_all_possible_moves(self, piece, piece_color, position):
         """Generates a list of all possible moves for a piece basedon its color and board position"""
-        # represent a list of the position itself e.g a8 would be ['a', '8']
 
         # With this list we can get the new positions for this move by modifying only one part
         temp = list(position)
@@ -965,22 +957,16 @@ class Board(Frame):
         if piece == 'bishop':
 
             # up right diagonal
-            up_right = [i for i in full_row[index_in_row + 1:]]
-            bishop_up_right = self.get_diagonal(up_right, 'go up')
+            bishop_up_right = self.get_diagonal(position, 'up_right')
 
             # down right diagonal
-            down_right = [i for i in full_row[index_in_row + 1:]]
-            bishop_down_right = self.get_diagonal(down_right, 'go down')
+            bishop_down_right = self.get_diagonal(position, 'down_right')
 
             # up left diagonal
-            up_left = [i for i in full_row[:index_in_row]]
-            up_left.reverse()
-            bishop_up_left = self.get_diagonal(up_left, 'go up')
+            bishop_up_left = self.get_diagonal(position, 'up_left')
 
             # down left diagonal
-            down_left = [i for i in full_row[:index_in_row]]
-            down_left.reverse()
-            bishop_down_left = self.get_diagonal(down_left, 'go down')
+            bishop_down_left = self.get_diagonal(position, 'down_left')
 
             # all
             all_possible_bishop_moves = [bishop_up_right] + [bishop_down_right] + \
@@ -990,23 +976,24 @@ class Board(Frame):
 
         if piece == 'knight':
             # Generate moves, by moving positions in board (clockwise)
-            move_one = self.move_column(self.move_row(self.move_row([position], 'increase'), 'increase'), 'increase')
-            move_two = self.move_row(self.move_column(self.move_column([position], 'increase'), 'increase'), 'increase')
+            move_one = self.move_column(self.move_row(self.move_row(position, 'increase'), 'increase'), 'increase')
+            move_two = self.move_row(self.move_column(self.move_column(position, 'increase'), 'increase'), 'increase')
 
-            move_three = self.move_row(self.move_column(self.move_column([position], 'increase'), 'increase'),
+            move_three = self.move_row(self.move_column(self.move_column(position, 'increase'), 'increase'),
                                        'decrease')
-            move_four = self.move_column(self.move_row(self.move_row([position], 'decrease'), 'decrease'), 'increase')
+            move_four = self.move_column(self.move_row(self.move_row(position, 'decrease'), 'decrease'), 'increase')
 
-            move_five = self.move_column(self.move_row(self.move_row([position], 'decrease'), 'decrease'), 'decrease')
-            move_six = self.move_row(self.move_column(self.move_column([position], 'decrease'), 'decrease'), 'decrease')
+            move_five = self.move_column(self.move_row(self.move_row(position, 'decrease'), 'decrease'), 'decrease')
+            move_six = self.move_row(self.move_column(self.move_column(position, 'decrease'), 'decrease'), 'decrease')
 
-            move_seven = self.move_row(self.move_column(self.move_column([position], 'decrease'), 'decrease'),
+            move_seven = self.move_row(self.move_column(self.move_column(position, 'decrease'), 'decrease'),
                                        'increase')
-            move_eight = self.move_column(self.move_row(self.move_row([position], 'increase'), 'increase'), 'decrease')
+            move_eight = self.move_column(self.move_row(self.move_row(position, 'increase'), 'increase'), 'decrease')
 
-            all_possible_knight_moves = [move_one] + [move_two] + [move_three] + [move_four] + [move_five] + \
-                                        [move_six] + [move_seven] + [move_eight]
+            all_possible_knight_moves = [[move_one] + [move_two] + [move_three] + [move_four] + [move_five] + \
+                                        [move_six] + [move_seven] + [move_eight]]
 
+            print(all_possible_knight_moves)
             return all_possible_knight_moves
 
         if piece == 'queen':
@@ -1027,23 +1014,16 @@ class Board(Frame):
             queen_left.reverse()
 
             # up right diagonal
-            up_right = [i for i in full_row[index_in_row + 1:]]
-            queen_up_right = self.get_diagonal(up_right, 'go up')
+            queen_up_right = self.get_diagonal(position, 'up_right')
 
             # down right diagonal
-            down_right = [i for i in full_row[index_in_row + 1:]]
-            queen_down_right = self.get_diagonal(down_right, 'go down')
+            queen_down_right = self.get_diagonal(position, 'down_right')
 
             # up left diagonal
-            up_left = [i for i in full_row[:index_in_row]]
-            up_left.reverse()
-            queen_up_left = self.get_diagonal(up_left, 'go up')
+            queen_up_left = self.get_diagonal(position, 'up_left')
 
             # down left diagonal
-            down_left = [i for i in full_row[:index_in_row]]
-            down_left.reverse()
-            queen_down_left = self.get_diagonal(down_left, 'go down')
-
+            queen_down_left = self.get_diagonal(position, 'down_left')
             # all
             all_possible_queen_moves = [queen_down_right] + [queen_right] + [queen_up_right] + [queen_up] + \
                                        [queen_up_left] + [queen_left] + [queen_down_left] + [queen_down]
@@ -1052,45 +1032,46 @@ class Board(Frame):
 
         if piece == 'king':
             # clockwise pattern for king
-            move_one = self.move_row([position], 'increase')
-            move_two = self.move_column(self.move_row([position], 'increase'), 'increase')
-            move_three = self.move_column([position], 'increase')
-            move_four = self.move_row(self.move_column([position], 'increase'), 'decrease')
-            move_five = self.move_column([position], 'decrease')
-            move_six = self.move_row(self.move_column([position], 'decrease'), 'decrease')
-            move_seven = self.move_column([position], 'decrease')
-            move_eight = self.move_row(self.move_column([position], 'decrease'), 'increase')
+            move_one = self.move_row(position, 'increase')
+            move_two = self.move_column(self.move_row(position, 'increase'), 'increase')
+            move_three = self.move_column(position, 'increase')
+            move_four = self.move_row(self.move_column(position, 'increase'), 'decrease')
+            move_five = self.move_row(position, 'decrease')
+            move_six = self.move_row(self.move_column(position, 'decrease'), 'decrease')
+            move_seven = self.move_column(position, 'decrease')
+            move_eight = self.move_row(self.move_column(position, 'decrease'), 'increase')
 
             # all
             all_possible_king_moves = [move_one] + [move_two] + [move_three] + [move_four] + [move_five] + \
                                       [move_six] + [move_seven] + [move_eight]
+            all_possible_king_moves = [[move] for move in all_possible_king_moves]
+            print(all_possible_king_moves)
 
             return all_possible_king_moves
 
-        if piece == 'prawn' and piece_color == 'black':
-            up_one = self.move_row([position], 'increase')
-            up_two = self.move_row(self.move_row([position], 'increase'), 'increase')
-            prawn_up = [up_one[0], up_two[0]]
-            print(prawn_up)
+        if piece == 'prawn' and piece_color == self.player_piece_color:
+            up_one = self.move_row(position, 'increase')
+            up_two = self.move_row(self.move_row(position, 'increase'), 'increase')
+            prawn_up = filter(self.remove_nones, [up_one, up_two])
 
             # diagonal
-            right_diagonal = self.move_column(self.move_row([position], 'increase'), 'increase')
-            left_diagonal = self.move_column(self.move_row([position], 'increase'), 'decrease')
+            right_diagonal = self.move_column(self.move_row(position, 'increase'), 'increase')
+            left_diagonal = self.move_column(self.move_row(position, 'increase'), 'decrease')
 
             all_possible_prawn_moves = [prawn_up] + [right_diagonal] + [left_diagonal]
 
             # all
             return all_possible_prawn_moves
 
-        if piece == 'prawn' and piece_color == 'white':
+        if piece == 'prawn' and piece_color == self.opponent_piece_color:
             # up
-            down_one = self.move_row([position], 'decrease')
-            down_two = self.move_row(self.move_row([position], 'decrease'), 'decrease')
-            prawn_up = [down_one[0], down_two[0]]
+            down_one = self.move_row(position, 'decrease')
+            down_two = self.move_row(self.move_row(position, 'decrease'), 'decrease')
+            prawn_up = filter(self.remove_nones, [down_one, down_two])
 
             # diagonal
-            right_diagonal = self.move_column(self.move_row([position], 'decrease'), 'increase')
-            left_diagonal = self.move_column(self.move_row([position], 'decrease'), 'decrease')
+            right_diagonal = self.move_column(self.move_row(position, 'decrease'), 'increase')
+            left_diagonal = self.move_column(self.move_row(position, 'decrease'), 'decrease')
 
             all_possible_prawn_moves = [prawn_up] + [right_diagonal] + [left_diagonal]
 
@@ -1230,127 +1211,129 @@ class Board(Frame):
         else:
             return val
 
-    @staticmethod
-    def move_row(array, operation):
-        """Allows to increase or decrease a column of chess coordinates by one"""
+    def move_row(self, position, operation):
+        """Returns position above to or below parameter"""
 
-        # the new increased/decreased list
-        new_array = []
+        # ensure chess position is entered
+        if position in self.pieces:
+            if operation == 'increase':
+                # '8' shouldn't be in the position, because it is the highest row there is, so it can't be increased
+                if '8' in position:
+                    return
 
-        count = 1
-        if operation == 'increase':
-            # increase operation
-            for coordinate in array:
-                # divide the position e.g. b5 into a list ['b', '5']
-                # to manipulate each part individually
-                coordinates = list(coordinate)
+                # Get index of item in 'pieces' list
+                my_index = self.pieces.index(position)
 
-                # take the numeric part and increase it by one
-                new_coordinate = str(int(coordinates[1]) + count)
-                if new_coordinate == '9':
-                    break
+                # return item next to that index
+                return self.pieces[my_index + 8]
 
-                # append new value to array
-                new_array.append(coordinate[0] + new_coordinate)
-                count += 1
+            if operation == 'decrease':
+                # '2' shouldn't be in the position, because it is the lowest row there is, so it can't be decreased
+                if '1' in position:
+                    return
+                # Get index of item in 'pieces' list
+                my_index = self.pieces.index(position)
 
-        count = 1
-        if operation == 'decrease':
-            # decrease operation
-            for coordinate in array:
-                # divide the position e.g. b5 into a list ['b', '5']
-                # to manipulate each part individually
-                coordinates = list(coordinate)
+                # return item next to that index
+                return self.pieces[my_index - 8]
+        else:
+            return
 
-                # take the numeric part and increase it by one
-                new_coordinate = str(int(coordinates[1]) - count)
-                if new_coordinate == '0':
-                    break
+    def move_column(self, position, operation):
+        """Returns position next to or behind parameter"""
 
-                # append new value to array
-                new_array.append(coordinate[0] + new_coordinate)
-                count += 1
+        # ensure chess position is entered
+        if position in self.pieces:
 
-        # return full new array
-        return new_array
+            if operation == 'increase':
+                # 'h' shouldn't be in the position, because it is the last element in a row, so it can't be increased
+                if 'h' in position:
+                    return
 
-    def move_column(self, array, operation):
-        """Allows to increase or decrease a row of chess coordinates by one"""
+                # Get index of item in 'pieces' list
+                my_index = self.pieces.index(position)
 
-        # the new increased/decreased list
-        new_array = []
+                # return item next to that index
+                return self.pieces[my_index + 1]
 
-        count = 1
-        if operation == 'increase':
-            # increase operation
-            for coordinate in array:
-                # divide the position e.g. b5 into a list ['b', '5']
-                # to manipulate each part individually
-                coordinates = list(coordinate)
+            if operation == 'decrease':
+                # 'a' shouldn't be in the position, because it is the first element in a row, so it can't be decreased
+                if 'a' in position:
+                    return
 
-                letter_index = self.letters.index(str(coordinates[0]))
+                # Get index of item in 'pieces' list
+                my_index = self.pieces.index(position)
 
-                # if we reach the endpoint 'h' which is index 7, break
-                if letter_index == 7:
-                    break
+                # return item next to that index
+                return self.pieces[my_index - 1]
+        else:
+            return
 
-                # take the letter part and increase it by one
-                new_letter = self.letters[letter_index + 1]
+    def get_diagonal(self, position, direction):
+        """Returns diagonal for a specific position"""
 
-                # append new value to array
-                new_array.append(new_letter + coordinate[1])
-                count += 1
+        # lists
+        letters = {'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4, 'f': 5, 'g': 6, 'h': 7}
+        list_position = list(position)
+        columns_to_right = letters[list_position[0]] + 8
+        columns_to_left = letters[list_position[0]]
 
-        count = 1
-        if operation == 'decrease':
-            # decrease operation
-            for coordinate in array:
-                # divide the position e.g. b5 into a list ['b', '5']
-                # to manipulate each part individually
-                coordinates = list(coordinate)
+        diagonal_values = []
 
-                letter_index = self.letters.index(str(coordinates[0]))
+        if direction == 'up_right':
 
-                # if we reach the endpoint 'a' which is index 0, break
-                if letter_index == 0:
-                    break
+            next_diagonal = position
+            for i in range(columns_to_right):
+                # get diagonal for next value
+                next_diagonal = self.move_row(self.move_column(next_diagonal, 'increase'), 'increase')
+                # append to diagonal list
+                diagonal_values.append(next_diagonal)
 
-                # take the letter part and increase it by one
-                new_letter = self.letters[letter_index - 1]
+            # return final filtered list
+            return list(filter(self.remove_nones, diagonal_values))
 
-                # append new value to array
-                new_array.append(new_letter + coordinate[1])
-                count += 1
+        if direction == 'down_right':
 
-        # return full new array
-        return new_array
+            next_diagonal = position
+            for i in range(columns_to_right):
+                # get diagonal for next value
+                next_diagonal = self.move_row(self.move_column(next_diagonal, 'increase'), 'decrease')
+                # append to diagonal list
+                diagonal_values.append(next_diagonal)
 
-    @staticmethod
-    def get_diagonal(array, direction):
-        value = 1
-        new_array = []
-        if direction == 'go up':
-            for pos in array:
-                coordinate = list(pos)
-                new_val = int(coordinate[1]) + value
-                if new_val == 9:
-                    break
-                new_array.append(coordinate[0] + str(new_val))
-                value += 1
+            # return final filtered list
+            return list(filter(self.remove_nones, diagonal_values))
 
-        if direction == 'go down':
-            for pos in array:
-                coordinate = list(pos)
-                new_val = int(coordinate[1]) - value
-                if new_val == 0:
-                    break
-                new_array.append(coordinate[0] + str(new_val))
-                value += 1
+        if direction == 'up_left':
+            next_diagonal = position
+            for i in range(columns_to_left):
+                # get diagonal for next value
+                next_diagonal = self.move_row(self.move_column(next_diagonal, 'decrease'), 'increase')
+                # append to diagonal list
+                diagonal_values.append(next_diagonal)
 
-        return new_array
+            # return final filtered list
+            return list(filter(self.remove_nones, diagonal_values))
 
-    def build(self):
-        self.make_board()
-        self.place_default_pieces_on_screen()
-        self.place_buttons()
-        self.get_game_fen_string()
+        if direction == 'down_left':
+            next_diagonal = position
+            for i in range(columns_to_left):
+                # get diagonal for next value
+                next_diagonal = self.move_row(self.move_column(next_diagonal, 'decrease'), 'decrease')
+                # append to diagonal list
+                diagonal_values.append(next_diagonal)
+
+            # return final filtered list
+            return list(filter(self.remove_nones, diagonal_values))
+
+    def build(self, type='default'):
+        if type == 'default':
+            self.make_board()
+            self.place_buttons()
+            self.place_default_pieces_on_screen()
+
+        if type == 'empty':
+            self.make_board()
+            self.place_buttons()
+            for piece in self.pieces:
+                self.place_piece('blank', 'blank', piece)

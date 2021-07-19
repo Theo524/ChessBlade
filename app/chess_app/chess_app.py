@@ -29,7 +29,8 @@ class ChessApp(tkinter.Tk):
         self.game_frame = tkinter.Frame(self)
         self.game_frame.pack(side=tkinter.TOP)
 
-        # Widgets frame, here is where all the objects apart from the chess board are placed, for now its only chess notation
+        # Widgets frame, here is where all the objects apart from the chess board are placed,
+        # for now its only chess notation
         self.widgets_frame = tkinter.Frame(self.game_frame)
 
         # Actual game board

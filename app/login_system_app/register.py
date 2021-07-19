@@ -61,7 +61,7 @@ class RegisterSystem(ttk.Frame):
         self.new_user_frame = ttk.Frame(self.main_window)
         self.new_user_frame.pack(pady=10)
 
-        #ttk.Label(self.new_user_frame, text='New username\t ').pack(expand=True, side=LEFT)
+        # Username
         self.new_user_name_var = StringVar()
         self.new_username_entry = PlaceholderEntry(self.new_user_frame, 'New Username',
                                                    textvariable=self.new_user_name_var)
@@ -93,7 +93,6 @@ class RegisterSystem(ttk.Frame):
         self.confirm_password_frame = ttk.Frame(self.main_window)
         self.confirm_password_frame.pack(pady=10)
 
-        #Label(self.confirm_password_frame, text='Confirm pass\t ').pack(expand=True, side=LEFT)
         self.confirmed_password = StringVar()
         self.confirmed_password_entry = PlaceholderEntry(self.confirm_password_frame, 'Confirm password',
                                                          textvariable=self.confirmed_password)
@@ -111,8 +110,6 @@ class RegisterSystem(ttk.Frame):
         self.email_frame.pack(pady=10)
 
         self.email_var = StringVar()
-        #self.email_address = Label(self.email_frame, text='Email address\t')
-        #self.email_address.pack(side=LEFT)
         self.email_address_entry = PlaceholderEntry(self.email_frame, 'Email address (@gmail.com)', textvariable=self.email_var)
         self.email_address_entry.pack(expand=True, ipadx=15)
 
@@ -126,7 +123,6 @@ class RegisterSystem(ttk.Frame):
         self.dob_frame = ttk.Frame(self.main_window)
         self.dob_frame.pack(pady=10)
 
-        #self.dob = Label(self.dob_frame, text='Date of birth\t')
         self.dob_entry = DateEntry(self.dob_frame, date_pattern='dd/MM/yyyy', width=17, bg="darkblue")
         self.dob_entry.pack(expand=True)
 
