@@ -10,52 +10,22 @@ import sqlite3
 import requests
 
 
-class LoginApp(Toplevel):
-    """Window container"""
-
-    def __init__(self, parent):
-        """Login Application container"""
-
-        Toplevel.__init__(self)
-        self._frame = None
-        self.parent = parent
-
-        # Attributes
-        self.resizable(0, 0)
-        self.title('Login')
-
-        # database and temporal files paths
-        self.database = self.parent.database
-        self.temp_files = self.parent.temp_files
-
-        # place 'LoginSystem' frame
-        self.switch_frame(LoginSystem)
-
-    def switch_frame(self, frame_class):
-        new_frame = frame_class(self)
-        if self._frame is not None:
-            self._frame.destroy()
-        self._frame = new_frame
-        self._frame.pack()
-
-
 class LoginSystem(ttk.Frame):
     """Login to account"""
 
-    def __init__(self, master):
-        ttk.Frame.__init__(self, master)
+    def __init__(self, master, **kwargs):
+        ttk.Frame.__init__(self, master, **kwargs)
 
         # themes
-        self.master.master.style.configure('login_page.TButton', font=('Calibri', 13,))
-        self.master.master.style.configure('login_page.TCheckbutton', font=('Calibri', 10))
+        self.master.style.configure('login_page.TButton', font=('Calibri', 13,))
+        self.master.style.configure('login_page.TCheckbutton', font=('Calibri', 10))
 
         # window attribuutes
         self.master.title('Login')
 
-
         # container
         self.scene = ttk.Frame(self)
-        self.scene.pack()
+        self.scene.pack(pady=100)
 
         # files needed
         self.database = self.master.database
@@ -107,7 +77,7 @@ class LoginSystem(ttk.Frame):
         self.forgot_password = Label(self.extra, text='Forgot your password?', fg='blue', bg='#dadada',
                                       font=('Calibri', 9, 'italic'), cursor="hand2")
 
-        self.forgot_password.bind("<Button-1>", lambda e: master.switch_frame(ForgotPassword))
+        self.forgot_password.bind("<Button-1>", lambda e: self.master.switch_frame(ForgotPassword))
         self.forgot_password.pack(side=LEFT)
 
         # Login button (MIDDLE FRAME)
@@ -125,8 +95,7 @@ class LoginSystem(ttk.Frame):
         """Return to start app"""
 
         # Hide current app(LoginSystem), deiconify (unhide) 'StartApp'
-        self.master.withdraw()
-        self.master.parent.deiconify()
+        self.master.switch_frame(self.master.frames['start'])
 
     def show(self):
         """Show or hide password entry"""
@@ -200,8 +169,8 @@ class LoginSystem(ttk.Frame):
 class ForgotPassword(ttk.Frame):
     """Start for password recovery"""
 
-    def __init__(self, master):
-        ttk.Frame.__init__(self, master)
+    def __init__(self, master, **kwargs):
+        ttk.Frame.__init__(self, master, **kwargs)
 
         self.database = self.master.database
         self.temp_files = self.master.temp_files
@@ -210,11 +179,11 @@ class ForgotPassword(ttk.Frame):
         self.upper_window = ttk.Frame(self, height=50, width=450)
         self.upper_window.pack()
         ttk.Button(self.upper_window, text='<--',
-               command=lambda: master.switch_frame(LoginSystem), cursor='hand2').place(x=0, y=0)
+               command=lambda: self.master.switch_frame(LoginSystem), cursor='hand2').place(x=0, y=0)
 
         # ---------------------App layout/middle frame---------------------
         self.main_window = ttk.Frame(self)
-        self.main_window.pack()
+        self.main_window.pack(pady=100)
 
         # change title
         self.master.title('Recover password')
@@ -417,8 +386,8 @@ class ForgotPassword(ttk.Frame):
 class VerifyPasscode(ttk.Frame):
     """Receive sent passcode and verify"""
 
-    def __init__(self, master):
-        ttk.Frame.__init__(self, master)
+    def __init__(self, master, **kwargs):
+        ttk.Frame.__init__(self, master, **kwargs)
 
         self.temp_files = self.master.temp_files
 

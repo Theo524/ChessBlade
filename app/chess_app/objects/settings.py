@@ -267,7 +267,7 @@ class GeneralSettings(ttk.Frame):
         """Get game mode"""
 
         if self.gamemode_var.get() == 1:
-            return 'two player'
+            return 'two_player'
         elif self.gamemode_var.get() == 2:
             return 'computer'
 

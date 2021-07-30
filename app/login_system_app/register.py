@@ -13,32 +13,19 @@ import smtplib
 import sqlite3
 
 
-class RegisterApp(Toplevel):
-    def __init__(self, parent):
-        Toplevel.__init__(self)
-        self._frame = None
-        self.database = parent.database
-        self.parent = parent
-
-        # Attributes
-        self.resizable(0, 0)
-        self.title('Create an account')
-
-        # sets current frame to 'RegisterSystem', a class(Frame) from the 'register_page' file
-        reg = RegisterSystem(self)
-        reg.pack()
-
-
 class RegisterSystem(ttk.Frame):
-    def __init__(self, master):
-        ttk.Frame.__init__(self, master)
+    def __init__(self, master, **kwargs):
+        ttk.Frame.__init__(self, master, **kwargs)
 
         self.database = self.master.database
 
-        self.master.master.style.configure('error_label.TLabel', foreground='red', font=('Arial', 7))
+        self.master.style.configure('error_label.TLabel', foreground='red', font=('Arial', 7))
+        # container
+        self.scene = ttk.Frame(self)
+        self.scene.pack(pady=100)
 
         # ----------------------App layout/upper frame----------------------
-        self.upper_window = ttk.Frame(self, height=50, width=350)
+        self.upper_window = ttk.Frame(self.scene, height=50, width=350)
         self.upper_window.pack()
         # Button to return to start page
         ttk.Button(self.upper_window, text='<--',
@@ -49,7 +36,7 @@ class RegisterSystem(ttk.Frame):
         # All the widgets are placed here
         # This frame will consist of more frames
         # Every frame will have a label an entry and an error frame (highlighted in red)
-        self.main_window = ttk.Frame(self)
+        self.main_window = ttk.Frame(self.scene)
         self.main_window.pack()
 
         # Title (MIDDLE FRAME)
@@ -140,15 +127,14 @@ class RegisterSystem(ttk.Frame):
         self.save_button.pack()
 
         # ----------------------App layout/lower frame----------------------
-        self.lower_frame = ttk.Frame(self, height=50)
+        self.lower_frame = ttk.Frame(self.scene, height=50)
         self.lower_frame.pack()
 
     def return_to_start(self):
         """Returns to the start page"""
 
         # Withdraw current 'LoginApp' and deiconify 'StartApp'
-        self.master.withdraw()
-        self.master.parent.deiconify()
+        self.master.switch_frame(self.master.frames['start'])
 
     @staticmethod
     def check_email(email):

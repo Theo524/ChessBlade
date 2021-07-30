@@ -3,8 +3,8 @@ from tkinter import *
 from tkinter import ttk
 from ttkthemes import ThemedStyle
 
-from app.login_system_app.login import LoginApp
-from app.login_system_app.register import RegisterApp
+from app.login_system_app.login import LoginSystem
+from app.login_system_app.register import RegisterSystem
 
 
 class StartApp(Tk):
@@ -15,7 +15,8 @@ class StartApp(Tk):
         self.my_state = True
 
         # Attributes
-        self.resizable(0, 0)
+        #self.resizable(0, 0)
+        self.geometry('1000x620')
         self.title('Welcome')
 
         # themes
@@ -26,28 +27,31 @@ class StartApp(Tk):
         self.database = os.getcwd() + '\\database\\users.db'
         self.temp_files = os.getcwd() + '\\app\\login_system_app\\temp'
 
-        # extra windows (login, register)
-        # They wil both remain hidden (withdraw) unless they are called
-        self.login = LoginApp(parent=self)
-        self.login.withdraw()
-        self.reg = RegisterApp(parent=self)
-        self.reg.withdraw()
+        self._frame = None
+
+        self.frames = {'start': StartWindow, 'login': LoginSystem, 'register': RegisterSystem}
 
         # starting frame
-        frame = StartWindow(self)
-        frame.pack()
+        self.switch_frame(self.frames['start'])
+
+    def switch_frame(self, frame_class):
+        new_frame = frame_class(self, width=1000, height=620)
+        if self._frame is not None:
+            self._frame.destroy()
+        self._frame = new_frame
+        self._frame.pack(expand=True, fill='both')
 
 
-class StartWindow(Frame):
-    def __init__(self, master):
+class StartWindow(ttk.Frame):
+    def __init__(self, master, **kwargs):
         """Start window for app"""
 
-        Frame.__init__(self, master)
+        ttk.Frame.__init__(self, master, **kwargs)
         self.master = master
 
         # container
         self.scene = ttk.Frame(self)
-        self.scene.pack()
+        self.scene.pack(pady=110)
 
         # themes
         self.master.style.configure('start_page.TButton',
@@ -100,13 +104,12 @@ class StartWindow(Frame):
 
         # We hide the start_app (withdraw), and
         # deiconify (unhide) the login system which was hidden
-        self.master.withdraw()
-        self.master.login.deiconify()
+        # place 'LoginSystem' frame
+        self.master.switch_frame(self.master.frames['login'])
 
     def register(self):
         """Displays registration window"""
 
         # We hide the start_app (withdraw),
         # and deiconify (unhide) the register system which was hidden
-        self.master.withdraw()
-        self.master.reg.deiconify()
+        self.master.switch_frame(self.master.frames['register'])

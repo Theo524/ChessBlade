@@ -4,6 +4,7 @@ import string
 import os
 from PIL import Image, ImageTk
 import csv
+import chess
 
 
 class Board(Frame):
@@ -22,8 +23,11 @@ class Board(Frame):
         self.deleted_pieces = []
         self.tracker = []
 
-
         # ai_board = []
+        # Initialize chess board
+        self.ai_board = chess.Board()
+        print(self.ai_board)
+        # self.ai_board.legal_moves
 
         # required data
         self.letters = list(string.ascii_lowercase[:8])  # chess letters (a-h)
@@ -42,7 +46,6 @@ class Board(Frame):
         else:
             self.widgets_frame = Frame(self.master)
 
-
         # game mode
         mode = master.master.mode
 
@@ -58,8 +61,10 @@ class Board(Frame):
 
         # colors for board
         self.board_colors = [
-                                'white', self.board_color, 'white', self.board_color, 'white', self.board_color, 'white', self.board_color,
-                                self.board_color, 'white', self.board_color, 'white', self.board_color, 'white', self.board_color, 'white',
+                                'white', self.board_color, 'white', self.board_color, 'white', self.board_color,
+                                'white', self.board_color,
+                                self.board_color, 'white', self.board_color, 'white', self.board_color, 'white',
+                                self.board_color, 'white',
                             ] * 4
 
         # file paths
@@ -82,6 +87,8 @@ class Board(Frame):
         if self.widgets_frame:
             self.add_notation_tab()
 
+        self.game_fen = self.get_game_fen_string()
+
     def add_chess_pieces_positions(self):
         """Populate 1d and 2d array chess"""
 
@@ -96,12 +103,13 @@ class Board(Frame):
             print(row, ',')
 
         # get coordinates, e.g. 'a1', 'b1', etc into a 1 dimensional array
-        one_d_array = []
         for row in self.coordinates:
             for piece in row:
                 self.pieces.append(piece)
 
     def set_game_settings(self, mode):
+        """Sets Game settings"""
+
         if mode == 'guest':
 
             # open default settings file
@@ -138,7 +146,7 @@ class Board(Frame):
                     self.board_color = row[6]
 
     def add_notation_tab(self):
-        """implement side game visuals"""
+        """Implement game tabs"""
 
         # ---------------NOTEBOOK--------------
         # notebook for chess notation
@@ -205,6 +213,24 @@ class Board(Frame):
                 y -= 1
                 x = 0
 
+    def place_buttons(self):
+        """Place the actual buttons on the screen"""
+
+        x = 0
+        y = 0
+        for button in self.board.values():
+            # We access the button object and use tkinter 'grid()' to set the column and row with x and y
+            button['button'].grid(column=x, row=y)
+
+            # We place the buttons on the frame in a linear way, so the first row would be placed
+            # and x represents each button/column in this first row
+            x += 1
+            # When we reach th end of the row, which is 8 buttons per row, we move to the next row
+            if x == 8:
+                # Set x to 0 to start a series of columns from the begging and increase y by one to move one row down
+                x = 0
+                y += 1
+
     def place_default_pieces_on_screen(self):
         """Place default starting pieces on the screen"""
 
@@ -217,7 +243,7 @@ class Board(Frame):
         self.place_fen_string(staring_fen_string)
 
     def place_fen_string(self, fen_str):
-        """Convert fen string to place pieces"""
+        """Convert fen string and place pieces on board"""
 
         # Thanks to the method 'place_piece' I've made, we can easily move and delete any piece from the screen
         # We enter the piece, the color and the position we want to place it at as parameters
@@ -276,9 +302,9 @@ class Board(Frame):
                 # get the color from the letter type
                 # according to the rules - white, lower case and black uppercase
                 if piece in list(string.ascii_lowercase):
-                    color = 'white'
+                    color = self.opponent_piece_color
                 elif piece in list(string.ascii_uppercase):
-                    color = 'black'
+                    color = self.player_piece_color
                 else:
                     color = 'blank'
 
@@ -290,27 +316,8 @@ class Board(Frame):
                               'K': 'king', 'k': 'king',
                               'blank': 'blank'}
 
-
                 # finally place the piece
                 self.place_piece(piece_dict[piece], color, position)
-
-    def place_buttons(self):
-        """Place the actual buttons on the screen"""
-
-        x = 0
-        y = 0
-        for button in self.board.values():
-            # We access the button object and use tkinter 'grid()' to set the column and row with x and y
-            button['button'].grid(column=x, row=y)
-
-            # We place the buttons on the frame in a linear way, so the first row would be placed
-            # and x represents each button/column in this first row
-            x += 1
-            # When we reach th end of the row, which is 8 buttons per row, we move to the next row
-            if x == 8:
-                # Set x to 0 to start a series of columns from the begging and increase y by one to move one row down
-                x = 0
-                y += 1
 
     def update_current_piece(self, position):
         """Command assigned to every button in the board"""
@@ -320,16 +327,23 @@ class Board(Frame):
         piece_name = self.board[position]['piece']['piece_name']
         piece_color = self.board[position]['piece']['piece_color']
 
+        if self.tracker:
+            # color of the button, piece and piece color the last clicked
+            # It can be retrieved because the tracker is only updated at the end of this function
+            old_piece_name = self.tracker[-1]['selected_piece']['piece_name']
+            old_piece_color = self.tracker[-1]['selected_piece']['piece_color']
+            old_piece_position = self.tracker[-1]['player_clicked']
+
         # HIGHLIGHTING MOVES
         # allowing turns (two player mode)
-        # if self.game_type == 'two_player'
+        # if the game type is 'two_player' mode and a piece was clicked
         if self.game_type == 'two_player':
             if self.player_one_turn:
+                # If it is player one turn
                 if self.board[position]['piece']['piece_color'] == self.player_piece_color:
                     self.reset_board_colors()
 
-                    # We only allow black pieces to be highlighted
-
+                    # We only allow player pieces to be highlighted
                     # rooks
                     if self.board[position]['piece']['piece_name'] == 'rook':
                         self.piece_highlighting(f'{position}', 'rook', self.player_piece_color)
@@ -354,7 +368,7 @@ class Board(Frame):
                     if self.board[position]['piece']['piece_name'] == 'king':
                         self.piece_highlighting(f'{position}', 'king', self.player_piece_color)
 
-                # If the piece is white
+                # If the piece is enemy
                 if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
                     print('\n-------------------ACTION-------------------')
                     print('Action: Player selected piece')
@@ -364,7 +378,8 @@ class Board(Frame):
                     self.reset_board_colors()
 
             if self.player_two_turn:
-                if self.board[position]['piece']['piece_color'] == 'white':
+                # If it is the second player turn
+                if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
                     print('\n-------------------ACTION-------------------')
                     print('Action: Player selected piece')
                     print(f'Selected piece: {piece_name}')
@@ -372,34 +387,34 @@ class Board(Frame):
                     print('-------------------END-------------------')
                     self.reset_board_colors()
 
-                    # We only allow white pieces to be highlighted
+                    # We only allow enemy pieces to be highlighted
 
                     # rooks
                     if self.board[position]['piece']['piece_name'] == 'rook':
-                        self.piece_highlighting(f'{position}', 'rook', 'white')
+                        self.piece_highlighting(f'{position}', 'rook', self.opponent_piece_color)
 
                     # prawn
                     if self.board[position]['piece']['piece_name'] == 'prawn':
-                        self.piece_highlighting(f'{position}', 'prawn', 'white')
+                        self.piece_highlighting(f'{position}', 'prawn', self.opponent_piece_color)
 
                     # bishop
                     if self.board[position]['piece']['piece_name'] == 'bishop':
-                        self.piece_highlighting(f'{position}', 'bishop', 'white')
+                        self.piece_highlighting(f'{position}', 'bishop', self.opponent_piece_color)
 
                     # knight
                     if self.board[position]['piece']['piece_name'] == 'knight':
-                        self.piece_highlighting(f'{position}', 'knight', 'white')
+                        self.piece_highlighting(f'{position}', 'knight', self.opponent_piece_color)
 
                     # queen
                     if self.board[position]['piece']['piece_name'] == 'queen':
-                        self.piece_highlighting(f'{position}', 'queen', 'white')
+                        self.piece_highlighting(f'{position}', 'queen', self.opponent_piece_color)
 
                     # king
                     if self.board[position]['piece']['piece_name'] == 'king':
-                        self.piece_highlighting(f'{position}', 'king', 'white')
+                        self.piece_highlighting(f'{position}', 'king', self.opponent_piece_color)
 
                 # If the piece is black
-                if self.board[position]['piece']['piece_color'] == 'black':
+                if self.board[position]['piece']['piece_color'] == self.player_piece_color:
                     print('\n-------------------ACTION-------------------')
                     print('Action: Player selected piece')
                     print(f'Selected piece: {piece_name}')
@@ -410,58 +425,20 @@ class Board(Frame):
         # If the color of the button is green
         # It would mean the player had already clicked a piece previously which marked possible moves in green
         if current_button_color == 'light green':
-            # Get the last piece clicked, to change pieces, from the end of the tracker
-            # It can be retrieved because the tracker is only updated at the end of this function
-            old_piece_name = self.tracker[-1]['selected_piece']['piece_name']
-            old_piece_color = self.tracker[-1]['selected_piece']['piece_color']
-            old_piece_position = self.tracker[-1]['player_clicked']
+            # make the move
+            self.make_move(old_piece_name, old_piece_color, old_piece_position, position)
 
-            # Console output
-            print('\n-------------------ACTION-------------------')
-            print('Action: Player made a move')
-            print(f'Piece: {old_piece_name}')
-            print(f'Destination: {old_piece_position}')
-            print(f'Piece color: {old_piece_color}')
-            print('-------------------END_OF_ACTION-------------------\n')
+            # Add to notation
+            self.update_notation('moved_piece', position, old_piece_name, new_piece_name=None)
 
-            # -------------NOTATION-------------
-            # chess notation tracker(list)
-            self.chess_notation.append(f'{old_piece_name[0].upper()}{position}')
-            # The moves variable is updated every turn, so every even number of moves corresponds to a player
-            # while every odd number of moves corresponds to the other player
-            if self.moves % 2 == 0:
-                # even number of moves, 'P2' used to mark player2
-                self.notation_tab.insert('end', f'{self.moves}.(P2:{self.chess_notation[-1]}) ')
-            else:
-                # even number of moves, 'P1' used to mark player1
-                self.notation_tab.insert('end', f'{self.moves}.(P1:{self.chess_notation[-1]}) ')
-
-            # update number of moves
+            # increase number of moves by one
             self.moves += 1
 
-            # ---------MOVEMENT---------
-            # place a new piece with those attributes in the marked selected spot
-            self.place_piece(old_piece_name, old_piece_color, position)
-            # replace the place where that piece was with a blank space img
-            self.place_piece('blank', 'blank', old_piece_position)
-
-            # set all colors back normal (remove highlighting)
-            self.reset_board_colors()
-
             # We now swap turns so only one side can make moves
-            if self.moves % 2 == 0:
-                self.player_two_turn = True
-                self.player_one_turn = False
-            else:
-                self.player_two_turn = False
-                self.player_one_turn = True
+            self.swap_turns()
 
-        # if the button clicked is red, that means the piece can be deleted
+        # if the button clicked is red, that means the piece is to be deleted
         if current_button_color == 'red':
-            # Get the last piece clicked, to change piece
-            old_piece_name = self.tracker[-1]['selected_piece']['piece_name']
-            old_piece_color = self.tracker[-1]['selected_piece']['piece_color']
-            old_piece_position = self.tracker[-1]['player_clicked']
 
             # Console output
             print('\n-------------------ACTION-------------------')
@@ -471,30 +448,11 @@ class Board(Frame):
             print(f'PLayer piece color: {old_piece_color}')
             print('-------------------END_OF_ACTION-------------------\n')
 
-            # --------NOTATION----------
-            # This time we add an 'x' in the middle to show that a piece is being destroyed
-            self.chess_notation.append(f'{old_piece_name[0].upper()}x{position}')
-            # also add piece image
-            # w_x and w_y represent white x and white y
-            if self.board[position]['piece']['piece_color'] == 'black':
-                img = PhotoImage(file=self.black_pieces[f'{piece_name}'])
-            else:
-                img = PhotoImage(file=self.white_pieces[f'{piece_name}'])
-            l = Label(self.deleted_tab_visual, image=img)
-            l.configure(borderwidth=5, bg=self.board_colors[1])
-            l.grid(column=self.b_x, row=self.b_y)
-            l.image = img
-            l = None
-            self.b_x += 1
-            if self.b_x == 8:
-                self.b_x = 0
-                self.b_y += 1
+            # make move
+            self.make_move(old_piece_name, old_piece_color, old_piece_position, position)
 
-            # add the move to chess notation
-            if self.moves % 2 == 0:
-                self.notation_tab.insert('end', f'{self.moves}.(P2:{self.chess_notation[-1]}) ')
-            else:
-                self.notation_tab.insert('end', f'{self.moves}.(P1:{self.chess_notation[-1]}) ')
+            # add to notation
+            self.update_notation('deleted_piece', position, old_piece_name, piece_name)
 
             # increase number of moves by one
             self.moves += 1
@@ -507,22 +465,10 @@ class Board(Frame):
             self.deleted_pieces_tab.insert('end', self.board[position]['piece']['piece_name'])
             self.deleted_pieces_tab.insert('end', '), ')
 
-            # Replace pieces
-            self.place_piece(old_piece_name, old_piece_color, position)
-            self.place_piece('blank', 'blank', old_piece_position)
-
-            # reset board colors
-            self.reset_board_colors()
-
             # swap turns
-            if self.moves % 2 == 0:
-                self.player_two_turn = True
-                self.player_one_turn = False
-            else:
-                self.player_two_turn = False
-                self.player_one_turn = True
+            self.swap_turns()
 
-        # Whenever the user clicks a non piece or empty space
+        # Whenever the user clicks a non piece or empty space, a messagebox appears
         # reset the board colors
         if current_button_color in ['white', self.board_colors[1]] and piece_name is None:
 
@@ -538,22 +484,97 @@ class Board(Frame):
             self.reset_board_colors()
 
         # Make AI board (Not done yet)
-        # b = 0
-        # temp = []
-        # for val in self.board.keys():
-        # temp.append(val)
-        # b += 1
-        # if b == 8:
-        # b = 0
-        # copy = temp[:]
-        # self.ai_board.append(copy)
-        # temp.clear()
-        # print(self.ai_board)
 
         # Allows to track user history of clicks, appends the current move
         self.tracker.append({'player_clicked': position,
                              'selected_piece': self.board[position]['piece'],
                              'color': self.board[position]['color']})
+
+        # checkmate?
+        print(self.ai_board.is_checkmate())
+
+        # stalmate? Game ends in draw.
+        print(self.ai_board.is_stalemate())
+
+    def make_move(self, piece_name, color, old_position, new_position):
+        """Make a move in the chess board"""
+
+        # place the selected piece in the selected spot
+        self.place_piece(piece_name, color, new_position)
+        # replace the place where that piece originally was with a blank space img
+        self.place_piece('blank', 'blank', old_position)
+
+        # move for virtual board
+        move = chess.Move.from_uci(f'{old_position}{new_position}')
+
+        # legal moves available
+        legal_moves = list(self.ai_board.legal_moves)
+
+        # Make move in virtual board
+        self.ai_board.push(move)
+
+        # Console
+        print(self.ai_board)
+
+        # new game fen
+        self.game_fen = self.get_game_fen_string()
+
+        # reset board colors back to normal
+        self.reset_board_colors()
+        self.master.master.update()
+
+    def update_notation(self, mode, position, old_piece_name, new_piece_name):
+        """CHESS NOTATION"""
+
+        if mode == 'moved_piece':
+            # chess notation tracker(list)
+            self.chess_notation.append(f'{old_piece_name[0].upper()}{position}')
+            # The moves variable is updated every turn, so every even number of moves corresponds to a player
+            # while every odd number of moves corresponds to the other player
+            if self.moves % 2 == 0:
+                # even number of moves, 'P2' used to mark player2
+                self.notation_tab.insert('end', f'{self.moves}.(P2:{self.chess_notation[-1]}) ')
+            else:
+                # even number of moves, 'P1' used to mark player1
+                self.notation_tab.insert('end', f'{self.moves}.(P1:{self.chess_notation[-1]}) ')
+
+        if mode == 'deleted_piece':
+            # This time we add an 'x' in the middle to show that a piece is being destroyed
+            self.chess_notation.append(f'{old_piece_name[0].upper()}x{position}')
+            # also add piece image
+            # w_x and w_y represent white x and white y
+            if self.board[position]['piece']['piece_color'] == 'black':
+                img = PhotoImage(file=self.white_pieces[f'{new_piece_name}'])
+            else:
+                img = PhotoImage(file=self.black_pieces[f'{new_piece_name}'])
+            l = Label(self.deleted_tab_visual, image=img)
+            l.configure(borderwidth=5, bg=self.board_colors[1])
+            l.grid(column=self.b_x, row=self.b_y)
+            l.image = img
+            self.b_x += 1
+            if self.b_x == 8:
+                self.b_x = 0
+                self.b_y += 1
+
+            # add the move to chess notation
+            if self.moves % 2 == 0:
+                self.notation_tab.insert('end', f'{self.moves}.(P2:{self.chess_notation[-1]}) ')
+            else:
+                self.notation_tab.insert('end', f'{self.moves}.(P1:{self.chess_notation[-1]}) ')
+
+    def swap_turns(self):
+        """Swap turns between players"""
+
+        if self.game_type == 'two_player':
+            if self.moves % 2 == 0:
+                self.player_two_turn = True
+                self.player_one_turn = False
+            else:
+                self.player_two_turn = False
+                self.player_one_turn = True
+
+        if self.game_type == 'computer':
+            pass
 
     def reset_board_colors(self):
         """Reset board colors to normal(to eliminate highlighting)"""
@@ -587,14 +608,14 @@ class Board(Frame):
                 for move_pattern in all_possible_rook_moves:
                     # loop through each list in this list of all possible moves
                     for position in move_pattern:
-                        # if the piece is not black
-                        if self.board[position]['piece']['piece_color'] != self.player_piece_color:
+                        # Empty button with no piece
+                        if self.board[position]['piece']['piece_color'] is None:
                             # Highlight the button, by converting it to 'light green'
                             self.board[position]['button'].configure(bg='light green')
                             # Set the color variable of that button to light green (no longer black/white)
                             self.board[position]['color'] = 'light green'
 
-                        # check if the piece is white
+                        # check if the piece is for the enemy
                         if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
                             # if it is white, highlight it with red so it becomes availible to delete
                             self.board[position]['button'].configure(bg='red')
@@ -612,7 +633,7 @@ class Board(Frame):
                     # loop through each list in this list of all possible moves
                     for position in move_pattern:
                         # if the piece is not white
-                        if self.board[position]['piece']['piece_color'] != self.opponent_piece_color:
+                        if self.board[position]['piece']['piece_color'] is None:
                             # Highlight the button, by converting it to 'light green'
                             self.board[position]['button'].configure(bg='light green')
                             # Set the color variable of that button to light green (no longer black/white)
@@ -684,15 +705,17 @@ class Board(Frame):
                 for move_pattern in all_possible_knight_moves:
                     # loop through each list in this list of all possible moves
                     for position in move_pattern:
+                        # if the piece is black, move to the next move
+                        if self.board[position]['piece']['piece_color'] == self.player_piece_color:
+                            break
+
                         # if the piece is white, highlight red and mark as enemy
                         if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
                             self.board[position]['button'].configure(bg='red')
                             self.board[position]['color'] = 'red'
                             continue
 
-                        # if the piece is black, move to the next move
-                        if self.board[position]['piece']['piece_color'] == self.player_piece_color:
-                            continue
+
 
                         # if there is no piece, highlight and mark green
                         if self.board[position]['piece']['piece_color'] is None:
@@ -809,11 +832,9 @@ class Board(Frame):
                             continue
 
         # prawns
-        if piece_color == 'black' and piece == 'prawn':
+        if piece_color == self.player_piece_color and piece == 'prawn':
             # Prawns only move 2 up and 1 up to the side to delete piece
-            all_prawns = self.get_all_possible_moves('prawn', 'black', position)
-            print(position)
-            print(all_prawns)
+            all_prawns = self.get_all_possible_moves('prawn', self.player_piece_color, position)
 
             # The moves generated in a list which was part of a larger list
             prawn_up = all_prawns[0]
@@ -824,7 +845,7 @@ class Board(Frame):
                 # only loops twice, e.g. 'e5' would generate 'e6' and 'e7'
 
                 # if white or black piece stop highlight
-                if self.board[position]['piece']['piece_color'] in ['white', 'black']:
+                if self.board[position]['piece']['piece_color'] in [self.opponent_piece_color, self.player_piece_color]:
                     break
 
                 # else highlight as green
@@ -834,20 +855,20 @@ class Board(Frame):
             for position in left_diagonal:
                 # left diagonal is just one position e.g. for 'b2' it would be 'b1'
                 # if we detect an enemy piece there, we highlight red
-                if self.board[position]['piece']['piece_color'] == 'white':
+                if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
                     self.board[position]['button'].configure(bg='red')
                     self.board[position]['color'] = 'red'
 
             for position in right_diagonal:
                 # right diagonal is just one position e.g. for 'b2' it would be 'b3'
                 # if we detect an enemy piece there, we highlight red
-                if self.board[position]['piece']['piece_color'] == 'white':
+                if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
                     self.board[position]['button'].configure(bg='red')
                     self.board[position]['color'] = 'red'
 
-        if piece_color == 'white' and piece == 'prawn':
+        if piece_color == self.opponent_piece_color and piece == 'prawn':
             # Prawns only move 2 up and 1 up to the side to delete piece
-            all_prawns = self.get_all_possible_moves('prawn', 'white', position)
+            all_prawns = self.get_all_possible_moves('prawn', self.opponent_piece_color, position)
 
             # The moves generated in a list which was part of a larger list
             prawn_up = all_prawns[0]
@@ -856,7 +877,7 @@ class Board(Frame):
 
             for position in prawn_up:
                 # if the piece is white we stop highlighting
-                if self.board[position]['piece']['piece_color'] in ['white', 'black']:
+                if self.board[position]['piece']['piece_color'] in [self.opponent_piece_color, self.player_piece_color]:
                     break
 
                 self.board[f'{position}']['button'].configure(bg='light green')
@@ -864,13 +885,13 @@ class Board(Frame):
 
             for position in left_diagonal:
                 # if the piece is black, highlight red
-                if self.board[position]['piece']['piece_color'] == 'black':
+                if self.board[position]['piece']['piece_color'] == self.player_piece_color:
                     self.board[position]['button'].configure(bg='red')
                     self.board[position]['color'] = 'red'
 
             for position in right_diagonal:
                 # if the piece is black, highlight to red
-                if self.board[position]['piece']['piece_color'] == 'black':
+                if self.board[position]['piece']['piece_color'] == self.player_piece_color:
                     self.board[position]['button'].configure(bg='red')
                     self.board[position]['color'] = 'red'
 
@@ -980,20 +1001,20 @@ class Board(Frame):
             move_two = self.move_row(self.move_column(self.move_column(position, 'increase'), 'increase'), 'increase')
 
             move_three = self.move_row(self.move_column(self.move_column(position, 'increase'), 'increase'),
-                                       'decrease')
+                                        'decrease')
             move_four = self.move_column(self.move_row(self.move_row(position, 'decrease'), 'decrease'), 'increase')
 
             move_five = self.move_column(self.move_row(self.move_row(position, 'decrease'), 'decrease'), 'decrease')
             move_six = self.move_row(self.move_column(self.move_column(position, 'decrease'), 'decrease'), 'decrease')
 
             move_seven = self.move_row(self.move_column(self.move_column(position, 'decrease'), 'decrease'),
-                                       'increase')
+                                        'increase')
             move_eight = self.move_column(self.move_row(self.move_row(position, 'increase'), 'increase'), 'decrease')
 
-            all_possible_knight_moves = [[move_one] + [move_two] + [move_three] + [move_four] + [move_five] + \
-                                        [move_six] + [move_seven] + [move_eight]]
+            # all moves
+            all_possible_knight_moves = [move_one] + [move_two] + [move_three] + [move_four] + [move_five] + [move_six] + [move_seven] + [move_eight]
+            all_possible_knight_moves = [[move] for move in all_possible_knight_moves if move is not None]
 
-            print(all_possible_knight_moves)
             return all_possible_knight_moves
 
         if piece == 'queen':
@@ -1044,21 +1065,31 @@ class Board(Frame):
             # all
             all_possible_king_moves = [move_one] + [move_two] + [move_three] + [move_four] + [move_five] + \
                                       [move_six] + [move_seven] + [move_eight]
-            all_possible_king_moves = [[move] for move in all_possible_king_moves]
-            print(all_possible_king_moves)
+            all_possible_king_moves = [[move] for move in all_possible_king_moves if move is not None]
 
             return all_possible_king_moves
 
         if piece == 'prawn' and piece_color == self.player_piece_color:
             up_one = self.move_row(position, 'increase')
             up_two = self.move_row(self.move_row(position, 'increase'), 'increase')
-            prawn_up = filter(self.remove_nones, [up_one, up_two])
+
+            if int(position[1]) >= 3:
+                prawn_up = list(filter(self.remove_nones, [up_one]))
+            else:
+                prawn_up = list(filter(self.remove_nones, [up_one, up_two]))
 
             # diagonal
-            right_diagonal = self.move_column(self.move_row(position, 'increase'), 'increase')
-            left_diagonal = self.move_column(self.move_row(position, 'increase'), 'decrease')
+            right_diagonal = list(filter(self.remove_nones,
+                                         [self.move_column(self.move_row(position, 'increase'), 'increase')]))
+            left_diagonal = list(filter(self.remove_nones,
+                                         [self.move_column(self.move_row(position, 'increase'), 'decrease')]))
 
             all_possible_prawn_moves = [prawn_up] + [right_diagonal] + [left_diagonal]
+
+            #
+            # check it is not the last row
+            #if int(position[1]) == 8:
+               # return 'end'
 
             # all
             return all_possible_prawn_moves
@@ -1067,13 +1098,23 @@ class Board(Frame):
             # up
             down_one = self.move_row(position, 'decrease')
             down_two = self.move_row(self.move_row(position, 'decrease'), 'decrease')
-            prawn_up = filter(self.remove_nones, [down_one, down_two])
+
+            if int(position[1]) <= 6:
+                prawn_up = list(filter(self.remove_nones, [down_one]))
+            else:
+                prawn_up = list(filter(self.remove_nones, [down_one, down_two]))
 
             # diagonal
-            right_diagonal = self.move_column(self.move_row(position, 'decrease'), 'increase')
-            left_diagonal = self.move_column(self.move_row(position, 'decrease'), 'decrease')
+            right_diagonal = list(filter(self.remove_nones,
+                                         [self.move_column(self.move_row(position, 'decrease'), 'increase')]))
+            left_diagonal = list(filter(self.remove_nones,
+                                        [self.move_column(self.move_row(position, 'decrease'), 'decrease')]))
 
             all_possible_prawn_moves = [prawn_up] + [right_diagonal] + [left_diagonal]
+            #
+            # check it is not the last row
+            ##if int(position[1]) == 1:
+              #  return ['end']
 
             # all
             return all_possible_prawn_moves
@@ -1101,106 +1142,8 @@ class Board(Frame):
         return black_pieces, white_pieces
 
     def get_game_fen_string(self):
-        fen_list = []
-        count = 0
-
-        for position in self.pieces:
-            if count % 8 == 0:
-                fen_list.append('/')
-            # current_piece
-            piece = self.board[position]['piece']['piece_name']
-            color = self.board[position]['piece']['piece_color']
-            if piece is None:
-                fen_list.append('0')
-            else:
-                if color == 'black':
-                    if piece == 'knight':
-                        fen_list.append('N')
-                    else:
-                        fen_list.append(piece[0].upper())
-                elif color == 'white':
-                    if piece == 'knight':
-                        fen_list.append('n')
-                    else:
-                        fen_list.append(piece[0].lower())
-
-            count += 1
-
-        fen_list = ''.join(fen_list).split('/')
-
-
-        # make it to a 2d array
-        fen_final_array = []
-        for row in fen_list:
-            temp = []
-            for val in row:
-                temp.append(val)
-            fen_final_array.append(temp)
-
-        fen_string = []
-        for val in fen_final_array:
-            # formatted array
-            arr = self.group_zeros(val)
-            fen_string.append(arr)
-
-        final = []
-        temp = []
-        for val in fen_string:
-            new_row = ''.join(val)
-            final.append(new_row)
-
-        b = '/'.join(final)
-
-    def group_zeros(self, my_array):
-        """Replace zero'"""
-
-        # 2d array
-        comp = []
-
-        # list within the 2d array
-        empty_indexes = []
-
-        # index tracker
-        c = 0
-
-        # get all empty indexes in the list
-        # the indexes of empty positions in the list
-        for val in my_array:
-            if val == '0':
-                # if there is a '0' in the position, it rep[resents an empty position, so we store its index through c
-                empty_indexes.append(c)
-
-            if val in string.ascii_letters:
-                # if a letter was found, it means, we ended a sequence so we append the previous list
-                # and make a new one
-                comp.append(empty_indexes)
-                empty_indexes = []
-            c += 1
-
-        # clean empty lists '[]' for lists like this [[], [], [1, 2], [4]]
-        cleaned_indexes_of_values = list(filter(self.remove_nones, comp))
-
-        # groups lists like [[1, 2, 3], [5], [7, 8]] into number of items such as [3, 1, 2]
-        grouped_values = list(map(self.add_groups, cleaned_indexes_of_values))
-
-        # get only the first index of the listed indexes so from [[1, 2, 3], [6]]
-        # get only [1, 6]
-        indexes = [ind[0] for ind in cleaned_indexes_of_values]
-
-        # original array without empty spaces
-        array = [val for val in my_array if val != '0']
-
-        c = 0
-        # insert number of spaces into their respective indexes
-        for i in indexes:
-            array.insert(i, str(grouped_values[c]))
-            c += 1
-        return array
-
-    @staticmethod
-    def add_groups(value):
-        """Sum of grouped values"""
-        return len(value)
+        """Get fen string of board"""
+        return self.ai_board.board_fen()
 
     @staticmethod
     def remove_nones(val):
@@ -1337,3 +1280,5 @@ class Board(Frame):
             self.place_buttons()
             for piece in self.pieces:
                 self.place_piece('blank', 'blank', piece)
+
+

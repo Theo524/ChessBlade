@@ -1,3 +1,5 @@
+import _tkinter
+
 from app.login_system_app.start import StartApp
 from app.chess_app.chess_app import ChessApp
 
@@ -101,6 +103,6 @@ if __name__ == '__main__':
         ChessApp(mode).mainloop()
 
         # Get new response once the chess app has been closed
-        # Response on whether to start a new app
+        # Response on whether to start a new chess game or not
         with open(main_path + '\\app\\chess_app\\all_settings\\data.txt', 'r') as f:
             response = f.read().split(':')[1]
