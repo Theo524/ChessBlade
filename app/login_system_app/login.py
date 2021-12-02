@@ -1,6 +1,9 @@
+import os
+import tkinter
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
+from PIL import Image,ImageTk
 from app.login_system_app.register import RegisterSystem
 from app.resources.custom_widgets.placeholder_entry import PlaceholderEntry
 import hashlib
@@ -44,9 +47,13 @@ class LoginSystem(ttk.Frame):
         self.main_window.pack()
 
         # Title (MIDDLE FRAME)
+        pic = PhotoImage(file=os.getcwd() + '\\app\\resources\\img\\login_icon.png')
+
         self.title_frame = ttk.Frame(self.main_window)
         self.title_frame.pack(pady=10)
-        ttk.Label(self.title_frame, text='LOGIN', font='arial 20').pack(expand=True)
+        image_title = Label(self.title_frame, image=pic)
+        image_title.pack()
+        image_title.image = pic
 
         # Username (MIDDLE FRAME)
         self.username_frame = ttk.Frame(self.main_window)
@@ -95,6 +102,7 @@ class LoginSystem(ttk.Frame):
         """Return to start app"""
 
         # Hide current app(LoginSystem), deiconify (unhide) 'StartApp'
+        self.master.title('Welcome')
         self.master.switch_frame(self.master.frames['start'])
 
     def show(self):
@@ -137,8 +145,13 @@ class LoginSystem(ttk.Frame):
             # Write mode type as 'user'
             with open(mode_file, 'w') as f:
                 f.write('user')
+
+            # Set start_new_game to false
+            with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
+                f.write('new_game:yes\n')
+                f.write('saved_game:no')
                 # quit the login system
-                self.master.quit()
+                self.master.close_win()
 
         else:
             # feedback for invalid data
@@ -175,15 +188,19 @@ class ForgotPassword(ttk.Frame):
         self.database = self.master.database
         self.temp_files = self.master.temp_files
 
+        # container
+        self.scene = ttk.Frame(self)
+        self.scene.pack(pady=100)
+
         # ---------------------App layout/upper frame---------------------
-        self.upper_window = ttk.Frame(self, height=50, width=450)
+        self.upper_window = ttk.Frame(self.scene, height=50, width=300)
         self.upper_window.pack()
         ttk.Button(self.upper_window, text='<--',
                command=lambda: self.master.switch_frame(LoginSystem), cursor='hand2').place(x=0, y=0)
 
         # ---------------------App layout/middle frame---------------------
-        self.main_window = ttk.Frame(self)
-        self.main_window.pack(pady=100)
+        self.main_window = ttk.Frame(self.scene)
+        self.main_window.pack()
 
         # change title
         self.master.title('Recover password')
@@ -234,7 +251,7 @@ class ForgotPassword(ttk.Frame):
         ttk.Button(self.main_window, text='Continue', cursor='hand2', command=self.get_email).pack()
 
         # ---------------------App layout/lower frame---------------------
-        self.lower_frame = ttk.Frame(self, height=50)
+        self.lower_frame = ttk.Frame(self.scene, height=50)
         self.lower_frame.pack()
 
     def check_email_in_db(self):
@@ -558,5 +575,5 @@ class NewPassword(ttk.Frame):
 
     def start(self):
         """Return to Login page"""
-
+        self.master.title('Login')
         self.master.switch_frame(LoginSystem)

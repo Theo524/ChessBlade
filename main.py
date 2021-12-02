@@ -79,8 +79,9 @@ if __name__ == '__main__':
     start = StartApp()
 
     start.mainloop()
-    # Once logged in or entered in guest mode, destroy the startapp
-    start.destroy()
+    # Once logged in or entered in guest mode, destroy the startapp if not closed
+    if not start.closed:
+        start.destroy()
 
     # Retrieve the game mode the game should be in (guest or user, set by the startapp)
     with open(main_path + '\\app\\login_system_app\\temp\\mode.txt') as f:
@@ -89,20 +90,34 @@ if __name__ == '__main__':
     # load settings into files
     load_settings(mode)
 
-    # Set start_new_game to true
-    with open(main_path + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
-        f.write('new_game:yes')
-
-    # read the data from that file
+    # read the data from  file on whether to start new game
     with open(main_path + '\\app\\chess_app\\all_settings\\data.txt', 'r') as f:
-        response = f.read().split(':')[1]
+        # response means whether to open a new game
+        txt = list(f.readlines())
+        response = txt[0].split(':')[1]
+
+        # saved game determines whether to open a new saved game
+        saved_game = txt[1].split(':')[1]
 
     # while the response remains as 'yes'
-    while str(response) == 'yes':
+    while str(response) == 'yes\n':
+        # get fen string
+        with open(main_path + '\\app\\chess_app\\all_saved_games\\recent_save.txt', 'r') as f:
+            fen_str = f.read()
+            print('jjhvfby:  ', fen_str)
+
         # Start new chess game
-        ChessApp(mode).mainloop()
+        if saved_game == 'yes':
+            ChessApp(mode, fen=fen_str).mainloop()
+        if saved_game == 'no':
+            ChessApp(mode).mainloop()
+
+
 
         # Get new response once the chess app has been closed
         # Response on whether to start a new chess game or not
         with open(main_path + '\\app\\chess_app\\all_settings\\data.txt', 'r') as f:
-            response = f.read().split(':')[1]
+            txt = list(f.readlines())
+
+            response = txt[0].split(':')[1]
+            saved_game = txt[1].split(':')[1]

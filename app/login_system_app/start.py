@@ -12,7 +12,10 @@ class StartApp(Tk):
         """Start of application"""
 
         Tk.__init__(self)
-        self.my_state = True
+
+        self.closed = False
+        # command button made for close window
+        self.protocol("WM_DELETE_WINDOW", self.close_win)
 
         # Attributes
         #self.resizable(0, 0)
@@ -41,6 +44,19 @@ class StartApp(Tk):
         self._frame = new_frame
         self._frame.pack(expand=True, fill='both')
 
+    def close_win(self):
+        """Close Window"""
+        # win state
+        self.closed = True
+
+        # Set start_new_game to false
+        with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
+            f.write('new_game:no\n')
+            f.write('saved_game:no')
+
+        # close win
+        self.destroy()
+
 
 class StartWindow(ttk.Frame):
     def __init__(self, master, **kwargs):
@@ -51,35 +67,35 @@ class StartWindow(ttk.Frame):
 
         # container
         self.scene = ttk.Frame(self)
-        self.scene.pack(pady=110)
+        self.scene.pack()
 
         # themes
         self.master.style.configure('start_page.TButton',
-                                    font=('Arial', 15))
+                                    font=('Arial', 20))
         self.master.style.configure("Placeholder.TEntry",
                                     foreground='grey')
 
         # Title
         ttk.Label(self.scene, text="CHESS GAME",
-                  font=('Arial', 30))\
-            .pack(side="top", padx=30, pady=15)
+                  font=('Arial', 50))\
+            .pack(side="top", padx=30, pady=50)
 
         # Login Button
         ttk.Button(self.scene, text="Login",
                     command=self.login,
-                   style='start_page.TButton')\
+                   style='start_page.TButton', cursor='hand2')\
             .pack(pady=20, ipady=5, ipadx=10)
 
         # Registration button
         ttk.Button(self.scene, text="Register",
                    command=self.register,
-                   style='start_page.TButton')\
+                   style='start_page.TButton', cursor='hand2')\
             .pack(pady=20, ipady=5, ipadx=10)
 
         # Guest mode button
         ttk.Button(self.scene, text="Enter as guest",
                    command=self.set_mode_guest,
-                   style='start_page.TButton')\
+                   style='start_page.TButton', cursor='hand2')\
             .pack(pady=20, ipady=5, ipadx=10)
 
         # Just my name at the bottom
@@ -94,6 +110,11 @@ class StartWindow(ttk.Frame):
         # Write the game mode 'guest' because user clicked 'enter as guest' button
         with open(mode_file, 'w') as f:
             f.write('guest')
+
+        # Set start_new_game to true
+        with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
+            f.write('new_game:yes\n')
+            f.write('saved_game:no')
 
         # We quit the start_page and start_app to start the chess app in guest mode
         self.master.my_state = False

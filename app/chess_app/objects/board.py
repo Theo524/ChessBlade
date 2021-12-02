@@ -1,3 +1,4 @@
+import tkinter.messagebox
 from tkinter import *
 from tkinter import messagebox, ttk
 import string
@@ -38,7 +39,7 @@ class Board(Frame):
         self.board = {}  # game board around which game revolves
         self.coordinates = []  # 2d array of all chess positions
         self.pieces = []  # 1d array of all chess positions
-        self.add_chess_pieces_positions()
+        self.add_chess_pieces_positions() # fill the lists
 
         # frame containing chess notation tab
         if kwargs:
@@ -87,7 +88,12 @@ class Board(Frame):
         if self.widgets_frame:
             self.add_notation_tab()
 
-        self.game_fen = self.get_game_fen_string()
+        try:
+            self.starting_fen = kwargs['fen_string']
+        except KeyError:
+            self.starting_fen = None
+
+        self.game_fen = None
 
     def add_chess_pieces_positions(self):
         """Populate 1d and 2d array chess"""
@@ -98,9 +104,6 @@ class Board(Frame):
             for letter in self.letters:
                 temp.append(f'{letter}{row + 1}')
             self.coordinates.append(temp)
-
-        for row in self.coordinates:
-            print(row, ',')
 
         # get coordinates, e.g. 'a1', 'b1', etc into a 1 dimensional array
         for row in self.coordinates:
@@ -164,7 +167,6 @@ class Board(Frame):
         # second tab
         self.deleted_tab_visual = Frame(self.notebook, bg=self.board_colors[1])
         self.deleted_tab_visual.configure(highlightthickness=5, highlightbackground='black')
-
         self.deleted_tab_visual.pack()
 
         # add  tabs to chess notebook
@@ -237,7 +239,7 @@ class Board(Frame):
         # Thanks to the method 'place_piece' I've made, we can easily move and delete any piece from the screen
         # We enter the piece, the color and the position we want to place it at as parameters
 
-        # use a FEN string (Forsyth-Edwards Notation)
+        # use a FEN string of only pieces (Forsyth-Edwards Notation)
         staring_fen_string = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'
 
         self.place_fen_string(staring_fen_string)
@@ -491,10 +493,12 @@ class Board(Frame):
                              'color': self.board[position]['color']})
 
         # checkmate?
-        print(self.ai_board.is_checkmate())
+        print(f'Checkmate: {self.ai_board.is_checkmate()}')
 
         # stalmate? Game ends in draw.
-        print(self.ai_board.is_stalemate())
+        print(f'Checkmate: {self.ai_board.is_stalemate()}')
+        if self.ai_board.is_stalemate():
+            messagebox.showerror('Info', f'Game ends in draw')
 
     def make_move(self, piece_name, color, old_position, new_position):
         """Make a move in the chess board"""
@@ -518,6 +522,7 @@ class Board(Frame):
 
         # new game fen
         self.game_fen = self.get_game_fen_string()
+        print(self.game_fen)
 
         # reset board colors back to normal
         self.reset_board_colors()
@@ -1269,16 +1274,21 @@ class Board(Frame):
             # return final filtered list
             return list(filter(self.remove_nones, diagonal_values))
 
-    def build(self, type='default'):
-        if type == 'default':
+    def build(self, board_type='default', **kwargs):
+        if board_type == 'default':
             self.make_board()
             self.place_buttons()
             self.place_default_pieces_on_screen()
 
-        if type == 'empty':
+        if board_type == 'empty':
             self.make_board()
             self.place_buttons()
             for piece in self.pieces:
                 self.place_piece('blank', 'blank', piece)
+
+        if board_type == 'saved':
+            self.make_board()
+            self.place_buttons()
+            self.place_fen_string(kwargs['fen'])
 
 

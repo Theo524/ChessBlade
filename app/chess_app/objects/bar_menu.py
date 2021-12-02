@@ -1,8 +1,9 @@
 from tkinter import *
 import os
 from app.chess_app.objects.settings import Settings
-from tkinter import ttk
+from tkinter import ttk, messagebox, filedialog
 import csv
+from datetime import date, datetime
 
 
 class BarMenu(Menu):
@@ -10,11 +11,13 @@ class BarMenu(Menu):
         Menu.__init__(self, root)
 
         # GAME MODE
-        self.mode = root.mode
-
+        self.root = root
+        self.mode = self.root.mode
         # Create a menu
         self.game_menu = Menu(self, tearoff=0)
         # Add the game menu options
+        self.game_menu.add_command(label='Open', command=self.open_file)
+        self.game_menu.add_command(label='Save', command=self.save_game)
         self.game_menu.add_command(label='New game', command=self.new_game)
         if self.mode == 'user':
             self.game_menu.add_command(label='Player stats', command=self.show_player_stats)
@@ -39,6 +42,62 @@ class BarMenu(Menu):
         # Name the menu
         self.add_cascade(label='About', menu=self.about_menu)
 
+    def save_game(self):
+        """Save a game fen string into txt file"""
+
+        board_obj = self.root.main_chess_board
+        fen = board_obj.get_game_fen_string()
+
+        with open(os.getcwd()+'\\app\\login_system_app\\temp\\current_user.txt', 'r') as f:
+            name = f.read() if self.mode == 'user' else 'Guest'
+
+        # new file name
+        f_name = f'{name} - Saved Game.txt'
+
+        today = date.today()
+        date_str = today.strftime("%A %B %d, %Y")
+
+        time = datetime.now()
+        h = f'0{str(time.hour)}' if len(str(time.hour))==0 else time.hour
+        m = f'0{str(time.minute)}' if len(str(time.minute))==0 else time.minute
+        s = f'0{str(time.second)}' if len(str(time.second))==0 else time.second
+        time_str = f'{h}:{m}:{s}'
+
+        with open(os.getcwd() + f'\\app\\chess_app\\all_saved_games\\{f_name}', 'w') as f:
+            f.write(f'Owner: {name}\n')
+            f.write(f'Date saved: {date_str}\n')
+            f.write(f'Time saved: {time_str}\n')
+            f.write('\n')
+            f.write(f'GAME FEN:{fen}')
+
+        # write str
+        with open(os.getcwd() + '\\app\\chess_app\\all_saved_games\\recent_save.txt', 'w') as f:
+            f.write(fen)
+
+        messagebox.showinfo('Saved', 'Game successfully Saved')
+
+    def open_file(self):
+        """Open file"""
+
+        board_obj = self.root.main_chess_board
+
+        res = messagebox.askyesno('Open', 'Open text file for saved game?')
+        g_path = os.getcwd() + '\\app\\chess_app\\all_saved_games'
+        if res:
+            filename = filedialog.askopenfilename(initialdir=g_path, title="Select file", filetypes=(("text files","*.txt"), ("all files","*.*")))
+
+            with open(filename, 'r') as f:
+                # end of file
+                fen = f.readlines()[-1].split(':')[1]
+                print(fen)
+
+            with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
+                f.write('new_game:yes\n')
+                f.write('saved_game:yes')
+
+            # close win
+            self.master.destroy()
+
     def open_settings(self):
         """Open game settings"""
         s = Settings(self.mode)
@@ -48,14 +107,16 @@ class BarMenu(Menu):
         # os.path.normpath(os.getcwd() + os.sep + os.pardir)
         # Set new game file to 'yes' and destroy window, so a new ChessAPp is run
         with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
-            f.write('new_game:yes')
+            f.write('new_game:yes\n')
+            f.write('saved_game:no')
 
         self.master.destroy()
 
     def exit(self):
         # Set new game file to 'no' and destroy window so the looping chess app stops
         with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
-            f.write('new_game:no')
+            f.write('new_game:no\n')
+            f.write('saved_game:no')
 
         self.master.destroy()
 

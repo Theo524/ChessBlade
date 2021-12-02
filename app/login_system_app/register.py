@@ -29,7 +29,7 @@ class RegisterSystem(ttk.Frame):
         self.upper_window.pack()
         # Button to return to start page
         ttk.Button(self.upper_window, text='<--',
-               command=self.return_to_start).place(x=0, y=0)
+               command=self.return_to_start, cursor='hand2').place(x=0, y=0)
 
         # ----------------------App layout/middle frame----------------------
 
@@ -123,7 +123,7 @@ class RegisterSystem(ttk.Frame):
         self.save_data_frame = ttk.Frame(self.main_window)
         self.save_data_frame.pack(pady=10)
 
-        self.save_button = ttk.Button(self.save_data_frame, text='Save', command=self.store_data)
+        self.save_button = ttk.Button(self.save_data_frame, text='Save', command=self.store_data, cursor='hand2')
         self.save_button.pack()
 
         # ----------------------App layout/lower frame----------------------
