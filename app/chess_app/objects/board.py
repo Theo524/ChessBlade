@@ -6,6 +6,7 @@ import os
 from PIL import Image, ImageTk
 import csv
 import chess
+import sys
 
 
 class Board(Frame):
@@ -23,12 +24,6 @@ class Board(Frame):
         self.chess_notation = []
         self.deleted_pieces = []
         self.tracker = []
-
-        # ai_board = []
-        # Initialize chess board
-        self.ai_board = chess.Board()
-        print(self.ai_board)
-        # self.ai_board.legal_moves
 
         # required data
         self.letters = list(string.ascii_lowercase[:8])  # chess letters (a-h)
@@ -88,12 +83,8 @@ class Board(Frame):
         if self.widgets_frame:
             self.add_notation_tab()
 
-        try:
-            self.starting_fen = kwargs['fen_string']
-        except KeyError:
-            self.starting_fen = None
-
-        self.game_fen = None
+        # ai board
+        self.ai_board = chess.Board()
 
     def add_chess_pieces_positions(self):
         """Populate 1d and 2d array chess"""
@@ -121,7 +112,7 @@ class Board(Frame):
                 next(csv_reader)
 
                 for row in csv_reader:
-                    print(row)
+                    print(f'Guest settings : {row}')
                     # retrieve settings in file
                     self.difficulty = row[0]
                     self.time = row[1]
@@ -138,7 +129,7 @@ class Board(Frame):
                 next(csv_reader)
 
                 for row in csv_reader:
-                    print(row)
+                    print(f'User settings : {row}')
                     # retrieve these personalized settings from user file
                     self.difficulty = row[0]
                     self.time = row[1]
@@ -494,11 +485,15 @@ class Board(Frame):
 
         # checkmate?
         print(f'Checkmate: {self.ai_board.is_checkmate()}')
-
         # stalmate? Game ends in draw.
-        print(f'Checkmate: {self.ai_board.is_stalemate()}')
+        print(f'Stalemate: {self.ai_board.is_stalemate()}')
+        print(f'Outcome: {self.ai_board.outcome()}')
+        if self.ai_board.is_checkmate():
+            messagebox.showerror('Info', f'Checkmate')
+
         if self.ai_board.is_stalemate():
-            messagebox.showerror('Info', f'Game ends in draw')
+            messagebox.showinfo('Info', f'Game ends in draw')
+
 
     def make_move(self, piece_name, color, old_position, new_position):
         """Make a move in the chess board"""
@@ -513,16 +508,21 @@ class Board(Frame):
 
         # legal moves available
         legal_moves = list(self.ai_board.legal_moves)
+        print(self.ai_board.is_legal(move))
 
         # Make move in virtual board
         self.ai_board.push(move)
 
         # Console
+        print('*********************************************')
+        print('*********************************************')
+        print('Chess library board(text-based):')
         print(self.ai_board)
-
-        # new game fen
-        self.game_fen = self.get_game_fen_string()
-        print(self.game_fen)
+        print()
+        print('My board:')
+        print(self)
+        print('*********************************************')
+        print('*********************************************')
 
         # reset board colors back to normal
         self.reset_board_colors()
@@ -1290,5 +1290,65 @@ class Board(Frame):
             self.make_board()
             self.place_buttons()
             self.place_fen_string(kwargs['fen'])
+            # ai board
+            # Initialize chess board lib fen
+            self.ai_board.set_board_fen(kwargs['fen'])
 
+        # Console
+        print('Chess lib board:')
+        print(self.ai_board)
+        print()
+        print('My board')
+        print(self)
 
+    def __str__(self):
+
+        # unicode for pieces
+        # lowercase represents white, black represents uppercase
+        # site where I got them from: https://altcodeunicode.com/alt-codes-chess-symbols/
+        unicode_pieces_dict = {'r': u'\u2656', 'n': u'\u2658', 'b': u'\u2657', 'q': u'\u2655', 'k': u'\u2654',
+                               'p': u'\u2659', 'R': u'\u265C', 'N': u'\u265E', 'B': u'\u265D', 'Q': u'\u265B',
+                               'K': u'\u265A', 'P': u'\u265F', 'separator': u'\u4E00', 'edge': u'\u007C'}
+
+        # col count
+        x = 0
+        # spaces and edges
+        separator = ' ' + unicode_pieces_dict['separator'] + ' '
+        side_edge = unicode_pieces_dict['edge']
+        height_edge = unicode_pieces_dict['separator'] * 19
+
+        # boards str add top border
+        board_str = f'{height_edge}\n'
+
+        for pos, val in self.board.items():
+            # left border vert line
+            if x == 0:
+                board_str += f'{side_edge}'
+
+            # current piece name
+            current_p = 'n' if val['piece']['piece_name'] == 'knight' else val['piece']['piece_name']
+            # take first letter if it is a piece if not make it blank space (with separator)
+            piece = separator if current_p is None else current_p[0]
+
+            # if it is a piece
+            if piece != separator:
+                # 'letter' is a single letter. Upper or lowercase depending on color
+                letter = str(current_p[0]).lower() if val['piece']['piece_color'] == 'black'\
+                    else str(current_p[0]).upper()
+
+                # piece unicode str
+                piece = ' ' + str(unicode_pieces_dict[letter]) + ' '
+
+            # add piece to board str
+            board_str += piece
+
+            # if x is not ignore else restart to 0 and create new row
+            x += 1
+            if x == 8:
+                board_str += f'{side_edge}\n'
+                x = 0
+
+        # add bottom border
+        board_str += height_edge
+
+        return board_str
