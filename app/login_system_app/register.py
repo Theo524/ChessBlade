@@ -362,11 +362,11 @@ class RegisterSystem(ttk.Frame):
 
                 # output database to console
                 c.execute("SELECT * FROM users")
-                print(c.fetchall())
+                print(f'User data: {c.fetchall()}')
                 c.execute("SELECT * FROM user_settings")
-                print(c.fetchall())
+                print(f'User settings: {c.fetchall()}')
                 c.execute("SELECT * FROM user_stats")
-                print(c.fetchall())
+                print(f'User stats: {c.fetchall()}')
 
 
             # ask user to leave or stay

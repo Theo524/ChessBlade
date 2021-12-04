@@ -16,12 +16,11 @@ class BarMenu(Menu):
         # Create a menu
         self.game_menu = Menu(self, tearoff=0)
         # Add the game menu options
-        self.game_menu.add_command(label='Open', command=self.open_file)
+        self.game_menu.add_command(label='Open existing game', command=self.open_file)
         self.game_menu.add_command(label='Save', command=self.save_game)
         self.game_menu.add_command(label='New game', command=self.new_game)
         if self.mode == 'user':
             self.game_menu.add_command(label='Player stats', command=self.show_player_stats)
-            self.game_menu.add_command(label='Save')
         self.game_menu.add_command(label='Exit', command=self.exit)
         # Name the game menu
         self.add_cascade(label='Game', menu=self.game_menu)
@@ -70,10 +69,6 @@ class BarMenu(Menu):
             f.write('\n')
             f.write(f'GAME FEN:{fen}')
 
-        # write str
-        with open(os.getcwd() + '\\app\\chess_app\\all_saved_games\\recent_save.txt', 'w') as f:
-            f.write(fen)
-
         messagebox.showinfo('Saved', 'Game successfully Saved')
 
     def open_file(self):
@@ -88,8 +83,13 @@ class BarMenu(Menu):
 
             with open(filename, 'r') as f:
                 # end of file
-                fen = f.readlines()[-1].split(':')[1]
-                print(fen)
+                file = list(f.readlines())
+                fen = file[-1].split(':')[1]
+
+            # write fen to temp file
+            with open(os.getcwd() + '\\app\\chess_app\\all_saved_games\\temp\\temp_file.txt', 'w') as f:
+                # end of file
+                f.write(fen)
 
             with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
                 f.write('new_game:yes\n')
@@ -120,6 +120,7 @@ class BarMenu(Menu):
 
         self.master.destroy()
 
+    @staticmethod
     def show_player_stats(self):
         """Shows player data"""
 
@@ -141,7 +142,7 @@ class BarMenu(Menu):
         new_window = Toplevel()
 
         # Create the frame
-        player_stats_frame = Frame(new_window, text='Player history', width=320, height=180)
+        player_stats_frame = Frame(new_window,  width=320, height=180)
         player_stats_frame.pack(pady=5)
 
         # Place the username as a title at the top of the box frame

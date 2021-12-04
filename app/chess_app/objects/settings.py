@@ -5,7 +5,7 @@ import sqlite3
 
 
 class Settings(Toplevel):
-    def __init__(self, mode):
+    def __init__(self):
         Toplevel.__init__(self)
 
         # attributes

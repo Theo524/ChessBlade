@@ -10,7 +10,7 @@ from tkinter import ttk
 class ChessApp(tkinter.Tk):
     """Window container for game objects"""
     def __init__(self, mode, **kwargs):
-        tkinter.Tk.__init__(self, mode)
+        tkinter.Tk.__init__(self)
 
         # The game mode and the path for this chess app settings and files, shown in these variables
         self.mode = mode

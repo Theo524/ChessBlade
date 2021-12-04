@@ -102,17 +102,14 @@ if __name__ == '__main__':
     # while the response remains as 'yes'
     while str(response) == 'yes\n':
         # get fen string
-        with open(main_path + '\\app\\chess_app\\all_saved_games\\recent_save.txt', 'r') as f:
+        with open(main_path + '\\app\\chess_app\\all_saved_games\\temp\\temp_file.txt', 'r') as f:
             fen_str = f.read()
-            print('jjhvfby:  ', fen_str)
 
         # Start new chess game
         if saved_game == 'yes':
             ChessApp(mode, fen=fen_str).mainloop()
         if saved_game == 'no':
             ChessApp(mode).mainloop()
-
-
 
         # Get new response once the chess app has been closed
         # Response on whether to start a new chess game or not
