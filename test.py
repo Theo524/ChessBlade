@@ -13,7 +13,7 @@ board = Board(board_frame)
 board.build(board_type='empty')
 
 # Place random pieces on board like this (start with black piece for movement)
-board.place_piece('queen', 'black', 'c5')
+board.place_piece(piece='queen', color='black', position='c5')
 
 
 board.pack()
