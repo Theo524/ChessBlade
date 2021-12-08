@@ -34,7 +34,7 @@ class Board(Frame):
         self.board = {}  # game board around which game revolves
         self.coordinates = []  # 2d array of all chess positions
         self.pieces = []  # 1d array of all chess positions
-        self.add_chess_pieces_positions() # fill the lists
+        self.add_chess_pieces_positions()  # fill the lists
 
         # frame containing chess notation tab
         if kwargs:
@@ -104,9 +104,7 @@ class Board(Frame):
     def set_game_settings(self, mode):
         """Sets Game settings
 
-        :param mode: The gamemode the player is in
-        :type mode: str
-
+        :param str mode: The game mode the player is in
         """
 
         if mode == 'guest':
@@ -243,8 +241,7 @@ class Board(Frame):
     def place_fen_string(self, fen_str):
         """Convert fen string and place pieces on board
 
-        :param fen_str: simplified FEN string to be placed on board
-        :type fen_str: str
+        :param str fen_str: simplified FEN string to be placed on board
         """
 
         # Thanks to the method 'place_piece' I've made, we can easily move and delete any piece from the screen
@@ -324,8 +321,7 @@ class Board(Frame):
     def update_current_piece(self, position):
         """Command assigned to every button in the board
 
-        :param position: chessboard coordinate, used to determine moves
-        :type position: str
+        :param str position: chessboard coordinate, used to determine moves
         """
 
         # color of the button, piece and piece color the user just clicked
@@ -445,7 +441,6 @@ class Board(Frame):
 
         # if the button clicked is red, that means the piece is to be deleted
         if current_button_color == 'red':
-
             # Console output
             print('\n-------------------ACTION-------------------')
             print('Action: Player deleted a piece')
@@ -477,7 +472,6 @@ class Board(Frame):
         # Whenever the user clicks a non piece or empty space, a messagebox appears
         # reset the board colors
         if current_button_color in ['white', self.board_colors[1]] and piece_name is None:
-
             # message
             messagebox.showerror('Error', f'{position} is an invalid move')
 
@@ -510,14 +504,10 @@ class Board(Frame):
     def make_move(self, piece_name, color, old_position, new_position):
         """Make a move in the chess board
 
-        :param piece_name: the name of the given piece
-        :type piece_name: str
-        :param color: The color of the given piece
-        :type color: str
-        :param old_position: The position the piece is in
-        :type old_position: str
-        :param new_position: The position the piece will move to
-        :type new_position: str
+        :param str piece_name: the name of the given piece
+        :param str color: The color of the given piece
+        :param str old_position: The position the piece is in
+        :param str new_position: The position the piece will move to
         """
 
         # place the selected piece in the selected spot
@@ -551,16 +541,12 @@ class Board(Frame):
         self.master.master.update()
 
     def update_notation(self, mode, position, old_piece_name, new_piece_name):
-        """CHESS NOTATION
+        """Add game data to chess notation tabs
 
-        :param mode: determines what tab to add the data to
-        :type mode: str
-        :param position: chessboard coordinate
-        :type position: str
-        :param old_piece_name: Used for chess notation move
-        :type old_piece_name: str
-        :param new_piece_name: Used for chess notation move
-        :type new_piece_name: str
+        :param str mode: determines what tab to add the data to
+        :param str position: chessboard coordinate
+        :param str old_piece_name: Used for chess notation move
+        :param str new_piece_name: Used for chess notation move
         """
 
         if mode == 'moved_piece':
@@ -628,7 +614,12 @@ class Board(Frame):
                 i += 1
 
     def piece_highlighting(self, position, piece, piece_color):
-        """Highlights all possible moves for a given piece"""
+        """Highlights all possible moves for a given piece
+
+        :param str position: Chessboard coordinate
+        :param str piece: Piece name
+        :param str piece_color: Piece color
+        """
 
         # We highlight the piece color to blue, so it is evident what piece the user selected
         self.board[position]['button'].configure(bg='light blue')
@@ -751,8 +742,6 @@ class Board(Frame):
                             self.board[position]['button'].configure(bg='red')
                             self.board[position]['color'] = 'red'
                             continue
-
-
 
                         # if there is no piece, highlight and mark green
                         if self.board[position]['piece']['piece_color'] is None:
@@ -933,7 +922,12 @@ class Board(Frame):
                     self.board[position]['color'] = 'red'
 
     def place_piece(self, piece, color, position):
-        """Placement of pieces"""
+        """Allows to place a piece anywhere on the board
+
+        :param str piece: Piece name
+        :param str color: Piece color
+        :param str position: Chessboard coordinate
+        """
 
         # if the color parameter equals black
         if color == 'black':
@@ -981,7 +975,15 @@ class Board(Frame):
             self.board[position]['piece']['piece_color'] = None
 
     def get_all_possible_moves(self, piece, piece_color, position):
-        """Generates a list of all possible moves for a piece basedon its color and board position"""
+        """Generates a list of all possible moves for a piece based on its color and board position
+
+        :param str piece: Piece name
+        :param str piece_color: Piece color
+        :param str position: Chessboard coordinate
+
+        :returns: A list of all possible moves for the position for the specified piece
+        :rtype: list
+        """
 
         # With this list we can get the new positions for this move by modifying only one part
         temp = list(position)
@@ -1013,7 +1015,6 @@ class Board(Frame):
             return all_possible_rook_moves
 
         if piece == 'bishop':
-
             # up right diagonal
             bishop_up_right = self.get_diagonal(position, 'up_right')
 
@@ -1038,18 +1039,19 @@ class Board(Frame):
             move_two = self.move_row(self.move_column(self.move_column(position, 'increase'), 'increase'), 'increase')
 
             move_three = self.move_row(self.move_column(self.move_column(position, 'increase'), 'increase'),
-                                        'decrease')
+                                       'decrease')
             move_four = self.move_column(self.move_row(self.move_row(position, 'decrease'), 'decrease'), 'increase')
 
             move_five = self.move_column(self.move_row(self.move_row(position, 'decrease'), 'decrease'), 'decrease')
             move_six = self.move_row(self.move_column(self.move_column(position, 'decrease'), 'decrease'), 'decrease')
 
             move_seven = self.move_row(self.move_column(self.move_column(position, 'decrease'), 'decrease'),
-                                        'increase')
+                                       'increase')
             move_eight = self.move_column(self.move_row(self.move_row(position, 'increase'), 'increase'), 'decrease')
 
             # all moves
-            all_possible_knight_moves = [move_one] + [move_two] + [move_three] + [move_four] + [move_five] + [move_six] + [move_seven] + [move_eight]
+            all_possible_knight_moves = [move_one] + [move_two] + [move_three] + [move_four] + [move_five] + \
+                                        [move_six] + [move_seven] + [move_eight]
             all_possible_knight_moves = [[move] for move in all_possible_knight_moves if move is not None]
 
             return all_possible_knight_moves
@@ -1119,14 +1121,14 @@ class Board(Frame):
             right_diagonal = list(filter(self.remove_nones,
                                          [self.move_column(self.move_row(position, 'increase'), 'increase')]))
             left_diagonal = list(filter(self.remove_nones,
-                                         [self.move_column(self.move_row(position, 'increase'), 'decrease')]))
+                                        [self.move_column(self.move_row(position, 'increase'), 'decrease')]))
 
             all_possible_prawn_moves = [prawn_up] + [right_diagonal] + [left_diagonal]
 
             #
             # check it is not the last row
-            #if int(position[1]) == 8:
-               # return 'end'
+            # if int(position[1]) == 8:
+            # return 'end'
 
             # all
             return all_possible_prawn_moves
@@ -1148,16 +1150,16 @@ class Board(Frame):
                                         [self.move_column(self.move_row(position, 'decrease'), 'decrease')]))
 
             all_possible_prawn_moves = [prawn_up] + [right_diagonal] + [left_diagonal]
-            #
-            # check it is not the last row
-            ##if int(position[1]) == 1:
-              #  return ['end']
 
             # all
             return all_possible_prawn_moves
 
     def get_piece_img(self):
-        """Easy way to access file paths for pieces"""
+        """Easy way to access file paths for pieces
+
+        :returns: A dictionary containing the file paths for the chess pieces, thus making them easily accessible
+        :rtype: dict
+        """
 
         # Get the name for all the black pieces and white pieces paths in lists
         # Format of each piece name is 'piece.png'
@@ -1169,9 +1171,9 @@ class Board(Frame):
         # To shorten this we slice this name and remove 4 characters from the end: '.png' in the key
         # The value is simply the full path
         black_pieces = {f'{str(piece[:len(piece) - 4])}':
-                        f'{self.pieces_file_path}\\black\\{piece}' for piece in black[0]}
+                            f'{self.pieces_file_path}\\black\\{piece}' for piece in black[0]}
         white_pieces = {f'{str(piece[:len(piece) - 4])}':
-                        f'{self.pieces_file_path}\\white\\{piece}' for piece in white[0]}
+                            f'{self.pieces_file_path}\\white\\{piece}' for piece in white[0]}
 
         # We return both lists, now we can access any image
         # For example, black rook would be 'black_pieces['rook']', this returns its file path
@@ -1184,7 +1186,13 @@ class Board(Frame):
 
     @staticmethod
     def remove_nones(val):
-        """Remove None from array"""
+        """Remove None from array
+
+        :param str val: Value
+
+        :returns: val if not None, else False
+        :rtype: bool, str
+        """
         if val is None:
             return False
 
@@ -1192,7 +1200,16 @@ class Board(Frame):
             return val
 
     def move_row(self, position, operation):
-        """Returns position above to or below parameter"""
+        """Returns position above to or below parameter
+
+        :param str position: chessboard coordinate
+        :param str operation: To help determine whether to return position above or under current one e.g.
+        for 'b4' it would be 'b5' for increase and 'b3' for decrease
+
+        :return: if coordinate not out of chess board margins return list of of the one chess coordinate
+        above or under the provided one,  else return None
+        :rtype: string
+        """
 
         # ensure chess position is entered
         if position in self.pieces:
@@ -1223,12 +1240,12 @@ class Board(Frame):
         """Returns position next to or behind parameter
 
         :param str position: chessboard coordinate
-        :param str operation: Generates piece in front or behind current one e.g.
+        :param str operation: To help determine whether to return position ahead or behind current one e.g.
         for 'b4' it would be 'c4' for increase and 'a4' for decrease
 
         :return: if coordinate not out of chess board margins return list of of the one chess coordinate
         next or behind the provided one,  else return None
-        :rtype: list
+        :rtype: string
         """
 
         # ensure chess position is entered
@@ -1329,7 +1346,6 @@ class Board(Frame):
         :type board_type: str, optional
         """
 
-
         if board_type == 'default':
             self.make_board()
             self.place_buttons()
@@ -1389,7 +1405,7 @@ class Board(Frame):
             # if it is a piece
             if piece != separator:
                 # 'letter' is a single letter. Upper or lowercase depending on color
-                letter = str(current_p[0]).lower() if val['piece']['piece_color'] == 'black'\
+                letter = str(current_p[0]).lower() if val['piece']['piece_color'] == 'black' \
                     else str(current_p[0]).upper()
 
                 # piece unicode str
