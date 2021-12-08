@@ -102,7 +102,12 @@ class Board(Frame):
                 self.pieces.append(piece)
 
     def set_game_settings(self, mode):
-        """Sets Game settings"""
+        """Sets Game settings
+
+        :param mode: The gamemode the player is in
+        :type mode: str
+
+        """
 
         if mode == 'guest':
 
@@ -140,7 +145,7 @@ class Board(Frame):
                     self.board_color = row[6]
 
     def add_notation_tab(self):
-        """Implement game tabs"""
+        """Implement game tabs for chess notation"""
 
         # ---------------NOTEBOOK--------------
         # notebook for chess notation
@@ -236,7 +241,11 @@ class Board(Frame):
         self.place_fen_string(staring_fen_string)
 
     def place_fen_string(self, fen_str):
-        """Convert fen string and place pieces on board"""
+        """Convert fen string and place pieces on board
+
+        :param fen_str: simplified FEN string to be placed on board
+        :type fen_str: str
+        """
 
         # Thanks to the method 'place_piece' I've made, we can easily move and delete any piece from the screen
         # We enter the piece, the color and the position we want to place it at as parameters
@@ -313,7 +322,11 @@ class Board(Frame):
                 self.place_piece(piece_dict[piece], color, position)
 
     def update_current_piece(self, position):
-        """Command assigned to every button in the board"""
+        """Command assigned to every button in the board
+
+        :param position: chessboard coordinate, used to determine moves
+        :type position: str
+        """
 
         # color of the button, piece and piece color the user just clicked
         current_button_color = self.board[position]['color']
@@ -494,9 +507,18 @@ class Board(Frame):
         if self.ai_board.is_stalemate():
             messagebox.showinfo('Info', f'Game ends in draw')
 
-
     def make_move(self, piece_name, color, old_position, new_position):
-        """Make a move in the chess board"""
+        """Make a move in the chess board
+
+        :param piece_name: the name of the given piece
+        :type piece_name: str
+        :param color: The color of the given piece
+        :type color: str
+        :param old_position: The position the piece is in
+        :type old_position: str
+        :param new_position: The position the piece will move to
+        :type new_position: str
+        """
 
         # place the selected piece in the selected spot
         self.place_piece(piece_name, color, new_position)
@@ -529,7 +551,17 @@ class Board(Frame):
         self.master.master.update()
 
     def update_notation(self, mode, position, old_piece_name, new_piece_name):
-        """CHESS NOTATION"""
+        """CHESS NOTATION
+
+        :param mode: determines what tab to add the data to
+        :type mode: str
+        :param position: chessboard coordinate
+        :type position: str
+        :param old_piece_name: Used for chess notation move
+        :type old_piece_name: str
+        :param new_piece_name: Used for chess notation move
+        :type new_piece_name: str
+        """
 
         if mode == 'moved_piece':
             # chess notation tracker(list)
@@ -1188,7 +1220,16 @@ class Board(Frame):
             return
 
     def move_column(self, position, operation):
-        """Returns position next to or behind parameter"""
+        """Returns position next to or behind parameter
+
+        :param str position: chessboard coordinate
+        :param str operation: Generates piece in front or behind current one e.g.
+        for 'b4' it would be 'c4' for increase and 'a4' for decrease
+
+        :return: if coordinate not out of chess board margins return list of of the one chess coordinate
+        next or behind the provided one,  else return None
+        :rtype: list
+        """
 
         # ensure chess position is entered
         if position in self.pieces:
@@ -1218,7 +1259,14 @@ class Board(Frame):
             return
 
     def get_diagonal(self, position, direction):
-        """Returns diagonal for a specific position"""
+        """Returns diagonal for a specific position on chessboard
+
+        :param str position: chessboard coordinate
+        :param str direction: The direction in which the diagonal will be generated
+
+        :return: list of all the possible moves in a certain diagonal
+        :rtype: list
+        """
 
         # lists
         letters = {'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4, 'f': 5, 'g': 6, 'h': 7}
@@ -1275,6 +1323,13 @@ class Board(Frame):
             return list(filter(self.remove_nones, diagonal_values))
 
     def build(self, board_type='default', **kwargs):
+        """Construct board
+
+        :param board_type: Determines the type of board the user wants to build, defaults to 'default'
+        :type board_type: str, optional
+        """
+
+
         if board_type == 'default':
             self.make_board()
             self.place_buttons()
@@ -1302,6 +1357,7 @@ class Board(Frame):
         print(self)
 
     def __str__(self):
+        """Returns a text based unicode representation of game"""
 
         # unicode for pieces
         # lowercase represents white, black represents uppercase

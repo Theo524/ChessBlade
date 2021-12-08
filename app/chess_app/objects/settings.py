@@ -5,8 +5,10 @@ import sqlite3
 
 
 class Settings(Toplevel):
-    def __init__(self):
+    def __init__(self, mode):
         Toplevel.__init__(self)
+
+        self.mode = mode
 
         # attributes
         self.title('Settings')
@@ -22,6 +24,8 @@ class Settings(Toplevel):
         # general settings
         self.general_settings = GeneralSettings(notebook)
         self.general_settings.pack(pady=10, expand=True, fill=BOTH)
+
+        # Access to customization settings is only available as a user
         # customization settings
         self.customization_settings = CustomizationSettings(notebook)
         self.customization_settings.pack(pady=10, expand=True, fill=BOTH)
