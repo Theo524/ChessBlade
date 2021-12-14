@@ -77,15 +77,14 @@ def load_settings(game_mode):
 if __name__ == '__main__':
     # Start the application
     start = StartApp()
-
     start.mainloop()
+
     # Once logged in or entered in guest mode, destroy the startapp if not closed
     if not start.closed:
         start.destroy()
 
-    # Retrieve the game mode the game should be in (guest or user, set by the startapp)
-    with open(main_path + '\\app\\login_system_app\\temp\\mode.txt') as f:
-        mode = f.read()
+    # game mode (from Login system)
+    mode = start.mode
 
     # load settings into files
     load_settings(mode)
@@ -95,7 +94,6 @@ if __name__ == '__main__':
         # response means whether to open a new game
         txt = list(f.readlines())
         response = txt[0].split(':')[1]
-
         # saved game determines whether to open a new saved game
         saved_game = txt[1].split(':')[1]
 
@@ -104,17 +102,14 @@ if __name__ == '__main__':
         # get fen string
         with open(main_path + '\\app\\chess_app\\all_saved_games\\temp\\temp_file.txt', 'r') as f:
             fen_str = f.read()
-
         # Start new chess game
         if saved_game == 'yes':
             ChessApp(mode, fen=fen_str).mainloop()
         if saved_game == 'no':
             ChessApp(mode).mainloop()
 
-        # Get new response once the chess app has been closed
-        # Response on whether to start a new chess game or not
+        # Get new response once the chess app has been closed response on whether to start a new chess game or not
         with open(main_path + '\\app\\chess_app\\all_settings\\data.txt', 'r') as f:
             txt = list(f.readlines())
-
             response = txt[0].split(':')[1]
             saved_game = txt[1].split(':')[1]

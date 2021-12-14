@@ -29,7 +29,8 @@ class RegisterSystem(ttk.Frame):
         self.upper_window.pack()
         # Button to return to start page
         ttk.Button(self.upper_window, text='<--',
-               command=self.return_to_start, cursor='hand2').place(x=0, y=0)
+                   command=lambda: self.master.switch_frame(self.master.frames['start']),
+                   cursor='hand2').place(x=0, y=0)
 
         # ----------------------App layout/middle frame----------------------
 
@@ -58,7 +59,8 @@ class RegisterSystem(ttk.Frame):
         self.new_user_name_error_frame = ttk.Frame(self.main_window, height=1)
         self.new_user_name_error_frame.pack()
         self.new_user_name_error_var = StringVar()
-        self.new_user_name_error = ttk.Label(self.new_user_name_error_frame, textvariable=self.new_user_name_error_var,
+        self.new_user_name_error = ttk.Label(self.new_user_name_error_frame,
+                                             textvariable=self.new_user_name_error_var,
                                              style='error_label.TLabel')
 
         # New password (MIDDLE FRAME)
@@ -67,7 +69,8 @@ class RegisterSystem(ttk.Frame):
 
         #Label(self.new_password_frame, text='New password\t ').pack(expand=True, side=LEFT)
         self.new_password = StringVar()
-        self.new_password_entry = PlaceholderEntry(self.new_password_frame, 'New Password', textvariable=self.new_password)
+        self.new_password_entry = PlaceholderEntry(self.new_password_frame, 'New Password',
+                                                   textvariable=self.new_password)
         self.new_password_entry.pack(expand=True, ipadx=15)
 
         self.password_error_frame = ttk.Frame(self.main_window, height=1)
@@ -97,7 +100,8 @@ class RegisterSystem(ttk.Frame):
         self.email_frame.pack(pady=10)
 
         self.email_var = StringVar()
-        self.email_address_entry = PlaceholderEntry(self.email_frame, 'Email address (@gmail.com)', textvariable=self.email_var)
+        self.email_address_entry = PlaceholderEntry(self.email_frame, 'Email address (@gmail.com)',
+                                                    textvariable=self.email_var)
         self.email_address_entry.pack(expand=True, ipadx=15)
 
         self.email_error_frame = ttk.Frame(self.main_window, height=1)
@@ -123,7 +127,8 @@ class RegisterSystem(ttk.Frame):
         self.save_data_frame = ttk.Frame(self.main_window)
         self.save_data_frame.pack(pady=10)
 
-        self.save_button = ttk.Button(self.save_data_frame, text='Save', command=self.store_data, cursor='hand2')
+        self.save_button = ttk.Button(self.save_data_frame, text='Save', command=self.store_data,
+                                      cursor='hand2')
         self.save_button.pack()
 
         # ----------------------App layout/lower frame----------------------
@@ -137,45 +142,57 @@ class RegisterSystem(ttk.Frame):
         self.master.switch_frame(self.master.frames['start'])
 
     @staticmethod
-    def check_email(email):
+    def validate_email(email):
+        """Validate email"""
+
+        regex = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@gmail.com')
+
+        if re.fullmatch(regex, email):
+            return True
+        else:
+            return False
+
+    def check_email(self, email):
         """Checks whether the email account user entered exists"""
-        print(email)
 
-        try:
-            # Receiver email address
-            receiver_address = email
+        # first validate
+        valid = self.validate_email(email)
 
-            # Our message
-            subject = "Welcome"
-            body = f"Greetings from ChessMaster\n\nYour account has been successfully registered!" \
-                   f"\nWe look forward to working with you," \
-                   f"\n\nChessMaster,"
+        if valid:
+            try:
+                # Receiver email address
+                receiver_address = email
 
-            # Combine the subject and the body onto a single message
-            message = f"Subject: {subject}\n\n{body}"
+                # Our message
+                subject = "Welcome"
+                body = f"Greetings from ChessMaster\n\nYour account has been successfully registered!" \
+                       f"\nWe look forward to working with you," \
+                       f"\n\nChessMaster,"
 
-            # Endpoint for the SMTP Gmail server
-            smtp_server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
+                # Combine the subject and the body onto a single message
+                message = f"Subject: {subject}\n\n{body}"
 
-            # Login with a dummy email account I created
-            smtp_server.login("pruebadelogin524@gmail.com", "logintest1234")
+                # Endpoint for the SMTP Gmail server
+                smtp_server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
 
-            # Message sent in the above format (Subject:...\n\nBody) from my dummy email account
-            smtp_server.sendmail("pruebadelogin524@gmail.com", receiver_address, message)
+                # Login with a dummy email account I created
+                smtp_server.login("pruebadelogin524@gmail.com", "logintest1234")
 
-            # Close our endpoint
-            smtp_server.close()
+                # Message sent in the above format (Subject:...\n\nBody) from my dummy email account
+                smtp_server.sendmail("pruebadelogin524@gmail.com", receiver_address, message)
 
-            # if nothing went wrong it means the email account exists
-            exists = True
+                # Close our endpoint
+                smtp_server.close()
 
-        except smtplib.SMTPRecipientsRefused:
-            # if an exception occurs, the account doesn't exist
-            # The name of the exception is unclear and I do not know how to write it, hence I just use 'except'
-            exists = False
+                # if nothing went wrong it means the email account exists
+                return True
 
-        # We return whether the email account exists
-        return exists
+            except smtplib.SMTPRecipientsRefused:
+                # if an exception occurs, the account doesn't exist
+                # The name of the exception is unclear and I do not know how to write it, hence I just use 'except'
+                return False
+        else:
+            return False
 
     @staticmethod
     def calculate_age(dob):
@@ -207,44 +224,19 @@ class RegisterSystem(ttk.Frame):
         """Check if the password meets the requirements"""
 
         # Characters the password must contain
-        # Upper case letters, lower case letters, symbols and numbers are a requirement
-        alpha = list(string.ascii_uppercase)
-        lower = list(string.ascii_lowercase)
-        numbers = [str(number) for number in range(11)]
-        symbols = list('`¦¬!\"£$€%^&*()_+=-[]#\',./{}~@<>?|\\:')
-
-        # variables for the check
-        is_len = False
-        is_alpha = 0
-        is_lower = 0
-        is_num = 0
-        is_special = 0
-
-        # Check the length is appropriate (between 8 and 20 chars)
-        if 8 <= len(password) <= 20:
-            is_len = True
-
-        # for loop checks each character in the password to find a match
-        for letter in password:
-            if letter in alpha:
-                is_alpha += 1
-
-            if letter in lower:
-                is_lower += 1
-
-            if letter in numbers:
-                is_num += 1
-
-            if letter in symbols:
-                is_special += 1
-
-        # if all requirements are met return true, else give false
-        if is_len and is_alpha >= 2 and is_lower >= 2 and is_num >= 2 and is_special >= 2:
-            # password is valid
+        # Should have at least one number.
+        # Should have at least one uppercase and one lowercase character.
+        # Should have at least one special symbol.
+        # Should be between 8 to 20 characters long.
+        reg = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!#%*?&]{8,20}$"
+        # compiling regex
+        pat = re.compile(reg)
+        # searching regex
+        match = re.search(pat, password)
+        # validating conditions
+        if match:
             return True
-
         else:
-            # password is invalid
             return False
 
     def username_in_database(self, username):
@@ -294,7 +286,8 @@ class RegisterSystem(ttk.Frame):
         confirmed_password = self.confirmed_password.get()
         if not self.check_pass(password):
             # if invalid, display error frame
-            self.password_error_var.set('Password requisites: 8-20 characters, 2 - symbols, numbers, upper, lower')
+            self.password_error_var.set('Password requisites: 8-20 characters,'
+                                        ' at least - 1 symbols, 1 number, 1 upper, 1 lower')
             self.password_error.pack(expand=True)
         else:
             # if valid increase requirements met count and delete error frame
@@ -368,13 +361,12 @@ class RegisterSystem(ttk.Frame):
                 c.execute("SELECT * FROM user_stats")
                 print(f'User stats: {c.fetchall()}')
 
-
             # ask user to leave or stay
             answer = messagebox.askyesno('Success', 'Your data has successfully been saved. Do you want to leave?')
 
             if answer:
                 # switch if user wants to leave
-                self.return_to_start()
+                self.master.switch_frames(self.master.frames['start'])
             else:
                 # reset all entries blank if user wants to stay
                 self.reset()
@@ -389,6 +381,11 @@ class RegisterSystem(ttk.Frame):
         self.confirmed_password.set('')
         self.email_var.set('')
 
+        self.new_username_entry.reset()
+        self.new_password_entry.reset()
+        self.confirmed_password_entry.reset()
+        self.email_address_entry.reset()
+
     def reset_wrong_entries(self):
         """Resets entire page if user enters incorrect data"""
 
@@ -396,6 +393,11 @@ class RegisterSystem(ttk.Frame):
         self.new_password.set('')
         self.confirmed_password.set('')
         self.email_var.set('')
+
+        self.new_username_entry.reset()
+        self.new_password_entry.reset()
+        self.confirmed_password_entry.reset()
+        self.email_address_entry.reset()
 
         self.new_user_name_error_frame.pack_forget()
         self.password_error_frame.pack_forget()
