@@ -526,11 +526,11 @@ class Board(Frame):
         self.ai_board.push(move)
 
         # Console
-        print('*********************************************')
-        print('*********************************************')
-        print('Chess library board(text-based):')
-        print(self.ai_board)
-        print()
+        #print('*********************************************')
+        #print('*********************************************')
+        #print('Chess library board(text-based):')
+        #print(self.ai_board)
+        #print()
         print('My board:')
         print(self)
         print('*********************************************')
@@ -1405,8 +1405,8 @@ class Board(Frame):
             # if it is a piece
             if piece != separator:
                 # 'letter' is a single letter. Upper or lowercase depending on color
-                letter = str(current_p[0]).lower() if val['piece']['piece_color'] == 'black' \
-                    else str(current_p[0]).upper()
+                letter = str(current_p[0]).upper() if val['piece']['piece_color'] == 'black' \
+                    else str(current_p[0]).lower()
 
                 # piece unicode str
                 piece = ' ' + str(unicode_pieces_dict[letter]) + ' '
