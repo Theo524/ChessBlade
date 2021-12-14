@@ -23,7 +23,7 @@ class LoginSystem(ttk.Frame):
         self.master.style.configure('login_page.TButton', font=('Calibri', 13,))
         self.master.style.configure('login_page.TCheckbutton', font=('Calibri', 10))
 
-        # window attribuutes
+        # window attributes
         self.master.title('Login')
 
         # container
@@ -39,7 +39,7 @@ class LoginSystem(ttk.Frame):
         self.upper_window.pack()
         # button to return to start page
         ttk.Button(self.upper_window, text='<--', cursor="hand2",
-               command=self.return_to_start).place(x=0, y=0)
+               command=self.master.switch_frame(self.master.frames['start'])).place(x=0, y=0)
 
         # ----------------------app layout/middle frame(main data)----------------------
         # every item is placed inside this frame
@@ -48,7 +48,6 @@ class LoginSystem(ttk.Frame):
 
         # Title (MIDDLE FRAME)
         pic = PhotoImage(file=os.getcwd() + '\\app\\resources\\img\\login_icon.png')
-
         self.title_frame = ttk.Frame(self.main_window)
         self.title_frame.pack(pady=10)
         image_title = Label(self.title_frame, image=pic)
@@ -68,7 +67,8 @@ class LoginSystem(ttk.Frame):
         self.password_frame.pack(pady=10)
 
         self.password_var = StringVar()
-        self.password_entry = PlaceholderEntry(self.password_frame, 'Password', textvariable=self.password_var, show="")
+        self.password_entry = PlaceholderEntry(self.password_frame, 'Password',
+                                               textvariable=self.password_var, show="")
         self.password_entry.pack(expand=True, side=LEFT, padx=10, ipadx=10)
 
         # Extra/additional settings - 'forgotten password', 'show password' (MIDDLE FRAME)
@@ -135,23 +135,21 @@ class LoginSystem(ttk.Frame):
             # feedback
             messagebox.showinfo('Success', 'Successful login')
 
-            mode_file = self.temp_files + '//mode.txt'
             user_file = self.temp_files + '//current_user.txt'
 
             # save username to temp files
             with open(user_file, 'w') as f:
                 f.write(username)
 
-            # Write mode type as 'user'
-            with open(mode_file, 'w') as f:
-                f.write('user')
-
             # Set start_new_game to false
             with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
                 f.write('new_game:yes\n')
                 f.write('saved_game:no')
-                # quit the login system
-                self.master.close_win()
+
+            # set game mode as user
+            self.master.mode = 'user'
+            # quit the login system
+            self.master.close_win()
 
         else:
             # feedback for invalid data
@@ -435,7 +433,8 @@ class VerifyPasscode(ttk.Frame):
         self.passcode_var = StringVar()
         self.passcode_entry = ttk.Entry(self.main_window, textvariable=self.passcode_var)
         self.passcode_entry.pack(expand=True, pady=10)
-        ttk.Button(self.main_window, text='Continue', cursor='hand2', command=self.check_passcode).pack(expand=True)
+        ttk.Button(self.main_window, text='Continue', cursor='hand2',
+                   command=self.check_passcode).pack(expand=True)
 
         # ----------------------app layout/lower frame----------------------
         self.lower_window = ttk.Frame(self)
