@@ -3,6 +3,7 @@ from tkinter import *
 from tkinter import messagebox, ttk
 import string
 import time
+import datetime
 import os
 import threading
 from PIL import Image, ImageTk
@@ -478,13 +479,6 @@ class Board(Frame):
         if current_button_color in ['white', self.board_colors[1]] and piece_name is None:
             # message
             messagebox.showerror('Error', f'{position} is an invalid move')
-
-            # Console output
-            print('\n-------------------ACTION-------------------')
-            print('Action: Player clicked an empty space')
-            print(f'Position: {position}')
-            print(f'Output: Reset board to normal')
-            print('-------------------END-------------------\n')
             self.reset_board_colors()
 
         # Allows to track user history of clicks, appends the current move
@@ -494,7 +488,7 @@ class Board(Frame):
 
         # checkmate?
         print(f'Checkmate: {self.ai_board.is_checkmate()}')
-        # stalmate? Game ends in draw.
+        # stalemate? Game ends in draw.
         print(f'Stalemate: {self.ai_board.is_stalemate()}')
         print(f'Outcome: {self.ai_board.outcome()}')
         if self.ai_board.is_checkmate():
@@ -514,7 +508,6 @@ class Board(Frame):
 
         ## NOTATION
         # determine move or delete piece for notation
-        print(f"piece: {self.board[target]['piece']['piece_name']}")
         if self.board[target]['piece']['piece_name'] is None:
             # a normal move
             # Add to notation
@@ -546,7 +539,7 @@ class Board(Frame):
 
         # legal moves available
         legal_moves = list(self.ai_board.legal_moves)
-        print(self.ai_board.is_legal(move))
+        #print(self.ai_board.is_legal(move))
 
         # Make move in virtual board
         self.ai_board.push(move)
@@ -558,11 +551,7 @@ class Board(Frame):
         self.swap_turns()
 
         # Console
-        #print('*********************************************')
-        #print('*********************************************')
-        #print('Chess library board(text-based):')
         #print(self.ai_board)
-        #print()
         print('My board:')
         print(self)
         print('*********************************************')
@@ -602,10 +591,6 @@ class Board(Frame):
 
         # color of piece to be moved
         color = self.board[starting_pos]['piece']['piece_color']
-
-        # determine whether to it is a move to an empty spot or a move to delete a piece
-        print(self.board[target_pos]['piece']['piece_name'])
-        print('not a move')
 
         # make move
         self.make_move(piece_name=name, color=color, old_position=starting_pos, target=target_pos)
