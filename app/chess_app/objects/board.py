@@ -2,11 +2,14 @@ import tkinter.messagebox
 from tkinter import *
 from tkinter import messagebox, ttk
 import string
+import time
 import os
+import threading
 from PIL import Image, ImageTk
 import csv
 import chess
 import sys
+from app.chess_app.objects.chess_ai import AI
 
 
 class Board(Frame):
@@ -76,8 +79,6 @@ class Board(Frame):
         # deleted_pieces tracking pos
         self.b_x = 0
         self.b_y = 0
-        self.w_x = 0
-        self.w_y = 0
 
         # add notation if needed
         if self.widgets_frame:
@@ -85,6 +86,8 @@ class Board(Frame):
 
         # ai board
         self.ai_board = chess.Board()
+        # the actual ai
+        self.ai = AI(self.ai_board)
 
     def add_chess_pieces_positions(self):
         """Populate 1d and 2d array chess"""
@@ -330,14 +333,13 @@ class Board(Frame):
         piece_color = self.board[position]['piece']['piece_color']
 
         if self.tracker:
-            # color of the button, piece and piece color the last clicked
+            # color of the button, piece and piece color last clicked
             # It can be retrieved because the tracker is only updated at the end of this function
             old_piece_name = self.tracker[-1]['selected_piece']['piece_name']
             old_piece_color = self.tracker[-1]['selected_piece']['piece_color']
             old_piece_position = self.tracker[-1]['player_clicked']
 
         # HIGHLIGHTING MOVES
-        # allowing turns (two player mode)
         # if the game type is 'two_player' mode and a piece was clicked
         if self.game_type == 'two_player':
             if self.player_one_turn:
@@ -372,21 +374,11 @@ class Board(Frame):
 
                 # If the piece is enemy
                 if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
-                    print('\n-------------------ACTION-------------------')
-                    print('Action: Player selected piece')
-                    print(f'Selected piece: {piece_name}')
-                    print(f'Piece color: {piece_color}')
-                    print('-------------------END-------------------')
                     self.reset_board_colors()
 
             if self.player_two_turn:
                 # If it is the second player turn
                 if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
-                    print('\n-------------------ACTION-------------------')
-                    print('Action: Player selected piece')
-                    print(f'Selected piece: {piece_name}')
-                    print(f'Piece color: {piece_color}')
-                    print('-------------------END-------------------')
                     self.reset_board_colors()
 
                     # We only allow enemy pieces to be highlighted
@@ -417,46 +409,61 @@ class Board(Frame):
 
                 # If the piece is black
                 if self.board[position]['piece']['piece_color'] == self.player_piece_color:
-                    print('\n-------------------ACTION-------------------')
-                    print('Action: Player selected piece')
-                    print(f'Selected piece: {piece_name}')
-                    print(f'Piece color: {piece_color}')
-                    print('-------------------END-------------------')
                     self.reset_board_colors()
+
+        # if the game type is 'computer'(against ai)
+        if self.game_type == 'computer':
+            # actually against the ai its always player 1 turn
+            if self.player_one_turn:
+                # If it is player one turn
+                if self.board[position]['piece']['piece_color'] == self.player_piece_color:
+                    self.reset_board_colors()
+
+                    # We only allow player pieces to be highlighted
+                    # rooks
+                    if self.board[position]['piece']['piece_name'] == 'rook':
+                        self.piece_highlighting(f'{position}', 'rook', self.player_piece_color)
+
+                    # prawn
+                    if self.board[position]['piece']['piece_name'] == 'prawn':
+                        self.piece_highlighting(f'{position}', 'prawn', self.player_piece_color)
+
+                    # bishop
+                    if self.board[position]['piece']['piece_name'] == 'bishop':
+                        self.piece_highlighting(f'{position}', 'bishop', self.player_piece_color)
+
+                    # knight
+                    if self.board[position]['piece']['piece_name'] == 'knight':
+                        self.piece_highlighting(f'{position}', 'knight', self.player_piece_color)
+
+                    # queen
+                    if self.board[position]['piece']['piece_name'] == 'queen':
+                        self.piece_highlighting(f'{position}', 'queen', self.player_piece_color)
+
+                    # king
+                    if self.board[position]['piece']['piece_name'] == 'king':
+                        self.piece_highlighting(f'{position}', 'king', self.player_piece_color)
 
         # If the color of the button is green
         # It would mean the player had already clicked a piece previously which marked possible moves in green
         if current_button_color == 'light green':
             # make the move
-            self.make_move(old_piece_name, old_piece_color, old_piece_position, position)
+            self.make_move(old_piece_name, old_piece_color, old_piece_position, target=position)
 
-            # Add to notation
-            self.update_notation('moved_piece', position, old_piece_name, new_piece_name=None)
-
-            # increase number of moves by one
-            self.moves += 1
-
-            # We now swap turns so only one side can make moves
-            self.swap_turns()
+            # if against the ai
+            if self.game_type == 'computer':
+                # after player 1 has made its move the ai does its own move
+                self.make_ai_move()
 
         # if the button clicked is red, that means the piece is to be deleted
         if current_button_color == 'red':
-            # Console output
-            print('\n-------------------ACTION-------------------')
-            print('Action: Player deleted a piece')
-            print(f'Piece used: {old_piece_name}')
-            print(f'Deleted piece: {piece_name}')
-            print(f'PLayer piece color: {old_piece_color}')
-            print('-------------------END_OF_ACTION-------------------\n')
-
             # make move
-            self.make_move(old_piece_name, old_piece_color, old_piece_position, position)
+            self.make_move(old_piece_name, old_piece_color, old_piece_position, target=position)
 
-            # add to notation
-            self.update_notation('deleted_piece', position, old_piece_name, piece_name)
-
-            # increase number of moves by one
-            self.moves += 1
+            # if against the ai
+            if self.game_type == 'computer':
+                # after player 1 has made its move the ai does its own move
+                self.make_ai_move()
 
             # add this deleted piece to the deleted pieces list
             self.deleted_pieces.append([piece_name, piece_color])
@@ -465,9 +472,6 @@ class Board(Frame):
             self.deleted_pieces_tab.insert('end', ', ')
             self.deleted_pieces_tab.insert('end', self.board[position]['piece']['piece_name'])
             self.deleted_pieces_tab.insert('end', '), ')
-
-            # swap turns
-            self.swap_turns()
 
         # Whenever the user clicks a non piece or empty space, a messagebox appears
         # reset the board colors
@@ -482,8 +486,6 @@ class Board(Frame):
             print(f'Output: Reset board to normal')
             print('-------------------END-------------------\n')
             self.reset_board_colors()
-
-        # Make AI board (Not done yet)
 
         # Allows to track user history of clicks, appends the current move
         self.tracker.append({'player_clicked': position,
@@ -501,22 +503,46 @@ class Board(Frame):
         if self.ai_board.is_stalemate():
             messagebox.showinfo('Info', f'Game ends in draw')
 
-    def make_move(self, piece_name, color, old_position, new_position):
+    def make_move(self, piece_name, color, old_position, target=''):
         """Make a move in the chess board
 
         :param str piece_name: the name of the given piece
         :param str color: The color of the given piece
         :param str old_position: The position the piece is in
-        :param str new_position: The position the piece will move to
+        :param str target: The position the piece will move to
         """
 
+        ## NOTATION
+        # determine move or delete piece for notation
+        print(f"piece: {self.board[target]['piece']['piece_name']}")
+        if self.board[target]['piece']['piece_name'] is None:
+            # a normal move
+            # Add to notation
+            self.update_notation('moved_piece', target, piece_name, new_piece_name='')
+
+        elif self.board[target]['piece']['piece_name'] is not None:
+            # deleting a piece
+            # add this deleted piece to the deleted pieces list
+            self.deleted_pieces.append([self.board[target]['piece']['piece_name'],
+                                        self.board[target]['piece']['piece_color']])
+            self.deleted_pieces_tab.insert('end', '(')
+            self.deleted_pieces_tab.insert('end', self.board[target]['piece']['piece_color'])
+            self.deleted_pieces_tab.insert('end', ', ')
+            self.deleted_pieces_tab.insert('end', self.board[target]['piece']['piece_name'])
+            self.deleted_pieces_tab.insert('end', '), ')
+
+            # Add to notation
+            self.update_notation('deleted_piece', target, piece_name,
+                                 new_piece_name=str(self.board[target]['piece']['piece_name']))
+
+        ## CHESS MOVE
         # place the selected piece in the selected spot
-        self.place_piece(piece_name, color, new_position)
+        self.place_piece(piece_name, color, target)
         # replace the place where that piece originally was with a blank space img
         self.place_piece('blank', 'blank', old_position)
 
-        # move for virtual board
-        move = chess.Move.from_uci(f'{old_position}{new_position}')
+        # move for virtual board(chess lib)
+        move = chess.Move.from_uci(f'{old_position}{target}')
 
         # legal moves available
         legal_moves = list(self.ai_board.legal_moves)
@@ -524,6 +550,12 @@ class Board(Frame):
 
         # Make move in virtual board
         self.ai_board.push(move)
+
+        # increase number of moves by one
+        self.moves += 1
+
+        # We now swap turns so only one side can make moves
+        self.swap_turns()
 
         # Console
         #print('*********************************************')
@@ -540,6 +572,47 @@ class Board(Frame):
         self.reset_board_colors()
         self.master.master.update()
 
+    def make_ai_move(self):
+        """Move made by ai"""
+
+        # disable all board buttons
+        self.enable_board_buttons(False)
+
+        # depth(how many moves to look ahead) will be based on difficulty
+        depth = 1
+        if self.difficulty == 'Novice':
+            depth = 1
+
+        if self.difficulty == 'Intermediate':
+            depth = 3
+
+        if self.difficulty == 'Expert':
+            depth = 6
+
+        # get best move depending on difficulty
+        original_move = self.ai.selectmove(depth)
+        move = list(str(original_move))
+
+        # with this data I can get the name and info to make the move
+        starting_pos = ''.join(move[:2])
+        target_pos = ''.join(move[2:])
+
+        # name of piece to be moved
+        name = self.board[starting_pos]['piece']['piece_name']
+
+        # color of piece to be moved
+        color = self.board[starting_pos]['piece']['piece_color']
+
+        # determine whether to it is a move to an empty spot or a move to delete a piece
+        print(self.board[target_pos]['piece']['piece_name'])
+        print('not a move')
+
+        # make move
+        self.make_move(piece_name=name, color=color, old_position=starting_pos, target=target_pos)
+
+        # enable board button again
+        self.enable_board_buttons(True)
+
     def update_notation(self, mode, position, old_piece_name, new_piece_name):
         """Add game data to chess notation tabs
 
@@ -548,28 +621,34 @@ class Board(Frame):
         :param str old_piece_name: Used for chess notation move
         :param str new_piece_name: Used for chess notation move
         """
+        # since chess notation for prawns have no letter and knights use 'N' this small section will handle that
+        if old_piece_name == 'knight':
+            piece_letter = 'N'
+        else:
+            piece_letter = '' if old_piece_name == 'prawn' else str(old_piece_name[0].upper())
 
+        # actual notation
         if mode == 'moved_piece':
             # chess notation tracker(list)
-            self.chess_notation.append(f'{old_piece_name[0].upper()}{position}')
+            self.chess_notation.append(f'{piece_letter}{position}')
             # The moves variable is updated every turn, so every even number of moves corresponds to a player
-            # while every odd number of moves corresponds to the other player
-            if self.moves % 2 == 0:
-                # even number of moves, 'P2' used to mark player2
-                self.notation_tab.insert('end', f'{self.moves}.(P2:{self.chess_notation[-1]}) ')
-            else:
-                # even number of moves, 'P1' used to mark player1
-                self.notation_tab.insert('end', f'{self.moves}.(P1:{self.chess_notation[-1]}) ')
+            # add move to notation
+            self.notation_tab.insert('end', f'{self.moves}.{self.chess_notation[-1]} ')
 
         if mode == 'deleted_piece':
             # This time we add an 'x' in the middle to show that a piece is being destroyed
-            self.chess_notation.append(f'{old_piece_name[0].upper()}x{position}')
+            self.chess_notation.append(f'{piece_letter}x{position}')
+
+            # add the move to chess notation tab
+            self.notation_tab.insert('end', f'{self.moves}.{self.chess_notation[-1]} ')
+
             # also add piece image
-            # w_x and w_y represent white x and white y
-            if self.board[position]['piece']['piece_color'] == 'black':
+            # b_x and b_y represent the grid coordinated to place the images
+            if self.board[position]['piece']['piece_color'] == 'white':
                 img = PhotoImage(file=self.white_pieces[f'{new_piece_name}'])
             else:
                 img = PhotoImage(file=self.black_pieces[f'{new_piece_name}'])
+
             l = Label(self.deleted_tab_visual, image=img)
             l.configure(borderwidth=5, bg=self.board_colors[1])
             l.grid(column=self.b_x, row=self.b_y)
@@ -578,12 +657,6 @@ class Board(Frame):
             if self.b_x == 8:
                 self.b_x = 0
                 self.b_y += 1
-
-            # add the move to chess notation
-            if self.moves % 2 == 0:
-                self.notation_tab.insert('end', f'{self.moves}.(P2:{self.chess_notation[-1]}) ')
-            else:
-                self.notation_tab.insert('end', f'{self.moves}.(P1:{self.chess_notation[-1]}) ')
 
     def swap_turns(self):
         """Swap turns between players"""
@@ -597,7 +670,7 @@ class Board(Frame):
                 self.player_one_turn = True
 
         if self.game_type == 'computer':
-            pass
+            self.player_one_turn = True
 
     def reset_board_colors(self):
         """Reset board colors to normal(to eliminate highlighting)"""
@@ -612,6 +685,24 @@ class Board(Frame):
                 self.board[col]['button'].configure(bg=self.board_colors[i])
                 self.board[col]['color'] = self.board_colors[i]
                 i += 1
+
+    def enable_board_buttons(self, flag):
+        """Disable or enable board buttons
+
+        :param bool flag: determines whether to enable or disable all buttons
+        """
+
+        coordinates = self.coordinates[:]
+        coordinates.reverse()
+        # iterate through the entire board and set the button active or disabled
+        # this allows the ai to perform its move without interruption
+        for row in coordinates:
+            for col in row:
+                if flag:
+                    self.board[col]['button']['state'] = 'normal'
+
+                if not flag:
+                    self.board[col]['button']['state'] = 'disable'
 
     def piece_highlighting(self, position, piece, piece_color):
         """Highlights all possible moves for a given piece
@@ -1339,6 +1430,26 @@ class Board(Frame):
             # return final filtered list
             return list(filter(self.remove_nones, diagonal_values))
 
+    def threading(self):
+        # Call work function
+        t1 = threading.Thread(target=self.thread_timer_work)
+        t1.start()
+
+    def thread_timer_work(self):
+        """Thread that deals with background game timer"""
+
+        # convert time str to seconds
+        time = self.time
+        date_time = datetime.datetime.strptime(test, "%H:%M:%S")
+        a_timedelta = date_time - datetime.datetime(1900, 1, 1)
+        seconds = int(a_timedelta.total_seconds())
+
+        for i in range(seconds):
+            time.sleep(1)
+
+        # thread finished (timer is finished)
+        messagebox.showinfo('Time', f'The game duration was set to {time}\nGame ends in draw.')
+
     def build(self, board_type='default', **kwargs):
         """Construct board
 
@@ -1371,6 +1482,9 @@ class Board(Frame):
         print()
         print('My board')
         print(self)
+
+        # start timer thread after board has been built
+        self.threading()
 
     def __str__(self):
         """Returns a text based unicode representation of game"""
