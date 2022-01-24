@@ -2,7 +2,7 @@ import tkinter.messagebox
 from tkinter import *
 from tkinter import messagebox, ttk
 import string
-import time
+import time as time
 import datetime
 import os
 import threading
@@ -10,6 +10,7 @@ from PIL import Image, ImageTk
 import csv
 import chess
 import sys
+import sqlite3
 from app.chess_app.objects.chess_ai import AI
 
 
@@ -47,7 +48,7 @@ class Board(Frame):
             self.widgets_frame = Frame(self.master)
 
         # game mode
-        mode = master.master.mode
+        self.mode = master.master.mode
 
         # game_settings
         self.difficulty = None
@@ -57,7 +58,7 @@ class Board(Frame):
         self.opponent_piece_color = None
         self.border_color = None
         self.board_color = None
-        self.set_game_settings(mode)  # sets game settings
+        self.set_game_settings(self.mode)  # sets game settings
 
         # colors for board
         self.board_colors = [
@@ -89,6 +90,9 @@ class Board(Frame):
         self.ai_board = chess.Board()
         # the actual ai
         self.ai = AI(self.ai_board)
+
+        # to know when the game ends
+        self.game_over = False
 
     def add_chess_pieces_positions(self):
         """Populate 1d and 2d array chess"""
@@ -454,6 +458,10 @@ class Board(Frame):
             # if against the ai
             if self.game_type == 'computer':
                 # after player 1 has made its move the ai does its own move
+                # because clicking green would mean a move has just been done
+                # however if checkmate the board should stop
+                if self.ai_board.is_checkmate() or self.ai_board.is_stalemate():
+                    self.game_over = True
                 self.make_ai_move()
 
         # if the button clicked is red, that means the piece is to be deleted
@@ -462,8 +470,11 @@ class Board(Frame):
             self.make_move(old_piece_name, old_piece_color, old_piece_position, target=position)
 
             # if against the ai
+            # because clicking red would mean a move has just been done
             if self.game_type == 'computer':
                 # after player 1 has made its move the ai does its own move
+                if self.ai_board.is_checkmate() or self.ai_board.is_stalemate():
+                    self.game_over = True
                 self.make_ai_move()
 
             # add this deleted piece to the deleted pieces list
@@ -487,15 +498,46 @@ class Board(Frame):
                              'color': self.board[position]['color']})
 
         # checkmate?
+        print(f'Player one turn: {self.player_one_turn}')
+        print(f'Player two turn: {self.player_two_turn}')
         print(f'Checkmate: {self.ai_board.is_checkmate()}')
         # stalemate? Game ends in draw.
         print(f'Stalemate: {self.ai_board.is_stalemate()}')
         print(f'Outcome: {self.ai_board.outcome()}')
+        print(f'Result: {self.ai_board.result()}')
+        print(f'Turn: {self.ai_board.turn}')
         if self.ai_board.is_checkmate():
+            self.game_over = True
+
             messagebox.showerror('Info', f'Checkmate')
 
+            if not self.ai_board.turn:
+                self.game_score('checkmate', 1)
+
+            else:
+                self.game_score('checkmate', 2)
+
         if self.ai_board.is_stalemate():
+            self.game_over = True
+
             messagebox.showinfo('Info', f'Game ends in draw')
+
+            # if the user is playing against the ai update its score
+            self.game_score('stalemate')
+
+        if self.game_over:
+            new_game = messagebox.askyesno('Game over', f'Game over. Do you want to play a new again?')
+
+            if new_game:
+                # instructions for new game file
+                with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
+                    f.write('new_game:yes\n')
+                    f.write('saved_game:no')
+
+                self.master.master.destroy()
+
+            else:
+                self.enable_board_buttons(False)
 
     def make_move(self, piece_name, color, old_position, target=''):
         """Make a move in the chess board
@@ -563,6 +605,10 @@ class Board(Frame):
 
     def make_ai_move(self):
         """Move made by ai"""
+
+        # to avoid disrupting the board strings
+        if self.game_over:
+            return
 
         # disable all board buttons
         self.enable_board_buttons(False)
@@ -655,6 +701,7 @@ class Board(Frame):
                 self.player_one_turn = True
 
         if self.game_type == 'computer':
+            # always player one turn, since its playing against the ai
             self.player_one_turn = True
 
     def reset_board_colors(self):
@@ -680,7 +727,7 @@ class Board(Frame):
         coordinates = self.coordinates[:]
         coordinates.reverse()
         # iterate through the entire board and set the button active or disabled
-        # this allows the ai to perform its move without interruption
+        # this allows the ai to perform its move without user interruption
         for row in coordinates:
             for col in row:
                 if flag:
@@ -1424,8 +1471,9 @@ class Board(Frame):
         """Thread that deals with background game timer"""
 
         # convert time str to seconds
-        time = self.time
-        date_time = datetime.datetime.strptime(test, "%H:%M:%S")
+        game_time = self.time
+        date_time = datetime.datetime.strptime(game_time, "%H:%M:%S")
+        time_str = date_time
         a_timedelta = date_time - datetime.datetime(1900, 1, 1)
         seconds = int(a_timedelta.total_seconds())
 
@@ -1433,7 +1481,136 @@ class Board(Frame):
             time.sleep(1)
 
         # thread finished (timer is finished)
-        messagebox.showinfo('Time', f'The game duration was set to {time}\nGame ends in draw.')
+        messagebox.showinfo('Time', f'The game duration was set to {time_str}\nGame ends in draw. '
+                                    f'You can change this option in settings')
+
+    def game_score(self, result, winner=0):
+        """Decides whether the game is a win, loss or draw
+
+        :param str result: can be checkmate, stalemate and is the outcome of the game
+        :param int winner: can either be 1 or 2, 1 indicates the user, 2 indicates the ai is the winner
+        """
+
+        if self.mode == 'user':
+
+            # get the current username
+            with open(os.getcwd() + '\\login_system_app\\temp\\current_user.txt') as f:
+                username = f.read()
+
+            if self.game_type == 'two_player':
+                # practice games  (one v one on a single device) aren't scored
+                pass
+
+            if self.game_type == 'computer':
+                # 1 is the user, 2 is the ai so it would count as a loss for the user in terms of winner/loser
+                # first get the user name to search database (loaded at login)
+                if result == 'checkmate' and winner == 1:
+                    # user won
+                    self.update_db_game_score(username, 'win')
+
+                if result == 'checkmate' and winner == 2:
+                    # Computer(AI) won
+                    self.update_db_game_score(username, 'loss')
+
+                if result == 'stalemate':
+                    # was a draw
+                    self.update_db_game_score(username, 'draw')
+
+    def update_db_game_score(self, user, result):
+        """Gets a copy of the user statistics from the db and updates them according to the result
+
+        :param str user: The name of the user (account) playing, won't have errors because every user is unique
+        :param str result: Can be a win, loss or draw
+        """
+
+        # database path
+        database = os.getcwd() + '\\database\\users.db'
+
+        # Store new data into database
+        conn = sqlite3.connect(database)
+        c = conn.cursor()
+
+        with conn:
+            # GET ORIGINAL DATA
+            c.execute("SELECT * FROM user_stats WHERE user=?", (user,))
+            original_data = list(c.fetchall()[0])
+
+            # increase number of games played by one
+            original_data[1] += 1
+
+            # game score
+            if result == 'win':
+                # add 1 more win
+                original_data[2] += 1
+
+                # add points to ranking according to the game difficulty
+                # ranking is basically just points
+                # the amount of points added also depends on the difficulty
+                if self.difficulty == 'Novice':
+                    original_data[5] += 1
+
+                if self.difficulty == 'Intermediate':
+                    original_data[5] += 2
+
+                if self.difficulty == 'Expert':
+                    original_data[5] += 3
+
+            if result == 'loss':
+                # add one more loss
+                original_data[3] += 1
+
+                # ranking doesn't get updated in loss
+
+            if result == 'draw':
+                # add one more draw
+                original_data[4] += 1
+
+                # add points to ranking according to the game difficulty
+                # the amount of points added also depends on the difficulty
+                if self.difficulty == 'Novice':
+                    original_data[5] += 0.5
+
+                if self.difficulty == 'Intermediate':
+                    original_data[5] += 1
+
+                if self.difficulty == 'Expert':
+                    original_data[5] += 1.5
+
+            # finally add the data to the database
+            self.add_score_to_db(original_data)
+
+    @staticmethod
+    def add_score_to_db(data):
+        """Add new user statistics to database
+
+        :param list data: user statistics to be added to the database
+        """
+
+        # database path
+        database = os.getcwd() + '\\database\\users.db'
+
+        # Store new data into database
+        conn = sqlite3.connect(database)
+        c = conn.cursor()
+
+        # name
+        username = data[0]
+
+        with conn:
+            # add new data
+            c.execute("UPDATE user_stats SET "
+                      "number_of_games_played = :number_of_games_played AND "
+                      "wins = :wins AND "
+                      "losses = :losses AND "
+                      "draws = :draws AND "
+                      "ranking = :ranking "
+                      "WHERE user=:user",
+                      {'number_of_games_played': data[1],
+                       'wins': data[2],
+                       'losses': data[3],
+                       'draws': data[4],
+                       'ranking': data[5],
+                       'user': username})
 
     def build(self, board_type='default', **kwargs):
         """Construct board
