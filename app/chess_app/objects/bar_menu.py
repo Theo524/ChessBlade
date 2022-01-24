@@ -29,15 +29,15 @@ class BarMenu(Menu):
         self.help_menu = Menu(self, tearoff=0)
         # Add menu options
         self.help_menu.add_command(label='Settings', command=self.open_settings)
-        self.help_menu.add_command(label='Rules')
+        self.help_menu.add_command(label='Help and chess rules')
         # Name teh menu
         self.add_cascade(label='Help', menu=self.help_menu)
 
         # Create another menu
         self.about_menu = Menu(self, tearoff=0)
         # Add menu options
-        self.about_menu.add_command(label='Contact us')
-        self.about_menu.add_command(label='About us')
+        # self.about_menu.add_command(label='Contact us')
+        self.about_menu.add_command(label='Author', command=self.show_my_details)
         # Name the menu
         self.add_cascade(label='About', menu=self.about_menu)
 
@@ -57,9 +57,9 @@ class BarMenu(Menu):
         date_str = today.strftime("%A %B %d, %Y")
 
         time = datetime.now()
-        h = f'0{str(time.hour)}' if len(str(time.hour))==0 else time.hour
-        m = f'0{str(time.minute)}' if len(str(time.minute))==0 else time.minute
-        s = f'0{str(time.second)}' if len(str(time.second))==0 else time.second
+        h = f'0{str(time.hour)}' if len(str(time.hour)) == 0 else time.hour
+        m = f'0{str(time.minute)}' if len(str(time.minute)) == 0 else time.minute
+        s = f'0{str(time.second)}' if len(str(time.second)) == 0 else time.second
         time_str = f'{h}:{m}:{s}'
 
         with open(os.getcwd() + f'\\app\\chess_app\\all_saved_games\\{f_name}', 'w') as f:
@@ -121,7 +121,7 @@ class BarMenu(Menu):
         self.master.destroy()
 
     @staticmethod
-    def show_player_stats(self):
+    def show_player_stats():
         """Shows player data"""
 
         with open(os.getcwd() + '//app//chess_app//all_settings//user//user_stats.csv') as f:
@@ -174,3 +174,30 @@ class BarMenu(Menu):
             .grid(column=2, row=3, padx=(15, 0))
         Label(player_stats_frame, text=draws, font='verdana 10 bold') \
             .grid(column=3, row=3, padx=(0, 25))
+
+    @staticmethod
+    def show_my_details():
+        """My credentials"""
+
+        win = Toplevel()
+        github_frame = Frame(win)
+        github_frame.pack()
+
+        first_row = Frame(github_frame)
+        github_user_intro = Label(first_row, text='Github user:', font='Helvetica 11 bold')
+        github_user_text = Label(first_row, text='Theo524', font='Helvetica 11')
+        first_row.pack()
+        github_user_intro.pack(side=LEFT)
+        github_user_text.pack()
+
+        second_row = Frame(github_frame)
+        github_user_intro_2 = Label(second_row, text='Github site for this project:', font='Helvetica 11 bold')
+        github_user_text_2 = Label(second_row, text='https://github.com/Theo524/Chess-game.git', font='Helvetica 11')
+        second_row.pack()
+        github_user_intro_2.pack(side=LEFT)
+        github_user_text_2.pack()
+
+    def show_help(self):
+        """Help window"""
+
+        pass
