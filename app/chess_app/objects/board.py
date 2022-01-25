@@ -39,6 +39,7 @@ class Board(Frame):
         self.board = {}  # game board around which game revolves
         self.coordinates = []  # 2d array of all chess positions
         self.pieces = []  # 1d array of all chess positions
+        self.pieces_reversed = [] # 1d array of all chess positions reversed
         self.add_chess_pieces_positions()  # fill the lists
 
         # frame containing chess notation tab
@@ -94,6 +95,10 @@ class Board(Frame):
         # to know when the game ends
         self.game_over = False
 
+        # prawn promotion
+        self.promotion_window = None
+        self.promotion = False
+
     def add_chess_pieces_positions(self):
         """Populate 1d and 2d array chess"""
 
@@ -108,6 +113,13 @@ class Board(Frame):
         for row in self.coordinates:
             for piece in row:
                 self.pieces.append(piece)
+
+        # reversed order
+        reversed_p = self.coordinates[:]
+        reversed_p.reverse()
+        for row in reversed_p:
+            for piece in row:
+                self.pieces_reversed.append(piece)
 
     def set_game_settings(self, mode):
         """Sets Game settings
@@ -452,8 +464,23 @@ class Board(Frame):
         # If the color of the button is green
         # It would mean the player had already clicked a piece previously which marked possible moves in green
         if current_button_color == 'light green':
-            # make the move
-            self.make_move(old_piece_name, old_piece_color, old_piece_position, target=position)
+
+            first_rank = self.coordinates[0]
+            last_rank = self.coordinates[-1]
+            # detecting a prawn possibly moving to the last rank
+            if self.tracker[-1]['selected_piece']['piece_name'] == 'prawn':
+                # if it indeed is a prawn then we get the position
+                if position in first_rank or position in last_rank:
+                    self.promotion = True
+                    # if the point being clicked is one of the last ranks
+                    color = self.tracker[-1]['selected_piece']['piece_color']
+                    self.prawn_upgrade(color, [old_piece_name, old_piece_color, old_piece_position, position])
+                else:
+                    self.promotion = False
+
+            if not self.promotion:
+                # make the move
+                self.make_move(old_piece_name, old_piece_color, old_piece_position, target=position)
 
             # if against the ai
             if self.game_type == 'computer':
@@ -466,8 +493,23 @@ class Board(Frame):
 
         # if the button clicked is red, that means the piece is to be deleted
         if current_button_color == 'red':
-            # make move
-            self.make_move(old_piece_name, old_piece_color, old_piece_position, target=position)
+            first_rank = self.coordinates[0]
+            last_rank = self.coordinates[-1]
+            # detecting a prawn possibly moving to the last rank
+            if self.tracker[-1]['selected_piece']['piece_name'] == 'prawn':
+                # if it indeed is a prawn then we get the position
+                if position in first_rank or position in last_rank:
+                    self.promotion = True
+                    # if the point being clicked is one of the last ranks
+                    color = self.tracker[-1]['selected_piece']['piece_color']
+                    self.prawn_upgrade(color, [old_piece_name, old_piece_color, old_piece_position, position])
+
+                else:
+                    self.promotion = False
+
+            if not self.promotion:
+                # make the move
+                self.make_move(old_piece_name, old_piece_color, old_piece_position, target=position)
 
             # if against the ai
             # because clicking red would mean a move has just been done
@@ -497,15 +539,6 @@ class Board(Frame):
                              'selected_piece': self.board[position]['piece'],
                              'color': self.board[position]['color']})
 
-        # checkmate?
-        print(f'Player one turn: {self.player_one_turn}')
-        print(f'Player two turn: {self.player_two_turn}')
-        print(f'Checkmate: {self.ai_board.is_checkmate()}')
-        # stalemate? Game ends in draw.
-        print(f'Stalemate: {self.ai_board.is_stalemate()}')
-        print(f'Outcome: {self.ai_board.outcome()}')
-        print(f'Result: {self.ai_board.result()}')
-        print(f'Turn: {self.ai_board.turn}')
         if self.ai_board.is_checkmate():
             self.game_over = True
 
@@ -539,6 +572,78 @@ class Board(Frame):
             else:
                 self.enable_board_buttons(False)
 
+    def prawn_upgrade(self, color, move_data):
+        """Gui for prawn promotion
+
+        :param str color: color of the prawn piece
+        :param list move_data: the move to be performed on the board
+        """
+
+        # disable all board buttons (force user to promote prawn)
+        self.enable_board_buttons(False)
+
+        # gui aspects
+        self.promotion_window = Toplevel(master=self.master.master)
+        Label(self.promotion_window, text=f'Promote {color} prawn to:', font='Helvetica 15 italic').pack()
+        frame_1 = Frame(self.promotion_window)
+        frame_1.pack()
+        frame_2 = Frame(self.promotion_window)
+        frame_2.pack()
+
+        queen_btn = Button(frame_1, command=lambda: self.promotion_click('queen', move_data))
+        queen_btn.pack(side=LEFT, pady=5, padx=5)
+        temp = ImageTk.PhotoImage(
+            Image.open(self.black_pieces['queen'] if color == 'black' else self.white_pieces['queen']))
+        queen_btn.configure(image=temp)
+        queen_btn.image = temp
+
+        bishop_btn = Button(frame_1, command=lambda: self.promotion_click('bishop', move_data))
+        bishop_btn.pack(pady=5, padx=5)
+        temp = ImageTk.PhotoImage(
+            Image.open(self.black_pieces['bishop'] if color == 'black' else self.white_pieces['bishop']))
+        bishop_btn.configure(image=temp)
+        bishop_btn.image = temp
+
+        rook_btn = Button(frame_2, command=lambda: self.promotion_click('rook', move_data))
+        rook_btn.pack(side=LEFT, pady=5, padx=5)
+        temp = ImageTk.PhotoImage(
+            Image.open(self.black_pieces['rook'] if color == 'black' else self.white_pieces['rook']))
+        rook_btn.configure(image=temp)
+        rook_btn.image = temp
+
+        knight_btn = Button(frame_2, command=lambda: self.promotion_click('knight', move_data))
+        knight_btn.pack(pady=5, padx=5)
+        temp = ImageTk.PhotoImage(
+            Image.open(self.black_pieces['knight'] if color == 'black' else self.white_pieces['knight']))
+        knight_btn.configure(image=temp)
+        knight_btn.image = temp
+
+        self.promotion_window.protocol("WM_DELETE_WINDOW", self.pr_window_on_close)
+
+        # start window
+        self.promotion_window.mainloop()
+
+    def promotion_click(self, piece, move_data):
+        """Display new piece enable board buttons
+
+        :param str piece: name of piece user chose to promote
+        :param list move_data: data needed for a move"""
+
+        # make the move on the boards
+        self.make_move(piece, move_data[1], move_data[2], move_data[3])
+
+        # close gui promotion window
+        self.promotion_window.destroy()
+
+        # buttons available to click again
+        self.enable_board_buttons(True)
+
+    @staticmethod
+    def pr_window_on_close():
+        """So that the user can't avoid promoting the prawn piece"""
+
+        messagebox.showerror('Error', 'You must select one the options')
+
     def make_move(self, piece_name, color, old_position, target=''):
         """Make a move in the chess board
 
@@ -548,7 +653,7 @@ class Board(Frame):
         :param str target: The position the piece will move to
         """
 
-        ## NOTATION
+        # NOTATION
         # determine move or delete piece for notation
         if self.board[target]['piece']['piece_name'] is None:
             # a normal move
@@ -570,34 +675,34 @@ class Board(Frame):
             self.update_notation('deleted_piece', target, piece_name,
                                  new_piece_name=str(self.board[target]['piece']['piece_name']))
 
-        ## CHESS MOVE
+        # CHESS MOVE
         # place the selected piece in the selected spot
         self.place_piece(piece_name, color, target)
         # replace the place where that piece originally was with a blank space img
         self.place_piece('blank', 'blank', old_position)
 
-        # move for virtual board(chess lib)
-        move = chess.Move.from_uci(f'{old_position}{target}')
+        try:
+            # move for virtual board(chess lib)
+            move = chess.Move.from_uci(f'{old_position}{target}')
 
-        # legal moves available
-        legal_moves = list(self.ai_board.legal_moves)
-        #print(self.ai_board.is_legal(move))
+            # legal moves available
+            legal_moves = list(self.ai_board.legal_moves)
+            # print(self.ai_board.is_legal(move))
 
-        # Make move in virtual board
-        self.ai_board.push(move)
+            # Make move in virtual board
+            self.ai_board.push(move)
+        except AssertionError:
+            # if there was an error is because of the promotion
+            # pushes an invalid piece to the board so to avoid that
+            # we create a fen string from the current board and place it
+            fen = self.get_game_fen_string()
+            self.ai_board = chess.Board(fen=fen)
 
         # increase number of moves by one
         self.moves += 1
 
         # We now swap turns so only one side can make moves
         self.swap_turns()
-
-        # Console
-        #print(self.ai_board)
-        print('My board:')
-        print(self)
-        print('*********************************************')
-        print('*********************************************')
 
         # reset board colors back to normal
         self.reset_board_colors()
@@ -606,11 +711,11 @@ class Board(Frame):
     def make_ai_move(self):
         """Move made by ai"""
 
-        # to avoid disrupting the board strings
+        # to avoid errors on checkmate or stalemate
         if self.game_over:
             return
 
-        # disable all board buttons
+        # disable all board buttons so the user can't interrupt
         self.enable_board_buttons(False)
 
         # depth(how many moves to look ahead) will be based on difficulty
@@ -629,6 +734,7 @@ class Board(Frame):
         move = list(str(original_move))
 
         # with this data I can get the name and info to make the move
+        # basically 'a8h8' becomes 'a8' 'g8'
         starting_pos = ''.join(move[:2])
         target_pos = ''.join(move[2:])
 
@@ -653,10 +759,18 @@ class Board(Frame):
         :param str new_piece_name: Used for chess notation move
         """
         # since chess notation for prawns have no letter and knights use 'N' this small section will handle that
+        piece_letter = ''
         if old_piece_name == 'knight':
             piece_letter = 'N'
         else:
-            piece_letter = '' if old_piece_name == 'prawn' else str(old_piece_name[0].upper())
+            if old_piece_name == 'prawn':
+                piece_letter = ''
+
+            if old_piece_name is None:
+                pass
+
+            else:
+                piece_letter = str(old_piece_name[0].upper())
 
         # actual notation
         if mode == 'moved_piece':
@@ -1305,7 +1419,7 @@ class Board(Frame):
 
     def get_game_fen_string(self):
         """Get fen string of board"""
-        return self.ai_board.board_fen()
+        return self.get_game_fen_string_original()
 
     @staticmethod
     def remove_nones(val):
@@ -1321,6 +1435,64 @@ class Board(Frame):
 
         else:
             return val
+
+    def get_game_fen_string_original(self):
+        """Get game fen string from inbuilt board
+
+        :returns: fen string for the current board position
+        :rtype: str
+        """
+
+        # classify board through pieces and spaces (represented as str '1')
+        first_list = []
+        i = 0
+        copy_of_board = self.board
+        for position in self.pieces_reversed:
+            if copy_of_board[position]['piece']['piece_name'] is None:
+                first_list.append('1')
+            else:
+                first_list.append(copy_of_board[position]['piece']['piece_name'][0].upper()
+                               if copy_of_board[position]['piece']['piece_color'] == 'black'
+                               else copy_of_board[position]['piece']['piece_name'][0].lower())
+
+            i += 1
+            if i == 8:
+                first_list.append('/')
+                i = 0
+
+        # make 2d array of this list where each list is a rank
+        temp = []
+        second_list = []
+        for i in first_list:
+            if i == '/':
+                second_list.append(temp)
+                temp = []
+            temp.append(i)
+
+        # classify each row by spaces and pieces
+        main = []
+        third_list = []
+        count = 0
+        for row in third_list:
+            try:
+                for value in row:
+                    if value == '1':
+                        count += 1
+                    if value != '1':
+                        if count != 0:
+                            third_list.append(str(count))
+                        third_list.append(value)
+                        count = 0
+
+                main.append(third_list)
+            except IndexError:
+                pass
+
+        # join everything together
+        joined_lists = [''.join(lst) for lst in main]
+        final_fen_str = ''.join(joined_lists)
+
+        return final_fen_str
 
     def move_row(self, position, operation):
         """Returns position above to or below parameter
@@ -1463,14 +1635,16 @@ class Board(Frame):
             return list(filter(self.remove_nones, diagonal_values))
 
     def threading(self):
-        # Call work function
+        """Thread"""
+
+        # Call work function to start thread
         t1 = threading.Thread(target=self.thread_timer_work)
         t1.start()
 
     def thread_timer_work(self):
         """Thread that deals with background game timer"""
 
-        # convert time str to seconds
+        # convert time str from db to seconds
         game_time = self.time
         date_time = datetime.datetime.strptime(game_time, "%H:%M:%S")
         time_str = date_time
@@ -1478,11 +1652,12 @@ class Board(Frame):
         seconds = int(a_timedelta.total_seconds())
 
         for i in range(seconds):
+            # actual timer
             time.sleep(1)
 
         # thread finished (timer is finished)
         messagebox.showinfo('Time', f'The game duration was set to {time_str}\nGame ends in draw. '
-                                    f'You can change this option in settings')
+                                    f'You can extend/shorten this option in settings.')
 
     def game_score(self, result, winner=0):
         """Decides whether the game is a win, loss or draw
