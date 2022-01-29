@@ -6,6 +6,7 @@ from tkinter import ttk, messagebox
 from tkcalendar import DateEntry
 from datetime import date
 from app.resources.custom_widgets.placeholder_entry import PlaceholderEntry
+from database.database import DatabaseBrowser
 
 import hashlib
 import string
@@ -17,6 +18,7 @@ class RegisterSystem(ttk.Frame):
     def __init__(self, master, **kwargs):
         ttk.Frame.__init__(self, master, **kwargs)
 
+        self.master = master
         self.database = self.master.database
 
         self.master.style.configure('error_label.TLabel', foreground='red', font=('Arial', 7))
@@ -239,26 +241,6 @@ class RegisterSystem(ttk.Frame):
         else:
             return False
 
-    def username_in_database(self, username):
-        """Ensure only unique usernames are stored in databse"""
-
-        conn = sqlite3.connect(self.database)
-        c = conn.cursor()
-
-        with conn:
-            c.execute("SELECT * FROM users")
-
-            data = c.fetchall()
-
-            # if username is in database return True, else False
-            for val in data:
-                if username == val[0]:
-                    return True
-                else:
-                    continue
-
-            return False
-
     def store_data(self):
         """Store the data in the database after checking it all"""
 
@@ -272,7 +254,7 @@ class RegisterSystem(ttk.Frame):
             self.new_user_name_error.pack(expand=True)
         else:
             # If the username has appropriate length, check if it is in the database
-            if self.username_in_database(username):
+            if DatabaseBrowser.username_in_database(username):
                 self.new_user_name_error_var.set('Username already exists')
                 self.new_user_name_error.pack(expand=True)
 
@@ -329,37 +311,10 @@ class RegisterSystem(ttk.Frame):
 
         # Verify that all 5 requirements were met
         if requirements_met == 5:
-            # Store data into database
-            conn = sqlite3.connect(self.database)
-            c = conn.cursor()
+            hashed_password = self.hash_pass(password)
 
-            with conn:
-                # Insert values into the database (general)
-                c.execute("INSERT INTO users VALUES (:username, :password, :email)",
-                          {'username': username.lower(),
-                           'password': self.hash_pass(password),
-                           'email': email})
-
-                # Insert values into the database (settings)
-                c.execute("INSERT INTO user_settings VALUES (:user, :difficulty, :time, :game_type, "
-                          ":player_piece_color, :opponent_piece_color, :border_color, :board_color)",
-                          {'user': username.lower(), 'difficulty': 'medium', 'time': '02:30:00',
-                           'game_type': 'two_player', 'player_piece_color': 'black', 'opponent_piece_color': 'white',
-                           'border_color': 'black', 'board_color': 'brown'})
-
-                # Insert values into the database (statistics)
-                c.execute("INSERT INTO user_stats VALUES (:user, :number_of_games_played, :wins, :loses, "
-                          ":draws, :ranking)",
-                          {'user': username.lower(), 'number_of_games_played': 0, 'wins': 0,
-                           'loses': 0, 'draws': 0, 'ranking': 0})
-
-                # output database to console
-                c.execute("SELECT * FROM users")
-                print(f'User data: {c.fetchall()}')
-                c.execute("SELECT * FROM user_settings")
-                print(f'User settings: {c.fetchall()}')
-                c.execute("SELECT * FROM user_stats")
-                print(f'User stats: {c.fetchall()}')
+            # create new user
+            DatabaseBrowser.create_new_user(username=username, hashed_password=hashed_password, email=email)
 
             # ask user to leave or stay
             answer = messagebox.askyesno('Success', 'Your data has successfully been saved. Do you want to leave?')
