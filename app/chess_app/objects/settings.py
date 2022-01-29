@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import ttk, messagebox, colorchooser
 import os
-import sqlite3
+from database.database import DatabaseBrowser
 
 
 class Settings(Toplevel):
@@ -75,10 +75,6 @@ class Settings(Toplevel):
         if type(self.board_color) != str or len(self.board_color) < 1:
             requirements_not_met += 1
 
-        # get game mode
-        with open(os.getcwd() + '\\app\\login_system_app\\temp\\mode.txt', 'r') as f:
-            game_mode = f.read()
-
         # Confirmation message
         confirm = messagebox.askyesno('Confirmation', 'Are you sure you want to apply these settings?')
         # if the user accepts, store settings, show informative feedback and destroy settings window
@@ -86,7 +82,7 @@ class Settings(Toplevel):
             # first check there are no empty fields
             if requirements_not_met == 0:
                 # if user is in guest mode, apply new settings to system
-                if game_mode == 'guest':
+                if self.mode == 'guest':
                     with open(os.getcwd() + '\\app\\chess_app\\all_settings\\guest\\default_game_settings.csv', 'w') as f:
                         f.write('Game_difficulty, time, game_mode, player_piece_color, opponent_piece_color, border_color,'
                                 'board_color\n')
@@ -94,7 +90,7 @@ class Settings(Toplevel):
                                 f'-{self.border_color}-{self.board_color}')
 
                 # if user is in user mode, apply new settings to user account
-                if game_mode == 'user':
+                if self.mode == 'user':
                     # apply changes to db
                     self.apply_settings_user_db()
                     # save the new settings in a file
@@ -121,30 +117,12 @@ class Settings(Toplevel):
         with open(os.getcwd() + '\\app\\login_system_app\\temp\\current_user.txt', 'r') as f:
             username = f.read()
 
-        # Open the sql database and retrieve all the data this user has
-        # All usernames in the sql file are unique so there won't be any problems
-        conn = sqlite3.connect(os.getcwd() + '\\database\\users.db')
-        c = conn.cursor()
+        # data to be saved
+        data = [username, self.difficulty, self.time, self.game_type, self.player_color,
+                self.opponent_color, self.border_color, self.board_color,]
 
-        with conn:
-            # update all user stats
-            c.execute("UPDATE user_settings SET "
-                      "difficulty = :game_difficulty AND "
-                      "time = :time AND "
-                      "game_type = :game_type AND "
-                      "player_piece_color = :player_piece_color AND "
-                      "opponent_piece_color = :opponent_piece_color AND "
-                      "border_color = :border_color AND "
-                      "board_color = :board_color "
-                      "WHERE user=:user",
-                      {'game_difficulty': self.difficulty,
-                       'time': self.time,
-                       'game_type': self.game_type,
-                       'player_piece_color': self.player_color,
-                       'opponent_piece_color': self.opponent_color,
-                       'border_color': self.border_color,
-                       'board_color': self.board_color,
-                       'user': username})
+        # save user settings to database
+        DatabaseBrowser.save(save='settings', username=username, data=data)
 
     def confirm_exit(self):
         """Confirms whether user wants to exit window"""
@@ -240,11 +218,11 @@ class GeneralSettings(ttk.Frame):
         """Get difficulty"""
 
         if self.difficulty_var.get() == 1:
-            return 'easy'
+            return 'Novice'
         elif self.difficulty_var.get() == 2:
-            return 'medium'
+            return 'Intermediate'
         elif self.difficulty_var.get() == 3:
-            return 'hard'
+            return 'Expert'
 
     def get_time(self):
         """Get time"""
