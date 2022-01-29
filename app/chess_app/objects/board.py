@@ -1,4 +1,3 @@
-import tkinter.messagebox
 from tkinter import *
 from tkinter import messagebox, ttk
 import string
@@ -9,9 +8,9 @@ import threading
 from PIL import Image, ImageTk
 import csv
 import chess
-import sys
-import sqlite3
+
 from app.chess_app.objects.chess_ai import AI
+from database.database import DatabaseBrowser
 
 
 class Board(Frame):
@@ -542,7 +541,7 @@ class Board(Frame):
         if self.ai_board.is_checkmate():
             self.game_over = True
 
-            messagebox.showerror('Info', f'Checkmate')
+            messagebox.showinfo('Game over', f'Checkmate')
 
             if not self.ai_board.turn:
                 self.game_score('checkmate', 1)
@@ -553,7 +552,7 @@ class Board(Frame):
         if self.ai_board.is_stalemate():
             self.game_over = True
 
-            messagebox.showinfo('Info', f'Game ends in draw')
+            messagebox.showinfo('Game over', f'Game ends in draw')
 
             # if the user is playing against the ai update its score
             self.game_score('stalemate')
@@ -724,10 +723,10 @@ class Board(Frame):
             depth = 1
 
         if self.difficulty == 'Intermediate':
-            depth = 3
+            depth = 2
 
         if self.difficulty == 'Expert':
-            depth = 6
+            depth = 3
 
         # get best move depending on difficulty
         original_move = self.ai.selectmove(depth)
@@ -1669,7 +1668,7 @@ class Board(Frame):
         if self.mode == 'user':
 
             # get the current username
-            with open(os.getcwd() + '\\login_system_app\\temp\\current_user.txt') as f:
+            with open(os.getcwd() + '\\app\\login_system_app\\temp\\current_user.txt') as f:
                 username = f.read()
 
             if self.game_type == 'two_player':
@@ -1698,94 +1697,52 @@ class Board(Frame):
         :param str result: Can be a win, loss or draw
         """
 
-        # database path
-        database = os.getcwd() + '\\database\\users.db'
+        # data
+        original_data = DatabaseBrowser.load(load='statistics', username=user)
 
-        # Store new data into database
-        conn = sqlite3.connect(database)
-        c = conn.cursor()
+        # increase number of games played by one
+        original_data[1] += 1
 
-        with conn:
-            # GET ORIGINAL DATA
-            c.execute("SELECT * FROM user_stats WHERE user=?", (user,))
-            original_data = list(c.fetchall()[0])
+        # game score
+        if result == 'win':
+            # add 1 more win
+            original_data[2] += 1
 
-            # increase number of games played by one
-            original_data[1] += 1
+            # add points to ranking according to the game difficulty
+            # ranking is basically just points
+            # the amount of points added also depends on the difficulty
+            if self.difficulty == 'Novice':
+                original_data[5] += 1
 
-            # game score
-            if result == 'win':
-                # add 1 more win
-                original_data[2] += 1
+            if self.difficulty == 'Intermediate':
+                original_data[5] += 2
 
-                # add points to ranking according to the game difficulty
-                # ranking is basically just points
-                # the amount of points added also depends on the difficulty
-                if self.difficulty == 'Novice':
-                    original_data[5] += 1
+            if self.difficulty == 'Expert':
+                original_data[5] += 3
 
-                if self.difficulty == 'Intermediate':
-                    original_data[5] += 2
+        if result == 'loss':
+            # add one more loss
+            original_data[3] += 1
 
-                if self.difficulty == 'Expert':
-                    original_data[5] += 3
+            # ranking doesn't get updated in loss
 
-            if result == 'loss':
-                # add one more loss
-                original_data[3] += 1
+        if result == 'draw':
+            # add one more draw
+            original_data[4] += 1
 
-                # ranking doesn't get updated in loss
+            # add points to ranking according to the game difficulty
+            # the amount of points added also depends on the difficulty
+            if self.difficulty == 'Novice':
+                original_data[5] += 0.5
 
-            if result == 'draw':
-                # add one more draw
-                original_data[4] += 1
+            if self.difficulty == 'Intermediate':
+                original_data[5] += 1
 
-                # add points to ranking according to the game difficulty
-                # the amount of points added also depends on the difficulty
-                if self.difficulty == 'Novice':
-                    original_data[5] += 0.5
+            if self.difficulty == 'Expert':
+                original_data[5] += 1.5
 
-                if self.difficulty == 'Intermediate':
-                    original_data[5] += 1
-
-                if self.difficulty == 'Expert':
-                    original_data[5] += 1.5
-
-            # finally add the data to the database
-            self.add_score_to_db(original_data)
-
-    @staticmethod
-    def add_score_to_db(data):
-        """Add new user statistics to database
-
-        :param list data: user statistics to be added to the database
-        """
-
-        # database path
-        database = os.getcwd() + '\\database\\users.db'
-
-        # Store new data into database
-        conn = sqlite3.connect(database)
-        c = conn.cursor()
-
-        # name
-        username = data[0]
-
-        with conn:
-            # add new data
-            c.execute("UPDATE user_stats SET "
-                      "number_of_games_played = :number_of_games_played AND "
-                      "wins = :wins AND "
-                      "losses = :losses AND "
-                      "draws = :draws AND "
-                      "ranking = :ranking "
-                      "WHERE user=:user",
-                      {'number_of_games_played': data[1],
-                       'wins': data[2],
-                       'losses': data[3],
-                       'draws': data[4],
-                       'ranking': data[5],
-                       'user': username})
+        # finally add the data to the database
+        DatabaseBrowser.save(save='statistics', username=original_data[0], data=original_data)
 
     def build(self, board_type='default', **kwargs):
         """Construct board
