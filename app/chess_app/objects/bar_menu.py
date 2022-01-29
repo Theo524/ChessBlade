@@ -1,5 +1,7 @@
 from tkinter import *
 import os
+
+from database.database import DatabaseBrowser
 from app.chess_app.objects.settings import Settings
 from tkinter import ttk, messagebox, filedialog
 import csv
@@ -45,7 +47,7 @@ class BarMenu(Menu):
         """Save a game fen string into txt file"""
 
         board_obj = self.root.main_chess_board
-        fen = board_obj.get_game_fen_string()
+        fen = board_obj.ai_board.fen().split(' ')[0]
 
         with open(os.getcwd()+'\\app\\login_system_app\\temp\\current_user.txt', 'r') as f:
             name = f.read() if self.mode == 'user' else 'Guest'
@@ -124,6 +126,18 @@ class BarMenu(Menu):
     def show_player_stats():
         """Shows player data"""
 
+        # We get the name for this current user
+        with open(os.getcwd() + '//app//login_system_app//temp//current_user.txt', 'r') as f:
+            username = f.read()
+
+        # Get required data
+        data = DatabaseBrowser.load(load='statistics', username=username)
+
+        # load unto files
+        with open(os.getcwd() + '\\app\\chess_app\\all_settings\\user\\user_stats.csv', 'w') as f:
+            f.write('number_of_games_played-wins-loses-draws-ranking\n')
+            f.write(f'{data[1]}-{data[2]}-{data[3]}-{data[4]}-{data[5]}')
+
         with open(os.getcwd() + '//app//chess_app//all_settings//user//user_stats.csv') as f:
             reader = csv.reader(f, delimiter='-')  # file separated by '-' rather than comas
             next(reader)  # skip header
@@ -134,10 +148,6 @@ class BarMenu(Menu):
                 loses = row[2]
                 draws = row[3]
                 ranking = row[4]
-
-        # We get the name for this current user
-        with open(os.getcwd() + '//app//login_system_app//temp//current_user.txt', 'r') as f:
-            username = f.read()
 
         new_window = Toplevel()
 
@@ -166,7 +176,7 @@ class BarMenu(Menu):
         # loses
         Label(player_stats_frame, text='Loses: ', font='calibri 10') \
             .grid(column=0, row=3)
-        Label(player_stats_frame, text=number_of_games_played, font='verdana 10 bold') \
+        Label(player_stats_frame, text=loses, font='verdana 10 bold') \
             .grid(column=1, row=3, padx=(0, 28))
 
         # draws
