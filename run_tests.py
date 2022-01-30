@@ -6,7 +6,7 @@ import tests.databaseTest as Database
 import tests.boardTest as Chess
 
 import unittest
-print
+
 # test some login system functions
 suite = unittest.TestLoader().loadTestsFromModule(Login)
 unittest.TextTestRunner(verbosity=2).run(suite)
