@@ -19,6 +19,10 @@ class LoginSystem(ttk.Frame):
     def __init__(self, master, **kwargs):
         ttk.Frame.__init__(self, master, **kwargs)
 
+        self.build_ui()
+
+    def build_ui(self):
+
         # themes
         self.master.style.configure('login_page.TButton', font=('Calibri', 13,))
         self.master.style.configure('login_page.TCheckbutton', font=('Calibri', 10))
@@ -182,6 +186,10 @@ class ForgotPassword(ttk.Frame):
 
     def __init__(self, master, **kwargs):
         ttk.Frame.__init__(self, master, **kwargs)
+
+        self.build_ui()
+
+    def build_ui(self):
 
         self.database = self.master.database
         self.temp_files = self.master.temp_files
@@ -404,6 +412,10 @@ class VerifyPasscode(ttk.Frame):
     def __init__(self, master, **kwargs):
         ttk.Frame.__init__(self, master, **kwargs)
 
+        self.build_ui()
+
+    def build_ui(self):
+
         self.temp_files = self.master.temp_files
 
         # window attributes
@@ -468,6 +480,10 @@ class NewPassword(ttk.Frame):
     def __init__(self, master):
         ttk.Frame.__init__(self, master)
 
+        self.build_ui()
+
+    def build_ui(self):
+
         # files
         self.database = self.master.database
         self.temp_files = self.master.temp_files
@@ -523,12 +539,11 @@ class NewPassword(ttk.Frame):
 
         password = self.new_pass_var.get()
 
-
         valid = RegisterSystem.check_pass(password)
 
         if valid:
             # convert password
-            new_pass = self.hash_pass(password)
+            new_pass = RegisterSystem.hash_pass(password)
 
             # get the email and username
             email_file = self.temp_files + '\\password_recovery\\email.txt'
@@ -552,7 +567,7 @@ class NewPassword(ttk.Frame):
                           {'username': username, 'password': old_pass, 'email': email})
 
                 data = c.fetchall()
-                c.execute("""UPDATE users SET password=:password WHERE username=:username AND email=:email""",
+                c.execute("""UPDATE users SET password=:password WHERE username=:username, email=:email""",
                           {'username': username, 'password': new_pass, 'email': email})
 
             messagebox.showinfo('Success', 'Your new password has been set')
@@ -562,15 +577,6 @@ class NewPassword(ttk.Frame):
         else:
             messagebox.showerror('Error', 'The password should contain 2 of each:\n- Upper case leters'
                                  '\n- Lower case letters\n- Numbers\n- Symbols')
-
-    @staticmethod
-    def hash_pass(password):
-        """Hash the password for better security"""
-
-        message = password.encode()
-        hashed_password = hashlib.blake2b(message).hexdigest()
-
-        return hashed_password
 
     def start(self):
         """Return to Login page"""

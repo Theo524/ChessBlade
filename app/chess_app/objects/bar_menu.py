@@ -76,8 +76,6 @@ class BarMenu(Menu):
     def open_file(self):
         """Open file"""
 
-        board_obj = self.root.main_chess_board
-
         res = messagebox.askyesno('Open', 'Open text file for saved game?')
         g_path = os.getcwd() + '\\app\\chess_app\\all_saved_games'
         if res:

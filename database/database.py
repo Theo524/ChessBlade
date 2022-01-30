@@ -7,6 +7,23 @@ class DatabaseBrowser:
         pass
 
     @staticmethod
+    def delete_user(username):
+
+        # Store data into database
+        conn = sqlite3.connect(os.getcwd() + '\\database\\users.db')
+        c = conn.cursor()
+
+        with conn:
+            # delete general
+            c.execute('DELETE FROM users WHERE username=:username', {'username': username})
+
+            # delete settings
+            c.execute('DELETE FROM user_settings WHERE user=:user', {'user': username})
+
+            # delete stats
+            c.execute('DELETE FROM user_stats WHERE user=:user', {'user': username})
+
+    @staticmethod
     def create_new_user(username, hashed_password, email):
 
         # Store data into database
@@ -34,12 +51,12 @@ class DatabaseBrowser:
                        'loses': 0, 'draws': 0, 'ranking': 0})
 
             # output database to console
-            c.execute("SELECT * FROM users")
-            print(f'User data: {c.fetchall()}')
-            c.execute("SELECT * FROM user_settings")
-            print(f'User settings: {c.fetchall()}')
-            c.execute("SELECT * FROM user_stats")
-            print(f'User stats: {c.fetchall()}')
+            #c.execute("SELECT * FROM users")
+            #print(f'User data: {c.fetchall()}')
+            #c.execute("SELECT * FROM user_settings")
+            #print(f'User settings: {c.fetchall()}')
+            #c.execute("SELECT * FROM user_stats")
+            #print(f'User stats: {c.fetchall()}')
 
     @staticmethod
     def load(load='', username=None):
@@ -140,7 +157,9 @@ class DatabaseBrowser:
 
             if save.lower() == 'general':
                 with conn:
-                    c.execute("INSERT INTO users VALUES (:username, :password, :email)",
+                    c.execute("UPDATE users SET username=:username,"
+                              " password=:password,"
+                              " email=:email",
                               {'username': data[0],
                                'password': data[1],
                                'email': data[2]})

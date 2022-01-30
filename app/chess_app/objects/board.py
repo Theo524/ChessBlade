@@ -34,13 +34,6 @@ class Board(Frame):
         self.alphabet = list(string.ascii_letters)  # alphabet
         self.nums = [str(i) for i in range(10)]  # Numbers as str (0-9)
 
-        # data structures
-        self.board = {}  # game board around which game revolves
-        self.coordinates = []  # 2d array of all chess positions
-        self.pieces = []  # 1d array of all chess positions
-        self.pieces_reversed = [] # 1d array of all chess positions reversed
-        self.add_chess_pieces_positions()  # fill the lists
-
         # frame containing chess notation tab
         if kwargs:
             self.widgets_frame = kwargs['widgets_frame']
@@ -51,14 +44,14 @@ class Board(Frame):
         self.mode = master.master.mode
 
         # game_settings
-        self.difficulty = None
-        self.time = None
-        self.game_type = None
-        self.player_piece_color = None
-        self.opponent_piece_color = None
-        self.border_color = None
-        self.board_color = None
-        self.set_game_settings(self.mode)  # sets game settings
+        settings = self.get_game_settings(self.mode)  # sets game settings
+        self.difficulty = settings[0]
+        self.time = settings[1]
+        self.game_type = settings[2]
+        self.player_piece_color = settings[3]
+        self.opponent_piece_color = settings[4]
+        self.border_color = settings[5]
+        self.board_color = settings[6]
 
         # colors for board
         self.board_colors = [
@@ -71,6 +64,11 @@ class Board(Frame):
         # file paths
         self.pieces_file_path = os.getcwd() + '\\app\\chess_app\\pieces'
         self.settings_file_path = os.getcwd() + '\\app\\chess_app\\all_settings'
+
+        # data structures
+        # 2d array of all chess positions, 1d array of all chess positions and the same one reversed
+        self.coordinates, self.pieces, self.pieces_reversed = self.add_chess_pieces_positions()  # fill the lists
+        self.board = self.make_board()  # game board around which game revolves
 
         # Dictionaries storing piece images file names
         self.black_pieces, self.white_pieces = self.get_piece_img()
@@ -102,25 +100,31 @@ class Board(Frame):
         """Populate 1d and 2d array chess"""
 
         # get coordinates, e.g. 'a1', 'b1', etc into a 2 dimensional array
+        coordinates = []
         for row in range(8):
             temp = []
             for letter in self.letters:
                 temp.append(f'{letter}{row + 1}')
-            self.coordinates.append(temp)
+            coordinates.append(temp)
 
         # get coordinates, e.g. 'a1', 'b1', etc into a 1 dimensional array
-        for row in self.coordinates:
+        pieces = []
+        for row in coordinates:
             for piece in row:
-                self.pieces.append(piece)
+                pieces.append(piece)
 
         # reversed order
-        reversed_p = self.coordinates[:]
+        reversed_p = coordinates[:]
         reversed_p.reverse()
+        pieces_reversed = []
         for row in reversed_p:
             for piece in row:
-                self.pieces_reversed.append(piece)
+                pieces_reversed.append(piece)
 
-    def set_game_settings(self, mode):
+        return coordinates, pieces, pieces_reversed
+
+    @staticmethod
+    def get_game_settings(mode):
         """Sets Game settings
 
         :param str mode: The game mode the player is in
@@ -136,14 +140,7 @@ class Board(Frame):
                 for row in csv_reader:
                     print(f'Guest settings : {row}')
                     # retrieve settings in file
-                    self.difficulty = row[0]
-                    self.time = row[1]
-                    self.game_type = row[2]
-                    self.player_piece_color = row[3]
-                    self.opponent_piece_color = row[4]
-                    self.border_color = row[5]
-                    self.board_color = row[6]
-
+                    return row
         elif mode == 'user':
             # fetch settings for that specific user
             with open(os.getcwd() + '\\app\\chess_app\\all_settings\\user\\user_game_settings.csv', 'r') as f:
@@ -153,13 +150,7 @@ class Board(Frame):
                 for row in csv_reader:
                     print(f'User settings : {row}')
                     # retrieve these personalized settings from user file
-                    self.difficulty = row[0]
-                    self.time = row[1]
-                    self.game_type = row[2]
-                    self.player_piece_color = row[3]
-                    self.opponent_piece_color = row[4]
-                    self.border_color = row[5]
-                    self.board_color = row[6]
+                    return row
 
     def add_notation_tab(self):
         """Implement game tabs for chess notation"""
@@ -189,6 +180,7 @@ class Board(Frame):
 
     def make_board(self):
         """Make the board dict"""
+        board = {}
 
         # Create a dictionary with the main key being a coordinate
         # Assign coordinates to their corresponding button
@@ -201,7 +193,7 @@ class Board(Frame):
             current_position = self.coordinates[y][x]
 
             # make board
-            self.board[current_position] = {'button': Button(self, bg=self.board_colors[i],
+            board[current_position] = {'button': Button(self, bg=self.board_colors[i],
                                                              text=f'\t        {current_position}',
                                                              font=('arial', 7),
                                                              compound=BOTTOM,
@@ -227,6 +219,8 @@ class Board(Frame):
             if x == 8:
                 y -= 1
                 x = 0
+
+        return board
 
     def place_buttons(self):
         """Place the actual buttons on the screen"""
@@ -1752,18 +1746,15 @@ class Board(Frame):
         """
 
         if board_type == 'default':
-            self.make_board()
             self.place_buttons()
             self.place_default_pieces_on_screen()
 
         if board_type == 'empty':
-            self.make_board()
             self.place_buttons()
             for piece in self.pieces:
                 self.place_piece('blank', 'blank', piece)
 
         if board_type == 'saved':
-            self.make_board()
             self.place_buttons()
             self.place_fen_string(kwargs['fen'])
             # ai board

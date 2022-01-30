@@ -21,6 +21,10 @@ class RegisterSystem(ttk.Frame):
         self.master = master
         self.database = self.master.database
 
+        self.build_ui()
+
+    def build_ui(self):
+
         self.master.style.configure('error_label.TLabel', foreground='red', font=('Arial', 7))
         # container
         self.scene = ttk.Frame(self)
@@ -154,11 +158,12 @@ class RegisterSystem(ttk.Frame):
         else:
             return False
 
-    def check_email(self, email):
+    @staticmethod
+    def check_email(email):
         """Checks whether the email account user entered exists"""
 
         # first validate
-        valid = self.validate_email(email)
+        valid = RegisterSystem.validate_email(email)
 
         if valid:
             try:
@@ -197,7 +202,7 @@ class RegisterSystem(ttk.Frame):
             return False
 
     @staticmethod
-    def calculate_age(dob):
+    def calculate_age(dob, this_year):
         """Calculate the user age"""
 
         # get today's date
@@ -208,7 +213,7 @@ class RegisterSystem(ttk.Frame):
         date_of_birth = date(int(born[2]), int(born[1]), int(born[0]))
 
         # operation that calculates the difference between today and the birthdate (age)
-        return today.year - date_of_birth.year - ((today.month, today.day) < (date_of_birth.month, date_of_birth.day))
+        return this_year - date_of_birth.year - ((today.month, today.day) < (date_of_birth.month, date_of_birth.day))
 
     @staticmethod
     def hash_pass(password):
@@ -299,7 +304,8 @@ class RegisterSystem(ttk.Frame):
 
         # Check date of birth is valid (age between 14-70)
         date_of_birth = self.dob_entry.get()
-        age = self.calculate_age(date_of_birth)
+        this_year = date.today().year
+        age = self.calculate_age(date_of_birth, this_year)
         if age < 14 or age > 100:
             # if invalid, display error frame
             self.dob_error_var.set('You must be between 14-100 years of age')
