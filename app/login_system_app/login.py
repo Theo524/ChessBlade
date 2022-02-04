@@ -11,6 +11,7 @@ import smtplib
 import random
 import sqlite3
 import requests
+from database.database import DatabaseBrowser
 
 
 class LoginSystem(ttk.Frame):
@@ -18,10 +19,6 @@ class LoginSystem(ttk.Frame):
 
     def __init__(self, master, **kwargs):
         ttk.Frame.__init__(self, master, **kwargs)
-
-        self.build_ui()
-
-    def build_ui(self):
 
         # themes
         self.master.style.configure('login_page.TButton', font=('Calibri', 13,))
@@ -43,7 +40,7 @@ class LoginSystem(ttk.Frame):
         self.upper_window.pack()
         # button to return to start page
         ttk.Button(self.upper_window, text='<--', cursor="hand2",
-               command=self.master.switch_frame(self.master.frames['start'])).place(x=0, y=0)
+                   command=self.return_to_start).place(x=0, y=0)
 
         # ----------------------app layout/middle frame(main data)----------------------
         # every item is placed inside this frame
@@ -145,7 +142,7 @@ class LoginSystem(ttk.Frame):
             with open(user_file, 'w') as f:
                 f.write(username)
 
-            # Set start_new_game to false
+            # Set start_new_game to true
             with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
                 f.write('new_game:yes\n')
                 f.write('saved_game:no')
@@ -187,12 +184,10 @@ class ForgotPassword(ttk.Frame):
     def __init__(self, master, **kwargs):
         ttk.Frame.__init__(self, master, **kwargs)
 
-        self.build_ui()
-
-    def build_ui(self):
-
         self.database = self.master.database
         self.temp_files = self.master.temp_files
+
+        self.master.style.configure('error_label.TLabel', foreground='red', font=('Arial', 7))
 
         # container
         self.scene = ttk.Frame(self)
@@ -251,7 +246,8 @@ class ForgotPassword(ttk.Frame):
         self.recover_password_error_frame.pack()
         self.recover_password_error_var = StringVar()
         self.recover_password_error = ttk.Label(self.recover_password_error_frame,
-                                            textvariable=self.recover_password_error_var, style='error_label.TLabel')
+                                                textvariable=self.recover_password_error_var,
+                                                style='error_label.TLabel')
 
         # Verification button (MIDDLE FRAME)
         ttk.Button(self.main_window, text='Continue', cursor='hand2', command=self.get_email).pack()
@@ -298,11 +294,6 @@ class ForgotPassword(ttk.Frame):
                 with open(passcode_file, 'w') as f:
                     f.write(passcode)
 
-                # write email to temp file
-                email_file = self.temp_files + '\\password_recovery\\email.txt'
-                with open(email_file, 'w') as f:
-                    f.write(email)
-
                 # write username to temp_file
                 user_file = self.temp_files + '\\password_recovery\\username.txt'
                 with open(user_file, 'w') as f:
@@ -313,8 +304,8 @@ class ForgotPassword(ttk.Frame):
                 c = conn.cursor()
 
                 with conn:
-                    c.execute('SELECT * FROM users WHERE username=:username AND email=:email',
-                              {'username': user.lower(), 'email': email})
+                    c.execute('SELECT * FROM users WHERE username=:username',
+                              {'username': user.lower(),})
 
                     data = c.fetchall()
                     # format of data is [(username, password, email)] so 'my_list[0][1]' represents the password
@@ -412,10 +403,6 @@ class VerifyPasscode(ttk.Frame):
     def __init__(self, master, **kwargs):
         ttk.Frame.__init__(self, master, **kwargs)
 
-        self.build_ui()
-
-    def build_ui(self):
-
         self.temp_files = self.master.temp_files
 
         # window attributes
@@ -480,9 +467,6 @@ class NewPassword(ttk.Frame):
     def __init__(self, master):
         ttk.Frame.__init__(self, master)
 
-        self.build_ui()
-
-    def build_ui(self):
 
         # files
         self.database = self.master.database
@@ -545,11 +529,6 @@ class NewPassword(ttk.Frame):
             # convert password
             new_pass = RegisterSystem.hash_pass(password)
 
-            # get the email and username
-            email_file = self.temp_files + '\\password_recovery\\email.txt'
-            with open(email_file, 'r') as f:
-                email = f.read()
-
             user_file = self.temp_files + '\\password_recovery\\username.txt'
             with open(user_file, 'r') as f:
                 username = f.read()
@@ -558,17 +537,14 @@ class NewPassword(ttk.Frame):
             with open(password_file, 'r') as f:
                 old_pass = f.read()
 
-            conn = sqlite3.connect(self.database)
-            c = conn.cursor()
+            # get old data to get email
+            data = DatabaseBrowser.load(load='general', username=username)
 
-            # Replace password in db
-            with conn:
-                c.execute("SELECT * FROM users WHERE username=:username AND password=:password AND email=:email",
-                          {'username': username, 'password': old_pass, 'email': email})
+            # make new data
+            all_data = [username, new_pass, data[2]]
 
-                data = c.fetchall()
-                c.execute("""UPDATE users SET password=:password WHERE username=:username, email=:email""",
-                          {'username': username, 'password': new_pass, 'email': email})
+            # save new data
+            DatabaseBrowser.save(save='general', username=username, data=all_data)
 
             messagebox.showinfo('Success', 'Your new password has been set')
             # Return to login

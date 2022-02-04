@@ -39,7 +39,7 @@ class StartApp(Tk):
         self.switch_frame(self.frames['start'])
 
     def switch_frame(self, frame_class):
-        new_frame = frame_class(self, width=1000, height=620)
+        new_frame = frame_class(self)
         if self._frame is not None:
             self._frame.destroy()
         self._frame = new_frame
@@ -75,7 +75,7 @@ class StartWindow(ttk.Frame):
         self.master.style.configure("Placeholder.TEntry", foreground='grey')
 
         # Title
-        ttk.Label(self.scene, text="CHESS GAME", font=('Arial', 50)).pack(side="top", padx=30, pady=50)
+        ttk.Label(self.scene, text="CHESS MASTER", font=('Arial', 50)).pack(side="top", padx=30, pady=50)
 
         # Login Button
         ttk.Button(self.scene, text="Login", command=lambda: master.switch_frame(master.frames['login']),

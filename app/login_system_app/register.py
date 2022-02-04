@@ -21,10 +21,6 @@ class RegisterSystem(ttk.Frame):
         self.master = master
         self.database = self.master.database
 
-        self.build_ui()
-
-    def build_ui(self):
-
         self.master.style.configure('error_label.TLabel', foreground='red', font=('Arial', 7))
         # container
         self.scene = ttk.Frame(self)
@@ -327,7 +323,7 @@ class RegisterSystem(ttk.Frame):
 
             if answer:
                 # switch if user wants to leave
-                self.master.switch_frames(self.master.frames['start'])
+                self.return_to_start()
             else:
                 # reset all entries blank if user wants to stay
                 self.reset()

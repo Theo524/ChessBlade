@@ -8,6 +8,10 @@ class DatabaseBrowser:
 
     @staticmethod
     def delete_user(username):
+        """Deletes user from database
+
+        :param str username: User to be deleted
+        """
 
         # Store data into database
         conn = sqlite3.connect(os.getcwd() + '\\database\\users.db')
@@ -25,6 +29,12 @@ class DatabaseBrowser:
 
     @staticmethod
     def create_new_user(username, hashed_password, email):
+        """Creates new user
+
+        :param str username: username
+        :param str hashed_password: Hashed version of password to be used (blake2b)
+        :param str email: email account that will be used
+        """
 
         # Store data into database
         conn = sqlite3.connect(os.getcwd() + '\\database\\users.db')
@@ -66,7 +76,6 @@ class DatabaseBrowser:
         :param str username: the name of the user who's data will be modified
 
         :return: structure containing data for that user
-
         """
 
         if username is not None:
@@ -157,9 +166,10 @@ class DatabaseBrowser:
 
             if save.lower() == 'general':
                 with conn:
-                    c.execute("UPDATE users SET username=:username,"
+                    c.execute("UPDATE users SET "
                               " password=:password,"
-                              " email=:email",
+                              " email=:email "
+                              "WHERE username=:username",
                               {'username': data[0],
                                'password': data[1],
                                'email': data[2]})
