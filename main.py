@@ -78,8 +78,8 @@ if __name__ == '__main__':
     # read the data from  file on whether to start new game
     with open(main_path + '\\app\\chess_app\\all_settings\\data.txt', 'r') as f:
         # response means whether to open a new game
-        txt = list(f.readlines())
-        # response = txt[0].split(':')[1]
+        #txt = list(f.readlines())
+        #response = txt[0].split(':')[1]
         response = 'yes\n'
 
         # saved game determines whether to open a new saved game
@@ -88,11 +88,12 @@ if __name__ == '__main__':
 
     # while the response remains as 'yes'
     while str(response) == 'yes\n':
-        # get fen string
-        with open(main_path + '\\app\\chess_app\\all_saved_games\\temp\\temp_file.txt', 'r') as f:
-            fen_str = f.read()
+
         # Start new chess game
         if saved_game == 'yes':
+            # get fen string
+            with open(main_path + '\\app\\chess_app\\all_saved_games\\temp\\temp_file.txt', 'r') as f:
+                fen_str = f.read()
             ChessApp(mode, fen=fen_str).mainloop()
         if saved_game == 'no':
             ChessApp(mode).mainloop()
