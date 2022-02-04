@@ -165,8 +165,8 @@ class Board(Frame):
         self.notation_tab.pack()
 
         # third tab
-        self.deleted_pieces_tab = Text(self.notebook)
-        self.deleted_pieces_tab.pack()
+        self.board_fen_string_tab = Text(self.notebook)
+        self.board_fen_string_tab.pack()
 
         # second tab
         self.deleted_tab_visual = Frame(self.notebook, bg=self.board_colors[1])
@@ -176,7 +176,7 @@ class Board(Frame):
         # add  tabs to chess notebook
         self.notebook.add(self.notation_tab, text='Notation')
         self.notebook.add(self.deleted_tab_visual, text='Deleted pieces')
-        self.notebook.add(self.deleted_pieces_tab, text='Deleted pieces (text)')
+        self.notebook.add(self.board_fen_string_tab, text='FEN')
 
     def make_board(self):
         """Make the board dict"""
@@ -512,14 +512,6 @@ class Board(Frame):
                     self.game_over = True
                 self.make_ai_move()
 
-            # add this deleted piece to the deleted pieces list
-            self.deleted_pieces.append([piece_name, piece_color])
-            self.deleted_pieces_tab.insert('end', '(')
-            self.deleted_pieces_tab.insert('end', self.board[position]['piece']['piece_color'])
-            self.deleted_pieces_tab.insert('end', ', ')
-            self.deleted_pieces_tab.insert('end', self.board[position]['piece']['piece_name'])
-            self.deleted_pieces_tab.insert('end', '), ')
-
         # Whenever the user clicks a non piece or empty space, a messagebox appears
         # reset the board colors
         if current_button_color in ['white', self.board_colors[1]] and piece_name is None:
@@ -651,22 +643,22 @@ class Board(Frame):
         if self.board[target]['piece']['piece_name'] is None:
             # a normal move
             # Add to notation
-            self.update_notation('moved_piece', target, piece_name, new_piece_name='')
+            self.update_notation('moved_piece', target, piece_name, new_piece_name='', color=color)
+
+            # fen tab
+            self.board_fen_string_tab.insert('end', f'{self.moves}. {self.get_game_fen_string_original()}\n')
 
         elif self.board[target]['piece']['piece_name'] is not None:
             # deleting a piece
             # add this deleted piece to the deleted pieces list
             self.deleted_pieces.append([self.board[target]['piece']['piece_name'],
                                         self.board[target]['piece']['piece_color']])
-            self.deleted_pieces_tab.insert('end', '(')
-            self.deleted_pieces_tab.insert('end', self.board[target]['piece']['piece_color'])
-            self.deleted_pieces_tab.insert('end', ', ')
-            self.deleted_pieces_tab.insert('end', self.board[target]['piece']['piece_name'])
-            self.deleted_pieces_tab.insert('end', '), ')
-
             # Add to notation
             self.update_notation('deleted_piece', target, piece_name,
-                                 new_piece_name=str(self.board[target]['piece']['piece_name']))
+                                 new_piece_name=str(self.board[target]['piece']['piece_name']), color=color)
+
+            # fen tab
+            self.board_fen_string_tab.insert('end', f'{self.moves}. {self.get_game_fen_string_original()}\n')
 
         # CHESS MOVE
         # place the selected piece in the selected spot
@@ -688,7 +680,7 @@ class Board(Frame):
             # if there was an error is because of the promotion
             # pushes an invalid piece to the board so to avoid that
             # we create a fen string from the current board and place it
-            fen = self.get_game_fen_string()
+            fen = self.get_game_fen_string_original()
             self.ai_board = chess.Board(fen=fen)
 
         # increase number of moves by one
@@ -743,13 +735,14 @@ class Board(Frame):
         # enable board button again
         self.enable_board_buttons(True)
 
-    def update_notation(self, mode, position, old_piece_name, new_piece_name):
+    def update_notation(self, mode, position, old_piece_name, new_piece_name, color):
         """Add game data to chess notation tabs
 
         :param str mode: determines what tab to add the data to
         :param str position: chessboard coordinate
         :param str old_piece_name: Used for chess notation move
         :param str new_piece_name: Used for chess notation move
+        :param str color: piece_color
         """
         # since chess notation for prawns have no letter and knights use 'N' this small section will handle that
         piece_letter = ''
@@ -763,7 +756,7 @@ class Board(Frame):
                 pass
 
             else:
-                piece_letter = str(old_piece_name[0].upper())
+                piece_letter = str(old_piece_name[0].upper()) if color == 'black' else str(old_piece_name[0].lower())
 
         # actual notation
         if mode == 'moved_piece':
@@ -1410,10 +1403,6 @@ class Board(Frame):
 
         return black_pieces, white_pieces
 
-    def get_game_fen_string(self):
-        """Get fen string of board"""
-        return self.get_game_fen_string_original()
-
     @staticmethod
     def remove_nones(val):
         """Remove None from array
@@ -1445,8 +1434,8 @@ class Board(Frame):
                 first_list.append('1')
             else:
                 first_list.append(copy_of_board[position]['piece']['piece_name'][0].upper()
-                               if copy_of_board[position]['piece']['piece_color'] == 'black'
-                               else copy_of_board[position]['piece']['piece_name'][0].lower())
+                                  if copy_of_board[position]['piece']['piece_color'] == 'black'
+                                  else copy_of_board[position]['piece']['piece_name'][0].lower())
 
             i += 1
             if i == 8:
@@ -1466,7 +1455,7 @@ class Board(Frame):
         main = []
         third_list = []
         count = 0
-        for row in third_list:
+        for row in second_list:
             try:
                 for value in row:
                     if value == '1':
@@ -1482,7 +1471,7 @@ class Board(Frame):
                 pass
 
         # join everything together
-        joined_lists = [''.join(lst) for lst in main]
+        joined_lists = [''.join(lst) for lst in third_list]
         final_fen_str = ''.join(joined_lists)
 
         return final_fen_str
