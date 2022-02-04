@@ -48,13 +48,32 @@ class BarMenu(Menu):
 
         board_obj = self.root.main_chess_board
         fen = board_obj.ai_board.fen().split(' ')[0]
+        notation = board_obj.chess_notation
 
         with open(os.getcwd()+'\\app\\login_system_app\\temp\\current_user.txt', 'r') as f:
-            name = f.read() if self.mode == 'user' else 'Guest'
+            name = f.read() if self.mode == 'user' else 'guest'
+
+        folder_path = None
+
+        if self.mode == 'guest':
+            folder_path = os.getcwd() + f'\\app\\chess_app\\all_saved_games\\guest'
+
+        if self.mode == 'user':
+            # create path if not exists
+            folder_path = os.path.join(os.getcwd() + f'\\app\\chess_app\\all_saved_games', name)
+            if not os.path.exists(folder_path):
+                os.mkdir(folder_path)
+
+        total_files = 0
+        # get count
+        for base, dirs, files in os.walk(folder_path):
+            for Files in files:
+                total_files += 1
 
         # new file name
-        f_name = f'{name} - Saved Game.txt'
+        save_name = f'save_{total_files+1}.txt'
 
+        # time stuff
         today = date.today()
         date_str = today.strftime("%A %B %d, %Y")
 
@@ -64,12 +83,17 @@ class BarMenu(Menu):
         s = f'0{str(time.second)}' if len(str(time.second)) == 0 else time.second
         time_str = f'{h}:{m}:{s}'
 
-        with open(os.getcwd() + f'\\app\\chess_app\\all_saved_games\\{f_name}', 'w') as f:
+        # path
+        final_path = f'{folder_path}\\{save_name}'
+
+        # write data
+        with open(final_path, 'w') as f:
             f.write(f'Owner: {name}\n')
             f.write(f'Date saved: {date_str}\n')
             f.write(f'Time saved: {time_str}\n')
             f.write('\n')
             f.write(f'GAME FEN:{fen}')
+            f.write(f'\n\nGame Notation: {notation}')
 
         messagebox.showinfo('Saved', 'Game successfully Saved')
 
@@ -77,14 +101,56 @@ class BarMenu(Menu):
         """Open file"""
 
         res = messagebox.askyesno('Open', 'Open text file for saved game?')
-        g_path = os.getcwd() + '\\app\\chess_app\\all_saved_games'
+
+        # name
+        with open(os.getcwd()+'\\app\\login_system_app\\temp\\current_user.txt', 'r') as f:
+            name = f.read() if self.mode == 'user' else 'guest'
+
         if res:
-            filename = filedialog.askopenfilename(initialdir=g_path, title="Select file", filetypes=(("text files","*.txt"), ("all files","*.*")))
+            # access
+            g_path = os.getcwd() + '\\app\\chess_app\\all_saved_games\\guest'
+
+            if self.mode == 'user':
+                g_path = os.getcwd() + f'\\app\\chess_app\\all_saved_games\\{name}'
+                # ensure user has saved games
+                if os.path.exists(g_path):
+                    total_files = 0
+                    # get count
+                    for base, dirs, files in os.walk(g_path):
+                        for Files in files:
+                            total_files += 1
+
+                    if total_files == 0:
+                        messagebox.showerror('Error', 'You do not have any saved games')
+                        return
+
+                else:
+                    messagebox.showerror('Error', 'You do not have any saved games')
+                    return
+
+            # file opening
+            filename = filedialog.askopenfilename(initialdir=g_path, title="Select file",
+                                                  filetypes=(("text files","*.txt"),
+                                                             ("all files","*.*")))
 
             with open(filename, 'r') as f:
                 # end of file
                 file = list(f.readlines())
-                fen = file[-1].split(':')[1]
+
+                # get owner
+                owner = file[0].split(':')[1].strip()
+
+                # check owner is the one opening
+                if owner == name:
+                    pass
+                else:
+                    messagebox.showerror('Error', 'This file does not belongs to you.\n'
+                                                  'You can only open games saved in your provided save folder, '
+                                                  'do not go outside of it.'
+                                                  '\nFor guest users, use guest folder.')
+                    return
+
+                fen = file[4].split(':')[1]
 
             # write fen to temp file
             with open(os.getcwd() + '\\app\\chess_app\\all_saved_games\\temp\\temp_file.txt', 'w') as f:
@@ -104,7 +170,6 @@ class BarMenu(Menu):
         s.mainloop()
 
     def new_game(self):
-        # os.path.normpath(os.getcwd() + os.sep + os.pardir)
         # Set new game file to 'yes' and destroy window, so a new ChessAPp is run
         with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
             f.write('new_game:yes\n')
@@ -199,8 +264,12 @@ class BarMenu(Menu):
         github_user_text.pack()
 
         second_row = Frame(github_frame)
-        github_user_intro_2 = Label(second_row, text='Github site for this project:', font='Helvetica 11 bold')
-        github_user_text_2 = Label(second_row, text='https://github.com/Theo524/Chess-game.git', font='Helvetica 11')
+        github_user_intro_2 = Label(second_row,
+                                    text='Github site for this project(private now):',
+                                    font='Helvetica 11 bold')
+        github_user_text_2 = Label(second_row,
+                                   text='https://github.com/Theo524/Chess-game.git',
+                                   font='Helvetica 11')
         second_row.pack()
         github_user_intro_2.pack(side=LEFT)
         github_user_text_2.pack()
