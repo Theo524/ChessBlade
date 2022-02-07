@@ -9,9 +9,7 @@ from app.resources.custom_widgets.placeholder_entry import PlaceholderEntry
 from database.database import DatabaseBrowser
 
 import hashlib
-import string
 import smtplib
-import sqlite3
 
 
 class RegisterSystem(ttk.Frame):
@@ -168,9 +166,9 @@ class RegisterSystem(ttk.Frame):
 
                 # Our message
                 subject = "Welcome"
-                body = f"Greetings from ChessMaster\n\nYour account has been successfully registered!" \
-                       f"\nWe look forward to working with you," \
-                       f"\n\nChessMaster,"
+                body = f"Greetings from ChessBlade\n\nYour account has been successfully registered!" \
+                       f"\nTime to play!" \
+                       f"\n\nChessBLade,"
 
                 # Combine the subject and the body onto a single message
                 message = f"Subject: {subject}\n\n{body}"
@@ -179,7 +177,7 @@ class RegisterSystem(ttk.Frame):
                 smtp_server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
 
                 # Login with a dummy email account I created
-                smtp_server.login("pruebadelogin524@gmail.com", "logintest1234")
+                smtp_server.login("chessblade.info@gmail.com", "chessblade1234")
 
                 # Message sent in the above format (Subject:...\n\nBody) from my dummy email account
                 smtp_server.sendmail("pruebadelogin524@gmail.com", receiver_address, message)

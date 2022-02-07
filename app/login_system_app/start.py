@@ -75,7 +75,7 @@ class StartWindow(ttk.Frame):
         self.master.style.configure("Placeholder.TEntry", foreground='grey')
 
         # Title
-        ttk.Label(self.scene, text="CHESS MASTER", font=('Arial', 50)).pack(side="top", padx=30, pady=50)
+        ttk.Label(self.scene, text="ChessBlade", font=('Arial', 50)).pack(side="top", padx=30, pady=50)
 
         # Login Button
         ttk.Button(self.scene, text="Login", command=lambda: master.switch_frame(master.frames['login']),

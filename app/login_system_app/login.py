@@ -339,7 +339,7 @@ class ForgotPassword(ttk.Frame):
                 smtp_server.starttls()
 
                 # Login with dummy Gmail account I created using SMTP
-                smtp_server.login("pruebadelogin524@gmail.com", "logintest1234")
+                smtp_server.login("chessblade.info@gmail.com", "chessblade1234")
 
                 # Let's combine the subject and the body onto a single message
                 message = f"Subject: {subject}\n\n{body}"

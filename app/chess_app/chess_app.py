@@ -17,7 +17,7 @@ class ChessApp(tkinter.Tk):
 
         # -------------APP_ATTRIBUTES-------------
         self.resizable(0, 0)
-        self.title('Chess by theo')
+        self.title('ChessBlade')
         self.protocol('WM_DELETE_WINDOW', self.end_new_game)
 
         # -------------BOARD FRAME-------------
