@@ -9,17 +9,17 @@ from app.login_system_app.register import RegisterSystem
 
 class StartApp(Tk):
     def __init__(self):
-        """Start of application"""
+        """Starting application"""
 
         Tk.__init__(self)
 
-        self.closed = False
         self.mode = None
-        # command button made for close window
+        self.user_entered_game = False
+
+        # command button for window closing
         self.protocol("WM_DELETE_WINDOW", self.close_win)
 
         # Attributes
-        #self.resizable(0, 0)
         self.geometry('1000x620')
         self.title('Welcome')
 
@@ -31,24 +31,48 @@ class StartApp(Tk):
         self.database = os.getcwd() + '\\database\\users.db'
         self.temp_files = os.getcwd() + '\\app\\login_system_app\\temp'
 
+        # frame
         self._frame = None
-
         self.frames = {'start': StartWindow, 'login': LoginSystem, 'register': RegisterSystem}
 
         # starting frame
         self.switch_frame(self.frames['start'])
 
+        # automatically start application
+        self.mainloop()
+
     def switch_frame(self, frame_class):
+        """Change application display"""
+
         new_frame = frame_class(self)
         if self._frame is not None:
             self._frame.destroy()
         self._frame = new_frame
         self._frame.pack(expand=True, fill='both')
 
+    def go_to_start_page(self):
+        """Set start menu page"""
+
+        self.switch_frame(StartWindow)
+        self.title('Welcome')
+
+    def go_to_login(self):
+        """Set login page"""
+
+        self.switch_frame(LoginSystem)
+        self.title('Login')
+
+    def go_to_registration(self):
+        """Set registration page"""
+
+        self.switch_frame(RegisterSystem)
+        self.title('Register')
+
     def close_win(self):
         """Close Window"""
-        # win state
-        self.closed = True
+
+        # user did not enter game
+        self.user_entered_game = False
 
         # Set start_new_game to false
         with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
@@ -78,11 +102,11 @@ class StartWindow(ttk.Frame):
         ttk.Label(self.scene, text="ChessBlade", font=('Arial', 50)).pack(side="top", padx=30, pady=50)
 
         # Login Button
-        ttk.Button(self.scene, text="Login", command=lambda: master.switch_frame(master.frames['login']),
+        ttk.Button(self.scene, text="Login", command=self.master.go_to_login,
                    style='start_page.TButton', cursor='hand2').pack(pady=20, ipady=5, ipadx=10)
 
         # Registration button
-        ttk.Button(self.scene, text="Register", command=lambda: master.switch_frame(master.frames['register']),
+        ttk.Button(self.scene, text="Register", command=self.master.go_to_registration,
                    style='start_page.TButton', cursor='hand2').pack(pady=20, ipady=5, ipadx=10)
 
         # Guest mode button
@@ -99,6 +123,7 @@ class StartWindow(ttk.Frame):
 
         # set the game mode 'guest' because user clicked 'enter as guest' button
         self.master.mode = 'guest'
+        self.master.user_entered_game = True
 
         # Set start_new_game to true
         with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
@@ -106,4 +131,4 @@ class StartWindow(ttk.Frame):
             f.write('saved_game:no')
 
         # We quit the start_page and start_app to start the chess app in guest mode
-        self.master.quit()
+        self.master.destroy()
