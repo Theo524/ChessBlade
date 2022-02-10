@@ -2,7 +2,7 @@ from tkinter import *
 import os
 
 from database.database import DatabaseBrowser
-from app.chess_app.objects.settings import Settings
+from app.chess_app.chess_app_widgets.settings import Settings
 from tkinter import ttk, messagebox, filedialog
 import csv
 from datetime import date, datetime
@@ -15,15 +15,21 @@ class BarMenu(Menu):
         # GAME MODE
         self.root = root
         self.mode = self.root.mode
+
         # Create a menu
         self.game_menu = Menu(self, tearoff=0)
+
         # Add the game menu options
-        self.game_menu.add_command(label='Open existing game', command=self.open_file)
-        self.game_menu.add_command(label='Save', command=self.save_game)
-        self.game_menu.add_command(label='New game', command=self.new_game)
         if self.mode == 'user':
+            # Only user can open and save games
+            self.game_menu.add_command(label='Open existing game', command=self.open_file)
+            self.game_menu.add_command(label='Save', command=self.save_game)
+        self.game_menu.add_command(label='New game', command=self.new_game)
+
+        if self.mode == 'user':
+            # user can see statistics
             self.game_menu.add_command(label='Player stats', command=self.show_player_stats)
-        self.game_menu.add_command(label='Exit', command=self.exit)
+        self.game_menu.add_command(label='Exit', command=lambda: self.master.master.end_game(self.mode))
         # Name the game menu
         self.add_cascade(label='Game', menu=self.game_menu)
 
@@ -31,7 +37,8 @@ class BarMenu(Menu):
         self.help_menu = Menu(self, tearoff=0)
         # Add menu options
         self.help_menu.add_command(label='Settings', command=self.open_settings)
-        self.help_menu.add_command(label='Help and chess rules')
+        self.help_menu.add_command(label='Help', command=self.not_available)
+        self.help_menu.add_command(label='Chess rules', command=self.not_available)
         # Name teh menu
         self.add_cascade(label='Help', menu=self.help_menu)
 
@@ -39,35 +46,36 @@ class BarMenu(Menu):
         self.about_menu = Menu(self, tearoff=0)
         # Add menu options
         # self.about_menu.add_command(label='Contact us')
+        self.about_menu.add_command(label='What\'s this?', command=self.not_available)
         self.about_menu.add_command(label='Author', command=self.show_my_details)
+
         # Name the menu
         self.add_cascade(label='About', menu=self.about_menu)
 
     def save_game(self):
-        """Save a game fen string into txt file"""
+        """Save a game fen string into txt file
 
+        only a user can save games
+        """
+
+        # board data
         board_obj = self.root.main_chess_board
         fen = board_obj.ai_board.fen().split(' ')[0]
         notation = board_obj.chess_notation
 
+        # user
         with open(os.getcwd()+'\\app\\login_system_app\\temp\\current_user.txt', 'r') as f:
-            name = f.read() if self.mode == 'user' else 'guest'
+            name = f.read()
 
-        folder_path = None
-
-        if self.mode == 'guest':
-            folder_path = os.getcwd() + f'\\app\\chess_app\\all_saved_games\\guest'
-
-        if self.mode == 'user':
-            # create path if not exists
-            folder_path = os.path.join(os.getcwd() + f'\\app\\chess_app\\all_saved_games', name)
-            if not os.path.exists(folder_path):
-                os.mkdir(folder_path)
+        # create path if not exists
+        folder_path = os.path.join(os.getcwd() + f'\\app\\chess_app\\all_saved_games', name)
+        if not os.path.exists(folder_path):
+            os.mkdir(folder_path)
 
         total_files = 0
-        # get count
+        # get game count
         for base, dirs, files in os.walk(folder_path):
-            for Files in files:
+            for _ in files:
                 total_files += 1
 
         # new file name
@@ -76,7 +84,6 @@ class BarMenu(Menu):
         # time stuff
         today = date.today()
         date_str = today.strftime("%A %B %d, %Y")
-
         time = datetime.now()
         h = f'0{str(time.hour)}' if len(str(time.hour)) == 0 else time.hour
         m = f'0{str(time.minute)}' if len(str(time.minute)) == 0 else time.minute
@@ -95,46 +102,39 @@ class BarMenu(Menu):
             f.write(f'GAME FEN:{fen}')
             f.write(f'\n\nGame Notation: {notation}')
 
+        # feedback
         messagebox.showinfo('Saved', 'Game successfully Saved')
 
     def open_file(self):
-        """Open file"""
+        """Open file
+
+        only a user can open games
+        """
 
         res = messagebox.askyesno('Open', 'Open text file for saved game?')
 
         # name
         with open(os.getcwd()+'\\app\\login_system_app\\temp\\current_user.txt', 'r') as f:
-            name = f.read() if self.mode == 'user' else 'guest'
+            name = f.read()
 
         if res:
-            # access
-            g_path = os.getcwd() + '\\app\\chess_app\\all_saved_games\\guest'
+            # game path
+            g_path = os.getcwd() + f'\\app\\chess_app\\all_saved_games\\{name}'
 
-            if self.mode == 'user':
-                g_path = os.getcwd() + f'\\app\\chess_app\\all_saved_games\\{name}'
-                # ensure user has saved games
-                if os.path.exists(g_path):
-                    total_files = 0
-                    # get count
-                    for base, dirs, files in os.walk(g_path):
-                        for Files in files:
-                            total_files += 1
+            # ensure user has saved games
+            total_files = self.get_file_count(g_path)
 
-                    if total_files == 0:
-                        messagebox.showerror('Error', 'You do not have any saved games')
-                        return
-
-                else:
-                    messagebox.showerror('Error', 'You do not have any saved games')
-                    return
+            if total_files == 0:
+                messagebox.showerror('Error', 'You do not have any saved games')
+                return
 
             # file opening
             filename = filedialog.askopenfilename(initialdir=g_path, title="Select file",
-                                                  filetypes=(("text files","*.txt"),
-                                                             ("all files","*.*")))
+                                                  filetypes=(("text files", "*.txt"),
+                                                             ("all files", "*.*")))
 
             with open(filename, 'r') as f:
-                # end of file
+                # file
                 file = list(f.readlines())
 
                 # get owner
@@ -146,8 +146,7 @@ class BarMenu(Menu):
                 else:
                     messagebox.showerror('Error', 'This file does not belongs to you.\n'
                                                   'You can only open games saved in your provided save folder, '
-                                                  'do not go outside of it.'
-                                                  '\nFor guest users, use guest folder.')
+                                                  'do not go outside of it.')
                     return
 
                 fen = file[4].split(':')[1]
@@ -157,6 +156,7 @@ class BarMenu(Menu):
                 # end of file
                 f.write(fen)
 
+            # set new window startup
             with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
                 f.write('new_game:yes\n')
                 f.write('saved_game:yes')
@@ -164,23 +164,41 @@ class BarMenu(Menu):
             # close win
             self.master.destroy()
 
+    @staticmethod
+    def get_file_count(path):
+        """Get number of files in a directory"""
+
+        total_files = 0
+        if os.path.exists(path):
+            for base, dirs, files in os.walk(path):
+                for _ in files:
+                    total_files += 1
+
+        return total_files
+
     def open_settings(self):
         """Open game settings"""
-        s = Settings(self.mode)
+        s = Settings(master=self.master, mode=self.mode)
         s.mainloop()
 
     def new_game(self):
-        # Set new game file to 'yes' and destroy window, so a new ChessAPp is run
+
+        # Ensure user isn't leaving against the ai
+        game_type = self.root.main_chess_board.game_type
+        if self.mode == 'user' and game_type == 'computer' and self.root.main_chess_board.moves > 0:
+            leave = messagebox.askyesno('End game?', 'You are playing vs the computer. If you exit the game now it will'
+                                                     ' be counted as a defeat. Are you sure you want to leave?')
+
+            if leave:
+                self.root.main_chess_board.game_score('checkmate', winner=2)
+                pass
+
+            if not leave:
+                return
+
+        # Set new game file to 'yes' and destroy window, so a new ChessApp is run
         with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
             f.write('new_game:yes\n')
-            f.write('saved_game:no')
-
-        self.master.destroy()
-
-    def exit(self):
-        # Set new game file to 'no' and destroy window so the looping chess app stops
-        with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
-            f.write('new_game:no\n')
             f.write('saved_game:no')
 
         self.master.destroy()
@@ -210,8 +228,8 @@ class BarMenu(Menu):
                 wins = row[1]
                 loses = row[2]
                 draws = row[3]
-                ranking = row[4]
 
+        # window
         new_window = Toplevel()
 
         # Create the frame
@@ -278,3 +296,7 @@ class BarMenu(Menu):
         """Help window"""
 
         pass
+
+    @staticmethod
+    def not_available():
+        messagebox.showerror('Error', 'This is not available yet. Will be added soon')
