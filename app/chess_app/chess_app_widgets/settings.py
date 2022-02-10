@@ -5,9 +5,10 @@ from database.database import DatabaseBrowser
 
 
 class Settings(Toplevel):
-    def __init__(self, mode):
-        Toplevel.__init__(self)
+    def __init__(self, master, mode):
+        Toplevel.__init__(self, master)
 
+        self.master = master
         self.mode = mode
 
         # attributes
@@ -43,36 +44,36 @@ class Settings(Toplevel):
         requirements_not_met = 0
 
         # Retrieving settings data from the classes
-        self.difficulty = self.general_settings.get_difficulty()
-        if type(self.difficulty) != str or len(self.difficulty)<1:
+        difficulty = self.general_settings.get_difficulty()
+        if type(difficulty) != str or len(difficulty) < 1:
             requirements_not_met += 1
 
-        self.time = self.general_settings.get_time()
-        if type(self.time) != str or len(self.time) != 8:
+        time = self.general_settings.get_time()
+        if type(time) != str or len(time) != 8:
             requirements_not_met += 1
 
-        self.game_type = self.general_settings.get_gamemode()
-        if type(self.game_type) != str or len(self.game_type) <1:
+        game_type = self.general_settings.get_gamemode()
+        if type(game_type) != str or len(game_type) < 1:
             requirements_not_met += 1
 
-        self.player_color = self.customization_settings.get_piece_color()
-        if self.player_color not in ['black', 'white']:
+        player_color = self.customization_settings.get_piece_color()
+        if player_color not in ['black', 'white']:
             requirements_not_met += 1
 
-        if self.player_color == 'black':
-            self.opponent_color = 'white'
+        if player_color == 'black':
+            opponent_color = 'white'
         else:
-            self.opponent_color = 'black'
+            opponent_color = 'black'
 
-        if self.opponent_color not in ['black', 'white']:
+        if opponent_color not in ['black', 'white']:
             requirements_not_met += 1
 
-        self.border_color = self.customization_settings.get_border_color()
-        if type(self.border_color) != str or len(self.border_color) < 1:
+        border_color = self.customization_settings.get_border_color()
+        if type(border_color) != str or len(border_color) < 1:
             requirements_not_met += 1
 
-        self.board_color = self.customization_settings.get_board_color()
-        if type(self.board_color) != str or len(self.board_color) < 1:
+        board_color = self.customization_settings.get_board_color()
+        if type(board_color) != str or len(board_color) < 1:
             requirements_not_met += 1
 
         # Confirmation message
@@ -83,34 +84,50 @@ class Settings(Toplevel):
             if requirements_not_met == 0:
                 # if user is in guest mode, apply new settings to system
                 if self.mode == 'guest':
-                    with open(os.getcwd() + '\\app\\chess_app\\all_settings\\guest\\default_game_settings.csv', 'w') as f:
-                        f.write('Game_difficulty, time, game_mode, player_piece_color, opponent_piece_color, border_color,'
+                    with open(os.getcwd() + '\\app\\chess_app\\all_settings\\guest\\default_game_settings.csv', 'w')\
+                            as f:
+                        f.write('Game_difficulty, time, game_mode, player_piece_color, opponent_piece_color,'
+                                ' border_color,'
                                 'board_color\n')
-                        f.write(f'{self.difficulty}-{self.time}-{self.game_type}-{self.player_color}-{self.opponent_color}'
-                                f'-{self.border_color}-{self.board_color}')
+                        f.write(f'{difficulty}-{time}-{game_type}-{player_color}-{opponent_color}'
+                                f'-{border_color}-{board_color}')
 
                 # if user is in user mode, apply new settings to user account
                 if self.mode == 'user':
+                    # data
+                    data = [difficulty, time, game_type, player_color, opponent_color, border_color, board_color]
+
                     # apply changes to db
-                    self.apply_settings_user_db()
+                    self.apply_settings_user_db(data)
                     # save the new settings in a file
                     with open(os.getcwd() + '\\app\\chess_app\\all_settings\\user\\user_game_settings.csv', 'w') as f:
                         f.write('Game_difficulty-time-game_mode-player_piece_color-opponent_piece_color-border_color-'
                                 'board_color\n')
-                        f.write(f'{self.difficulty}-{self.time}-{self.game_type}-{self.player_color}-{self.opponent_color}'
-                                f'-{self.border_color}-{self.board_color}')
+                        f.write(f'{difficulty}-{time}-{game_type}-{player_color}-{opponent_color}'
+                                f'-{border_color}-{board_color}')
 
-                # Confirmation and informative feedback
-                messagebox.showinfo('Success', 'Settings successfully saved.'
-                                               ' Start a new game to play with the new settings.')
+                    game_type = self.master.main_chess_board.game_type
+                    if game_type == 'computer':
+                        # Confirmation and informative feedback
+                        messagebox.showinfo('Success', 'Settings successfully saved. It has been detected that you are'
+                                                       ' playing against the ai. If you start a new game to play'
+                                                       ' with the new settings this game will be counted as a '
+                                                       'defeat in your account.')
+                    else:
+                        # Confirmation and informative feedback
+                        messagebox.showinfo('Success', 'Settings successfully saved.'
+                                                       ' Click  \'New game\' in the game menu '
+                                                       'to play with these new settings.')
                 # destroy settings window
                 self.destroy()
             else:
                 messagebox.showerror('Error', f'You left {requirements_not_met} empty field(s)')
+
         else:
             pass
 
-    def apply_settings_user_db(self):
+    @staticmethod
+    def apply_settings_user_db(data):
         """Apply settings to the user database"""
 
         # get the username
@@ -118,8 +135,7 @@ class Settings(Toplevel):
             username = f.read()
 
         # data to be saved
-        data = [username, self.difficulty, self.time, self.game_type, self.player_color,
-                self.opponent_color, self.border_color, self.board_color,]
+        data = [username, data[0], data[1], data[2], data[3], data[4], data[5], data[6]]
 
         # save user settings to database
         DatabaseBrowser.save(save='settings', username=username, data=data)
@@ -168,7 +184,7 @@ class GeneralSettings(ttk.Frame):
         expert.pack(side=LEFT)
 
         # --------------TIME--------------
-        time_frame = ttk.LabelFrame(self, text="Time")
+        time_frame = ttk.LabelFrame(self, text="Time you think the game will take")
         time_frame.pack(fill="both", expand="yes", pady=5, padx=5)
 
         # variables
@@ -178,18 +194,18 @@ class GeneralSettings(ttk.Frame):
 
         # hours entry
         Label(time_frame, text='Hours').pack(side=LEFT)
-        time_limit_hours = ttk.Spinbox(time_frame, width=3, from_=0, to=2, textvariable=self.time_in_hours, wrap=True)
+        time_limit_hours = ttk.Spinbox(time_frame, width=3, from_=0, to=8, textvariable=self.time_in_hours, wrap=True)
         time_limit_hours.pack(side=LEFT, padx=3)
 
         # minutes entry
         Label(time_frame, text='Minutes').pack(side=LEFT)
-        time_limit_minutes = ttk.Spinbox(time_frame, width=3, from_=1, to=60, textvariable=self.time_in_minutes,
+        time_limit_minutes = ttk.Spinbox(time_frame, width=3, from_=1, to=59, textvariable=self.time_in_minutes,
                                          wrap=True)
         time_limit_minutes.pack(side=LEFT, padx=3)
 
         # seconds entry
         Label(time_frame, text='Seconds').pack(side=LEFT)
-        time_limit_seconds = ttk.Spinbox(time_frame, width=3, from_=30, to=60, textvariable=self.time_in_seconds,
+        time_limit_seconds = ttk.Spinbox(time_frame, width=3, from_=30, to=59, textvariable=self.time_in_seconds,
                                          wrap=True)
         time_limit_seconds.pack(side=LEFT, padx=3)
 
