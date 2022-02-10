@@ -9,7 +9,7 @@ from PIL import Image, ImageTk
 import csv
 import chess
 
-from app.chess_app.objects.chess_ai import AI
+from app.chess_app.chess_app_widgets.chess_ai import AI
 from database.database import DatabaseBrowser
 
 
@@ -73,7 +73,7 @@ class Board(Frame):
         # Dictionaries storing piece images file names
         self.black_pieces, self.white_pieces = self.get_piece_img()
 
-        # Frame attributes border
+        # Game border
         self.configure(highlightthickness=5, highlightbackground=self.border_color)
 
         # deleted_pieces tracking pos
@@ -91,6 +91,9 @@ class Board(Frame):
 
         # to know when the game ends
         self.game_over = False
+
+        # game duration
+        self.game_duration = None
 
         # prawn promotion
         self.promotion_window = None
@@ -125,9 +128,12 @@ class Board(Frame):
 
     @staticmethod
     def get_game_settings(mode):
-        """Sets Game settings
+        """Get game settings
 
         :param str mode: The game mode the player is in
+
+        :rtype: list
+        :returns: list containing settings based on game mode
         """
 
         if mode == 'guest':
@@ -141,7 +147,8 @@ class Board(Frame):
                     print(f'Guest settings : {row}')
                     # retrieve settings in file
                     return row
-        elif mode == 'user':
+
+        if mode == 'user':
             # fetch settings for that specific user
             with open(os.getcwd() + '\\app\\chess_app\\all_settings\\user\\user_game_settings.csv', 'r') as f:
                 csv_reader = csv.reader(f, delimiter='-')
@@ -180,6 +187,7 @@ class Board(Frame):
 
     def make_board(self):
         """Make the board dict"""
+
         board = {}
 
         # Create a dictionary with the main key being a coordinate
@@ -194,21 +202,20 @@ class Board(Frame):
 
             # make board
             board[current_position] = {'button': Button(self, bg=self.board_colors[i],
-                                                             text=f'\t        {current_position}',
-                                                             font=('arial', 7),
-                                                             compound=BOTTOM,
-                                                             activebackground='light blue',
-                                                             relief=SOLID,
-                                                             bd=1,
-                                                             cursor='tcross',
-                                                             highlightbackground="black",
-                                                             highlightcolor="black",
-                                                             command=lambda p=current_position:
-                                                             self.update_current_piece(p)),
-                                            'piece': {'piece_name': None, 'piece_color': None},
-                                            'color': self.board_colors[i],
-                                            'selected': False
-                                            }
+                                                        text=f'\t        {current_position}',
+                                                        font=('arial', 7),
+                                                        compound=BOTTOM,
+                                                        activebackground='light blue',
+                                                        relief=SOLID,
+                                                        bd=1,
+                                                        cursor='tcross',
+                                                        highlightbackground="black",
+                                                        highlightcolor="black",
+                                                        command=lambda p=current_position:
+                                                        self.update_current_piece(p)),
+                                       'piece': {'piece_name': None, 'piece_color': None},
+                                       'color': self.board_colors[i],
+                                       'selected': False}
 
             # coordinates in first iteration are 'x=0, y=7', where the data is 'a8'
             # next coordinates are 'x=1, y=7' where the val is 'b8'
@@ -524,6 +531,7 @@ class Board(Frame):
                              'selected_piece': self.board[position]['piece'],
                              'color': self.board[position]['color']})
 
+        # CHECKMATE
         if self.ai_board.is_checkmate():
             self.game_over = True
 
@@ -535,6 +543,7 @@ class Board(Frame):
             else:
                 self.game_score('checkmate', 2)
 
+        # STALEMATE
         if self.ai_board.is_stalemate():
             self.game_over = True
 
@@ -544,7 +553,9 @@ class Board(Frame):
             self.game_score('stalemate')
 
         if self.game_over:
-            new_game = messagebox.askyesno('Game over', f'Game over. Do you want to play a new again?')
+            new_game = messagebox.askyesno('Game over', f'\nYou predicted this game would end at {self.time}, '
+                                                        f'it actually took {self.game_duration}.\n'
+                                                        f'Do you want to play a again?')
 
             if new_game:
                 # instructions for new game file
@@ -671,7 +682,7 @@ class Board(Frame):
             move = chess.Move.from_uci(f'{old_position}{target}')
 
             # legal moves available
-            legal_moves = list(self.ai_board.legal_moves)
+            # legal_moves = list(self.ai_board.legal_moves)
             # print(self.ai_board.is_legal(move))
 
             # Make move in virtual board
@@ -780,10 +791,10 @@ class Board(Frame):
             else:
                 img = PhotoImage(file=self.black_pieces[f'{new_piece_name}'])
 
-            l = Label(self.deleted_tab_visual, image=img)
-            l.configure(borderwidth=5, bg=self.board_colors[1])
-            l.grid(column=self.b_x, row=self.b_y)
-            l.image = img
+            label = Label(self.deleted_tab_visual, image=img)
+            label.configure(borderwidth=5, bg=self.board_colors[1])
+            label.grid(column=self.b_x, row=self.b_y)
+            label.image = img
             self.b_x += 1
             if self.b_x == 8:
                 self.b_x = 0
@@ -826,7 +837,7 @@ class Board(Frame):
 
         coordinates = self.coordinates[:]
         coordinates.reverse()
-        # iterate through the entire board and set the button active or disabled
+        # iterate through the entire board and set the buttons active or disabled
         # this allows the ai to perform its move without user interruption
         for row in coordinates:
             for col in row:
@@ -844,7 +855,7 @@ class Board(Frame):
         :param str piece_color: Piece color
         """
 
-        # We highlight the piece color to blue, so it is evident what piece the user selected
+        # We highlight the piece being clicked to blue, so it is evident what piece the user selected
         self.board[position]['button'].configure(bg='light blue')
 
         # rook
@@ -868,7 +879,7 @@ class Board(Frame):
 
                         # check if the piece is for the enemy
                         if self.board[position]['piece']['piece_color'] == self.opponent_piece_color:
-                            # if it is white, highlight it with red so it becomes availible to delete
+                            # if it is white, highlight it with red so it becomes available to delete
                             self.board[position]['button'].configure(bg='red')
                             self.board[position]['color'] = 'red'
                             break
@@ -1419,7 +1430,7 @@ class Board(Frame):
             return val
 
     def get_game_fen_string_original(self):
-        """Get game fen string from inbuilt board
+        """Get game fen string from board dict
 
         :returns: fen string for the current board position
         :rtype: str
@@ -1565,6 +1576,8 @@ class Board(Frame):
         # lists
         letters = {'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4, 'f': 5, 'g': 6, 'h': 7}
         list_position = list(position)
+
+        # basically how many columns there are in each direction from the position
         columns_to_right = letters[list_position[0]] + 8
         columns_to_left = letters[list_position[0]]
 
@@ -1624,7 +1637,10 @@ class Board(Frame):
         t1.start()
 
     def thread_timer_work(self):
-        """Thread that deals with background game timer"""
+        """Thread that deals with background game timer
+
+        The user can use this to see how long the game took
+        """
 
         # convert time str from db to seconds
         game_time = self.time
@@ -1632,14 +1648,18 @@ class Board(Frame):
         time_str = date_time
         a_timedelta = date_time - datetime.datetime(1900, 1, 1)
         seconds = int(a_timedelta.total_seconds())
+        time_taken = None
 
         for i in range(seconds):
             # actual timer
             time.sleep(1)
+            time_taken += 1
 
-        # thread finished (timer is finished)
-        messagebox.showinfo('Time', f'The game duration was set to {time_str}\nGame ends in draw. '
-                                    f'You can extend/shorten this option in settings.')
+            if self.game_over:
+                # convert time taken
+                time_convert = time.gmtime(time_taken)
+                # convert seconds to time str
+                self.game_duration = time.strftime("%H:%M:%S", time_convert)
 
     def game_score(self, result, winner=0):
         """Decides whether the game is a win, loss or draw
@@ -1749,6 +1769,12 @@ class Board(Frame):
             # ai board
             # Initialize chess board lib fen
             self.ai_board.set_board_fen(kwargs['fen'])
+
+        if board_type == 'normal_board':
+            # board with no notation
+            self.place_buttons()
+            self.place_default_pieces_on_screen()
+            self.widgets_frame.pack_forget()
 
         # Console
         print('Chess lib board:')

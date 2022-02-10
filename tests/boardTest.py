@@ -1,7 +1,7 @@
 import unittest
 from tkinter import Tk, Frame
 import tkinter
-from app.chess_app.objects.board import Board
+from app.chess_app.chess_app_widgets.board import Board
 import chess
 
 
