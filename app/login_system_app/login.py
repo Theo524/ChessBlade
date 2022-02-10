@@ -1,16 +1,13 @@
 import os
-import tkinter
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
-from PIL import Image,ImageTk
 from app.login_system_app.register import RegisterSystem
 from app.resources.custom_widgets.placeholder_entry import PlaceholderEntry
 import hashlib
 import smtplib
 import random
 import sqlite3
-import requests
 from database.database import DatabaseBrowser
 
 
@@ -19,6 +16,8 @@ class LoginSystem(ttk.Frame):
 
     def __init__(self, master, **kwargs):
         ttk.Frame.__init__(self, master, **kwargs)
+
+        self.master = master
 
         # themes
         self.master.style.configure('login_page.TButton', font=('Calibri', 13,))
@@ -40,7 +39,7 @@ class LoginSystem(ttk.Frame):
         self.upper_window.pack()
         # button to return to start page
         ttk.Button(self.upper_window, text='<--', cursor="hand2",
-                   command=self.return_to_start).place(x=0, y=0)
+                   command=self.master.go_to_start_page).place(x=0, y=0)
 
         # ----------------------app layout/middle frame(main data)----------------------
         # every item is placed inside this frame
@@ -60,7 +59,7 @@ class LoginSystem(ttk.Frame):
         self.username_frame.pack(pady=20)
 
         self.user_name_var = StringVar()
-        self.username_entry = PlaceholderEntry(self.username_frame, 'Username',textvariable=self.user_name_var)
+        self.username_entry = PlaceholderEntry(self.username_frame, 'Username', textvariable=self.user_name_var)
         self.username_entry.pack(expand=True, side=LEFT, padx=10, ipadx=10)
 
         # Password (MIDDLE FRAME)
@@ -78,12 +77,12 @@ class LoginSystem(ttk.Frame):
         # Show/hide password
         self.show_password_var = IntVar()
         self.show_password = ttk.Checkbutton(self.extra, text='Show password', style='login_page.TCheckbutton',
-                                         variable=self.show_password_var, onvalue=1, offvalue=0,
-                                         command=self.show, cursor="hand2")
+                                             variable=self.show_password_var, onvalue=1, offvalue=0,
+                                             command=self.show, cursor="hand2")
         self.show_password.pack(side=LEFT, padx=30)
         # Forgot password
         self.forgot_password = Label(self.extra, text='Forgot your password?', fg='blue', bg='#dadada',
-                                      font=('Calibri', 9, 'italic'), cursor="hand2")
+                                     font=('Calibri', 9, 'italic'), cursor="hand2")
 
         self.forgot_password.bind("<Button-1>", lambda e: self.master.switch_frame(ForgotPassword))
         self.forgot_password.pack(side=LEFT)
@@ -98,13 +97,6 @@ class LoginSystem(ttk.Frame):
         # ----------------------app layout/lower frame----------------------
         self.lower_window = ttk.Frame(self.scene, height=20)
         self.lower_window.pack()
-
-    def return_to_start(self):
-        """Return to start app"""
-
-        # Hide current app(LoginSystem), deiconify (unhide) 'StartApp'
-        self.master.title('Welcome')
-        self.master.switch_frame(self.master.frames['start'])
 
     def show(self):
         """Show or hide password entry"""
@@ -133,13 +125,10 @@ class LoginSystem(ttk.Frame):
 
         # Check whether the account was found
         if found:
-            # feedback
             messagebox.showinfo('Success', 'Successful login')
 
-            user_file = self.temp_files + '//current_user.txt'
-
             # save username to temp files
-            with open(user_file, 'w') as f:
+            with open(self.temp_files + '//current_user.txt', 'w') as f:
                 f.write(username)
 
             # Set start_new_game to true
@@ -149,8 +138,10 @@ class LoginSystem(ttk.Frame):
 
             # set game mode as user
             self.master.mode = 'user'
+            self.master.user_entered_game = True
+
             # quit the login system
-            self.master.close_win()
+            self.master.destroy()
 
         else:
             # feedback for invalid data
@@ -187,6 +178,10 @@ class ForgotPassword(ttk.Frame):
         self.database = self.master.database
         self.temp_files = self.master.temp_files
 
+        # title
+        self.master.title('Recover password')
+
+        # style
         self.master.style.configure('error_label.TLabel', foreground='red', font=('Arial', 7))
 
         # container
@@ -197,7 +192,7 @@ class ForgotPassword(ttk.Frame):
         self.upper_window = ttk.Frame(self.scene, height=50, width=300)
         self.upper_window.pack()
         ttk.Button(self.upper_window, text='<--',
-               command=lambda: self.master.switch_frame(LoginSystem), cursor='hand2').place(x=0, y=0)
+                   command=self.master.go_to_login, cursor='hand2').place(x=0, y=0)
 
         # ---------------------App layout/middle frame---------------------
         self.main_window = ttk.Frame(self.scene)
@@ -229,7 +224,8 @@ class ForgotPassword(ttk.Frame):
         self.user_frame.pack(pady=3)
 
         self.user_recover_password_var = StringVar()
-        self.user_recover_password_entry = PlaceholderEntry(self.user_frame, 'Username', textvariable=self.user_recover_password_var)
+        self.user_recover_password_entry = PlaceholderEntry(self.user_frame, 'Username',
+                                                            textvariable=self.user_recover_password_var)
         self.user_recover_password_entry.pack(expand=True)
 
         # Email
@@ -238,7 +234,7 @@ class ForgotPassword(ttk.Frame):
 
         self.email_recover_password_var = StringVar()
         self.email_recover_password_entry = PlaceholderEntry(self.email_frame, 'Email address',
-                                                  textvariable=self.email_recover_password_var)
+                                                             textvariable=self.email_recover_password_var)
         self.email_recover_password_entry.pack(expand=True)
 
         # error display frame
@@ -257,27 +253,15 @@ class ForgotPassword(ttk.Frame):
         self.lower_frame.pack()
 
     def check_email_in_db(self):
-        """Check whether the email entered is in database"""
+        """Check whether the email entered is in database and send passcode to email account"""
 
-        conn = sqlite3.connect(self.database)
-        c = conn.cursor()
+        # user data
+        email = self.email_recover_password_var.get()
+        user = self.user_recover_password_var.get()
 
-        with conn:
-
-            # our data
-            email = self.email_recover_password_var.get()
-            user = self.user_recover_password_var.get()
-
-            # collect email and username matches from db
-            # data should be a tuple of 3 values, if there is a match
-            c.execute("SELECT * FROM users WHERE username=:user AND email=:email", {'user': user, 'email': email})
-            data = c.fetchall()
-
-            # If there are any values in 'data' it means there is a match with the execute statement from c
-            if data:
-                in_database = True
-            else:
-                in_database = False
+        # check it is in the database
+        data = DatabaseBrowser.load(load='general', username=user)
+        in_database = True if data[2] == email else False
 
         # if the data is in the database, we send the email verification
         if in_database:
@@ -289,32 +273,14 @@ class ForgotPassword(ttk.Frame):
             successfully_sent_email = self.send_email(passcode, email, user)
 
             if successfully_sent_email:
+
                 # if email exists, we store passcode in temporal file
-                passcode_file = self.temp_files + '\\password_recovery\\passcode.txt'
-                with open(passcode_file, 'w') as f:
+                with open(self.temp_files + '\\password_recovery\\passcode.txt', 'w') as f:
                     f.write(passcode)
 
                 # write username to temp_file
-                user_file = self.temp_files + '\\password_recovery\\username.txt'
-                with open(user_file, 'w') as f:
+                with open(self.temp_files + '\\password_recovery\\username.txt', 'w') as f:
                     f.write(user.lower())
-
-                # get password for that user
-                conn = sqlite3.connect(self.database)
-                c = conn.cursor()
-
-                with conn:
-                    c.execute('SELECT * FROM users WHERE username=:username',
-                              {'username': user.lower(),})
-
-                    data = c.fetchall()
-                    # format of data is [(username, password, email)] so 'my_list[0][1]' represents the password
-                    password = data[0][1]
-
-                # write password to temp files
-                password_file = self.temp_files + '//password.txt'
-                with open(password_file, 'w') as f:
-                    f.write(password)
 
                 # if nothing went wrong, the message has been sent
                 return True
@@ -322,75 +288,50 @@ class ForgotPassword(ttk.Frame):
             else:
                 return False
 
-    def send_email(self, passcode, email, user):
+    @staticmethod
+    def send_email(passcode, email, user):
         """Send email message to an account"""
 
-        valid = self.validate(email)
-        if valid:
-            try:
-                # Send passcode to user email
-                receiver_address = email
-                subject = "Passcode verification"
-                body = f"Hello {user}!\nHere is your passcode\n{passcode}\nWith regards,\n\nChessMaster"
+        try:
+            # Send passcode to user email
+            receiver_address = email
+            subject = "Passcode verification"
+            body = f"Hello {user}!\nHere is your passcode\n{passcode}\nWith regards,\n\nChessBlade"
 
-                # Endpoint for the SMTP Gmail server
-                smtp_server = smtplib.SMTP('smtp.gmail.com', 587)
-                smtp_server.ehlo()
-                smtp_server.starttls()
+            # Endpoint for the SMTP Gmail server
+            smtp_server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+            smtp_server.ehlo()
 
-                # Login with dummy Gmail account I created using SMTP
-                smtp_server.login("chessblade.info@gmail.com", "chessblade1234")
+            # Login with dummy Gmail account I created using SMTP
+            smtp_server.login("chessblade.info@gmail.com", "chessblade1234")
 
-                # Let's combine the subject and the body onto a single message
-                message = f"Subject: {subject}\n\n{body}"
+            # Combine the subject and the body onto a single message
+            message = f"Subject: {subject}\n\n{body}"
 
-                # We'll be sending this message in the above format (Subject:...\n\nBody)
-                smtp_server.sendmail("pruebadelogin524@gmail.com", [receiver_address], message)
+            # We'll be sending this message in the above format (Subject:...\n\nBody)
+            smtp_server.sendmail("chessblade.info@gmail.com", receiver_address, message)
 
-                # Close our endpoint
-                smtp_server.close()
+            # Close our endpoint
+            smtp_server.close()
 
-            except smtplib.SMTPAuthenticationError:
-                # if the email does not work return false
-                return False
-
-            else:
-                return True
-        else:
-            return False
-
-    @staticmethod
-    def validate(email):
-        """Check whether a email account exists"""
-
-        email_address = email
-
-        # get response from website api
-        response = requests.get(
-            "https://isitarealemail.com/api/email/validate",
-            params={'email': email_address})
-
-        # actual response
-        status = response.json()['status']
-
-        if status == 'valid':
             return True
 
-        else:
+        except smtplib.SMTPAuthenticationError:
+            # if the email does not work return false
             return False
 
     def get_email(self):
         """Retrieve email input from user"""
 
-        # Check if it valid
+        # Check if the email is valid
         valid = self.check_email_in_db()
 
-        # If it is valid, we move to the next window
+        # If it is valid, move to the next window
         if valid:
             self.master.switch_frame(VerifyPasscode)
 
         else:
-            # if the email is invalid we add a warning message
+            # if the email is invalid add a warning message
             self.recover_password_error_frame.pack()
             self.recover_password_error.pack(pady=(0, 10))
             self.recover_password_error_var.set("Invalid data (Make sure you have created an account previously)")
@@ -405,14 +346,11 @@ class VerifyPasscode(ttk.Frame):
 
         self.temp_files = self.master.temp_files
 
-        # window attributes
-        self.master.title('Recover password')
-
         # ---------------------App layout/upper frame---------------------
         self.upper_window = ttk.Frame(self, height=50, width=350)
         self.upper_window.pack()
         ttk.Button(self.upper_window, text='<--', cursor='hand2',
-               command=self.return_to_login).place(x=0, y=0)
+                   command=self.master.go_to_login).place(x=0, y=0)
 
         # ---------------------App layout/middle frame---------------------
         self.main_window = ttk.Frame(self)
@@ -425,8 +363,8 @@ class VerifyPasscode(ttk.Frame):
         ttk.Label(self.title_frame, text='Passcode sent', font='arial 20').pack(expand=True)
 
         # Passcode (MIDDLE FRAME)
-        ttk.Label(self.main_window, text='Check your email,',font='arial 9').pack(pady=(10, 0))
-        ttk.Label(self.main_window, text='A passcode has been sent.',font='arial 9').pack()
+        ttk.Label(self.main_window, text='Check your email,', font='arial 9').pack(pady=(10, 0))
+        ttk.Label(self.main_window, text='A passcode has been sent.', font='arial 9').pack()
         ttk.Label(self.main_window, text='Enter the passcode below', font='arial 9').pack()
 
         self.passcode_var = StringVar()
@@ -438,11 +376,6 @@ class VerifyPasscode(ttk.Frame):
         # ----------------------app layout/lower frame----------------------
         self.lower_window = ttk.Frame(self)
         self.lower_window.pack(ipady=10)
-
-    def return_to_login(self):
-        """Return to Login page"""
-
-        self.master.switch_frame(LoginSystem)
 
     def check_passcode(self):
         """Check if the passcode is correct"""
@@ -467,7 +400,6 @@ class NewPassword(ttk.Frame):
     def __init__(self, master):
         ttk.Frame.__init__(self, master)
 
-
         # files
         self.database = self.master.database
         self.temp_files = self.master.temp_files
@@ -476,7 +408,7 @@ class NewPassword(ttk.Frame):
         self.upper_window = ttk.Frame(self, height=50, width=350)
         self.upper_window.pack()
         ttk.Button(self.upper_window, text='<--', cursor='hand2',
-                   command=self.start).place(x=0, y=0)
+                   command=self.master.go_to_start_page).place(x=0, y=0)
 
         # ---------------------App layout/middle frame---------------------
         self.main_window = ttk.Frame(self)
@@ -490,10 +422,11 @@ class NewPassword(ttk.Frame):
 
         # Passcode (MIDDLE FRAME)
         ttk.Label(self.main_window, text='Enter your new password here.',
-              font='arial 7 bold italic').pack(pady=10)
+                  font='arial 7 bold italic').pack(pady=10)
 
         self.new_pass_var = StringVar()
-        self.new_pass_entry = PlaceholderEntry(self.main_window, 'New password', textvariable=self.new_pass_var, show='')
+        self.new_pass_entry = PlaceholderEntry(self.main_window,
+                                               'New password', textvariable=self.new_pass_var, show='')
         self.new_pass_entry.pack(expand=True, pady=10)
 
         self.show_pass_var = IntVar()
@@ -523,38 +456,31 @@ class NewPassword(ttk.Frame):
 
         password = self.new_pass_var.get()
 
+        # check the password meets the requirements
         valid = RegisterSystem.check_pass(password)
 
         if valid:
-            # convert password
+            # hash password
             new_pass = RegisterSystem.hash_pass(password)
 
-            user_file = self.temp_files + '\\password_recovery\\username.txt'
-            with open(user_file, 'r') as f:
+            with open(self.temp_files + '\\password_recovery\\username.txt', 'r') as f:
                 username = f.read()
 
-            password_file = self.temp_files + '\\password_recovery\\password.txt'
-            with open(password_file, 'r') as f:
-                old_pass = f.read()
-
-            # get old data to get email
+            # get user original data to get email
             data = DatabaseBrowser.load(load='general', username=username)
 
-            # make new data
+            # make new data list
             all_data = [username, new_pass, data[2]]
 
             # save new data
             DatabaseBrowser.save(save='general', username=username, data=all_data)
 
             messagebox.showinfo('Success', 'Your new password has been set')
-            # Return to login
-            self.master.switch_frame(LoginSystem)
+
+            # Return to login page
+            self.master.go_to_login()
 
         else:
-            messagebox.showerror('Error', 'The password should contain 2 of each:\n- Upper case leters'
+            messagebox.showerror('Error', 'The password should contain at least 1 of each:\n- Upper case leters'
                                  '\n- Lower case letters\n- Numbers\n- Symbols')
 
-    def start(self):
-        """Return to Login page"""
-        self.master.title('Login')
-        self.master.switch_frame(LoginSystem)

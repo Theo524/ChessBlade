@@ -1,7 +1,4 @@
 from tkinter import *
-from ttkthemes import ThemedStyle
-
-from tkinter import *
 from tkinter import ttk, messagebox
 from tkcalendar import DateEntry
 from datetime import date
@@ -20,6 +17,7 @@ class RegisterSystem(ttk.Frame):
         self.database = self.master.database
 
         self.master.style.configure('error_label.TLabel', foreground='red', font=('Arial', 7))
+
         # container
         self.scene = ttk.Frame(self)
         self.scene.pack(pady=100)
@@ -67,7 +65,6 @@ class RegisterSystem(ttk.Frame):
         self.new_password_frame = ttk.Frame(self.main_window)
         self.new_password_frame.pack(pady=10)
 
-        #Label(self.new_password_frame, text='New password\t ').pack(expand=True, side=LEFT)
         self.new_password = StringVar()
         self.new_password_entry = PlaceholderEntry(self.new_password_frame, 'New Password',
                                                    textvariable=self.new_password)
@@ -135,12 +132,6 @@ class RegisterSystem(ttk.Frame):
         self.lower_frame = ttk.Frame(self.scene, height=50)
         self.lower_frame.pack()
 
-    def return_to_start(self):
-        """Returns to the start page"""
-
-        # Withdraw current 'LoginApp' and deiconify 'StartApp'
-        self.master.switch_frame(self.master.frames['start'])
-
     @staticmethod
     def validate_email(email):
         """Validate email"""
@@ -180,7 +171,7 @@ class RegisterSystem(ttk.Frame):
                 smtp_server.login("chessblade.info@gmail.com", "chessblade1234")
 
                 # Message sent in the above format (Subject:...\n\nBody) from my dummy email account
-                smtp_server.sendmail("pruebadelogin524@gmail.com", receiver_address, message)
+                smtp_server.sendmail("chessblade.info@gmail.com", receiver_address, message)
 
                 # Close our endpoint
                 smtp_server.close()
@@ -321,7 +312,7 @@ class RegisterSystem(ttk.Frame):
 
             if answer:
                 # switch if user wants to leave
-                self.return_to_start()
+                self.master.go_to_start_page()
             else:
                 # reset all entries blank if user wants to stay
                 self.reset()
@@ -340,22 +331,3 @@ class RegisterSystem(ttk.Frame):
         self.new_password_entry.reset()
         self.confirmed_password_entry.reset()
         self.email_address_entry.reset()
-
-    def reset_wrong_entries(self):
-        """Resets entire page if user enters incorrect data"""
-
-        self.new_user_name_var.set('')
-        self.new_password.set('')
-        self.confirmed_password.set('')
-        self.email_var.set('')
-
-        self.new_username_entry.reset()
-        self.new_password_entry.reset()
-        self.confirmed_password_entry.reset()
-        self.email_address_entry.reset()
-
-        self.new_user_name_error_frame.pack_forget()
-        self.password_error_frame.pack_forget()
-        self.email_error_frame.pack_forget()
-        self.confirmed_password_error_frame.pack_forget()
-        self.email_error_frame.pack_forget()
