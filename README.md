@@ -19,3 +19,5 @@ pip list --format=freeze > requirements.txt
 - Play with two players in the same device or against ai
 - Chess notation/Deleted pieces display/Game FEN
 - Working chess game
+
+![](https://github.com/Theo524/Chess-game/blob/main/app/resources/readme/Chess%20game%20image.png)
