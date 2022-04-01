@@ -2,9 +2,7 @@ from app.login_system_app.start import StartApp
 from app.chess_app.chess_app import ChessApp
 from database.database import DatabaseBrowser
 
-import threading
 import os
-from tkinter.ttk import Progressbar
 
 # Directory path for the current script
 main_path = os.getcwd()
