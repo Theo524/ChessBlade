@@ -38,6 +38,10 @@ class StartApp(Tk):
         # starting frame
         self.switch_frame(self.frames['start'])
 
+        # window icon
+        self.tk.call('wm', 'iconphoto', self._w,
+                     PhotoImage(file=os.getcwd() + '\\app\\resources\\img\\StartMenuIcon.png'))
+
         # automatically start application
         self.mainloop()
 
