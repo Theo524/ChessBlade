@@ -1,20 +1,15 @@
 from tkinter import *
-from tkinter import messagebox, ttk
+from tkinter import messagebox
 import string
-import time as time
-import datetime
 import os
-import threading
 from PIL import Image, ImageTk
-import csv
 import chess
 
 from app.chess_app.chess_app_widgets.chess_ai import AI
-from database.database import DatabaseBrowser
 
 
-class Board(Frame):
-
+# base board that is extended
+class MainChessBoard(Frame):
     def __init__(self, master, **kwargs):
         Frame.__init__(self, master)
 
@@ -24,9 +19,7 @@ class Board(Frame):
         self.AI_turn = False
         self.moves = 1
 
-        # Trackers
-        self.chess_notation = []
-        self.deleted_pieces = []
+        # pieces following
         self.tracker = []
 
         # required data
@@ -34,24 +27,13 @@ class Board(Frame):
         self.alphabet = list(string.ascii_letters)  # alphabet
         self.nums = [str(i) for i in range(10)]  # Numbers as str (0-9)
 
-        # frame containing chess notation tab
-        if kwargs:
-            self.widgets_frame = kwargs['widgets_frame']
-        else:
-            self.widgets_frame = Frame(self.master)
-
-        # game mode
-        self.mode = master.master.mode
-
-        # game_settings
-        settings = self.get_game_settings(self.mode)  # sets game settings
-        self.difficulty = settings[0]
-        self.time = settings[1]
-        self.game_type = settings[2]
-        self.player_piece_color = settings[3]
-        self.opponent_piece_color = settings[4]
-        self.border_color = settings[5]
-        self.board_color = settings[6]
+        # custom_settings
+        self.game_type = 'two_player'
+        self.difficulty = 'Intermediate'
+        self.player_piece_color = 'black'  ##settings[3]
+        self.opponent_piece_color = 'white'  ##settings[4]
+        self.border_color = 'black'  ##settings[5]
+        self.board_color = 'brown'  # settings[6]
 
         # colors for board
         self.board_colors = [
@@ -63,7 +45,6 @@ class Board(Frame):
 
         # file paths
         self.pieces_file_path = os.getcwd() + '\\app\\chess_app\\pieces'
-        self.settings_file_path = os.getcwd() + '\\app\\chess_app\\all_settings'
 
         # data structures
         # 2d array of all chess positions, 1d array of all chess positions and the same one reversed
@@ -76,14 +57,6 @@ class Board(Frame):
         # Game border
         self.configure(highlightthickness=5, highlightbackground=self.border_color)
 
-        # deleted_pieces tracking pos
-        self.b_x = 0
-        self.b_y = 0
-
-        # add notation if needed
-        if self.widgets_frame:
-            self.add_notation_tab()
-
         # ai board
         self.ai_board = chess.Board()
         # the actual ai
@@ -91,9 +64,6 @@ class Board(Frame):
 
         # to know when the game ends
         self.game_over = False
-
-        # game duration
-        self.game_duration = None
 
         # prawn promotion
         self.promotion_window = None
@@ -125,65 +95,6 @@ class Board(Frame):
                 pieces_reversed.append(piece)
 
         return coordinates, pieces, pieces_reversed
-
-    @staticmethod
-    def get_game_settings(mode):
-        """Get game settings
-
-        :param str mode: The game mode the player is in
-
-        :rtype: list
-        :returns: list containing settings based on game mode
-        """
-
-        if mode == 'guest':
-
-            # open default settings file
-            with open(os.getcwd() + '\\app\\chess_app\\all_settings\\guest\\default_game_settings.csv', 'r') as f:
-                csv_reader = csv.reader(f, delimiter='-')
-                next(csv_reader)
-
-                for row in csv_reader:
-                    print(f'Guest settings : {row}')
-                    # retrieve settings in file
-                    return row
-
-        if mode == 'user':
-            # fetch settings for that specific user
-            with open(os.getcwd() + '\\app\\chess_app\\all_settings\\user\\user_game_settings.csv', 'r') as f:
-                csv_reader = csv.reader(f, delimiter='-')
-                next(csv_reader)
-
-                for row in csv_reader:
-                    print(f'User settings : {row}')
-                    # retrieve these personalized settings from user file
-                    return row
-
-    def add_notation_tab(self):
-        """Implement game tabs for chess notation"""
-
-        # ---------------NOTEBOOK--------------
-        # notebook for chess notation
-        self.notebook = ttk.Notebook(self.widgets_frame, height=600, width=600)
-        self.notebook.pack(pady=(7, 0), padx=5)
-
-        # first tab
-        self.notation_tab = Text(self.notebook)
-        self.notation_tab.pack()
-
-        # third tab
-        self.board_fen_string_tab = Text(self.notebook)
-        self.board_fen_string_tab.pack()
-
-        # second tab
-        self.deleted_tab_visual = Frame(self.notebook, bg=self.board_colors[1])
-        self.deleted_tab_visual.configure(highlightthickness=5, highlightbackground='black')
-        self.deleted_tab_visual.pack()
-
-        # add  tabs to chess notebook
-        self.notebook.add(self.notation_tab, text='Notation')
-        self.notebook.add(self.deleted_tab_visual, text='Deleted pieces')
-        self.notebook.add(self.board_fen_string_tab, text='FEN')
 
     def make_board(self):
         """Make the board dict"""
@@ -537,36 +448,16 @@ class Board(Frame):
 
             messagebox.showinfo('Game over', f'Checkmate')
 
-            if not self.ai_board.turn:
-                self.game_score('checkmate', 1)
-
-            else:
-                self.game_score('checkmate', 2)
-
         # STALEMATE
         if self.ai_board.is_stalemate():
             self.game_over = True
 
             messagebox.showinfo('Game over', f'Game ends in draw')
 
-            # if the user is playing against the ai update its score
-            self.game_score('stalemate')
-
         if self.game_over:
-            new_game = messagebox.askyesno('Game over', f'\nYou predicted this game would end at {self.time}, '
-                                                        f'it actually took {self.game_duration}.\n'
-                                                        f'Do you want to play a again?')
+            new_game = messagebox.showinfo('Game over', f'Done')
 
-            if new_game:
-                # instructions for new game file
-                with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
-                    f.write('new_game:yes\n')
-                    f.write('saved_game:no')
-
-                self.master.master.destroy()
-
-            else:
-                self.enable_board_buttons(False)
+            self.enable_board_buttons(False)
 
     def prawn_upgrade(self, color, move_data):
         """Gui for prawn promotion
@@ -649,28 +540,6 @@ class Board(Frame):
         :param str target: The position the piece will move to
         """
 
-        # NOTATION
-        # determine move or delete piece for notation
-        if self.board[target]['piece']['piece_name'] is None:
-            # a normal move
-            # Add to notation
-            self.update_notation('moved_piece', target, piece_name, new_piece_name='', color=color)
-
-            # fen tab
-            self.board_fen_string_tab.insert('end', f'{self.moves}. {self.get_game_fen_string_original()}\n')
-
-        elif self.board[target]['piece']['piece_name'] is not None:
-            # deleting a piece
-            # add this deleted piece to the deleted pieces list
-            self.deleted_pieces.append([self.board[target]['piece']['piece_name'],
-                                        self.board[target]['piece']['piece_color']])
-            # Add to notation
-            self.update_notation('deleted_piece', target, piece_name,
-                                 new_piece_name=str(self.board[target]['piece']['piece_name']), color=color)
-
-            # fen tab
-            self.board_fen_string_tab.insert('end', f'{self.moves}. {self.get_game_fen_string_original()}\n')
-
         # CHESS MOVE
         # place the selected piece in the selected spot
         self.place_piece(piece_name, color, target)
@@ -682,11 +551,13 @@ class Board(Frame):
             move = chess.Move.from_uci(f'{old_position}{target}')
 
             # legal moves available
-            # legal_moves = list(self.ai_board.legal_moves)
-            # print(self.ai_board.is_legal(move))
+            legal_moves = list(self.ai_board.legal_moves)
+            if self.ai_board.is_legal(move):
+                # Make move in virtual board
+                self.ai_board.push(move)
 
-            # Make move in virtual board
-            self.ai_board.push(move)
+            else:
+                pass
         except AssertionError:
             # if there was an error is because of the promotion
             # pushes an invalid piece to the board so to avoid that
@@ -702,7 +573,10 @@ class Board(Frame):
 
         # reset board colors back to normal
         self.reset_board_colors()
-        self.master.master.update()
+        try:
+            self.master.master.update()
+        except AttributeError:
+            pass
 
     def make_ai_move(self):
         """Move made by ai"""
@@ -745,60 +619,6 @@ class Board(Frame):
 
         # enable board button again
         self.enable_board_buttons(True)
-
-    def update_notation(self, mode, position, old_piece_name, new_piece_name, color):
-        """Add game data to chess notation tabs
-
-        :param str mode: determines what tab to add the data to
-        :param str position: chessboard coordinate
-        :param str old_piece_name: Used for chess notation move
-        :param str new_piece_name: Used for chess notation move
-        :param str color: piece_color
-        """
-        # since chess notation for prawns have no letter and knights use 'N' this small section will handle that
-        piece_letter = ''
-        if old_piece_name == 'knight':
-            piece_letter = 'N'
-        else:
-            if old_piece_name == 'prawn':
-                piece_letter = ''
-
-            if old_piece_name is None:
-                pass
-
-            else:
-                piece_letter = str(old_piece_name[0].upper()) if color == 'black' else str(old_piece_name[0].lower())
-
-        # actual notation
-        if mode == 'moved_piece':
-            # chess notation tracker(list)
-            self.chess_notation.append(f'{piece_letter}{position}')
-            # The moves variable is updated every turn, so every even number of moves corresponds to a player
-            # add move to notation
-            self.notation_tab.insert('end', f'{self.moves}.{self.chess_notation[-1]} ')
-
-        if mode == 'deleted_piece':
-            # This time we add an 'x' in the middle to show that a piece is being destroyed
-            self.chess_notation.append(f'{piece_letter}x{position}')
-
-            # add the move to chess notation tab
-            self.notation_tab.insert('end', f'{self.moves}.{self.chess_notation[-1]} ')
-
-            # also add piece image
-            # b_x and b_y represent the grid coordinated to place the images
-            if self.board[position]['piece']['piece_color'] == 'white':
-                img = PhotoImage(file=self.white_pieces[f'{new_piece_name}'])
-            else:
-                img = PhotoImage(file=self.black_pieces[f'{new_piece_name}'])
-
-            label = Label(self.deleted_tab_visual, image=img)
-            label.configure(borderwidth=5, bg=self.board_colors[1])
-            label.grid(column=self.b_x, row=self.b_y)
-            label.image = img
-            self.b_x += 1
-            if self.b_x == 8:
-                self.b_x = 0
-                self.b_y += 1
 
     def swap_turns(self):
         """Swap turns between players"""
@@ -1387,6 +1207,7 @@ class Board(Frame):
 
             # all
             return all_possible_prawn_moves
+        print()
 
     def get_piece_img(self):
         """Easy way to access file paths for pieces
@@ -1484,6 +1305,8 @@ class Board(Frame):
         # join everything together
         joined_lists = [''.join(lst) for lst in third_list]
         final_fen_str = ''.join(joined_lists)
+        if len(final_fen_str.split('/')) != 8 or final_fen_str.split('/')[-1] == '':
+            final_fen_str += '8'
 
         return final_fen_str
 
@@ -1629,124 +1452,6 @@ class Board(Frame):
             # return final filtered list
             return list(filter(self.remove_nones, diagonal_values))
 
-    def threading(self):
-        """Thread"""
-
-        # Call work function to start thread
-        t1 = threading.Thread(target=self.thread_timer_work)
-        t1.start()
-
-    def thread_timer_work(self):
-        """Thread that deals with background game timer
-
-        The user can use this to see how long the game took
-        """
-
-        # convert time str from db to seconds
-        game_time = self.time
-        date_time = datetime.datetime.strptime(game_time, "%H:%M:%S")
-        time_str = date_time
-        a_timedelta = date_time - datetime.datetime(1900, 1, 1)
-        seconds = int(a_timedelta.total_seconds())
-        time_taken = None
-
-        for i in range(seconds):
-            # actual timer
-            time.sleep(1)
-            time_taken += 1
-
-            if self.game_over:
-                # convert time taken
-                time_convert = time.gmtime(time_taken)
-                # convert seconds to time str
-                self.game_duration = time.strftime("%H:%M:%S", time_convert)
-
-    def game_score(self, result, winner=0):
-        """Decides whether the game is a win, loss or draw
-
-        :param str result: can be checkmate, stalemate and is the outcome of the game
-        :param int winner: can either be 1 or 2, 1 indicates the user, 2 indicates the ai is the winner
-        """
-
-        if self.mode == 'user':
-
-            # get the current username
-            with open(os.getcwd() + '\\app\\login_system_app\\temp\\current_user.txt') as f:
-                username = f.read()
-
-            if self.game_type == 'two_player':
-                # practice games  (one v one on a single device) aren't scored
-                pass
-
-            if self.game_type == 'computer':
-                # 1 is the user, 2 is the ai so it would count as a loss for the user in terms of winner/loser
-                # first get the user name to search database (loaded at login)
-                if result == 'checkmate' and winner == 1:
-                    # user won
-                    self.update_db_game_score(username, 'win')
-
-                if result == 'checkmate' and winner == 2:
-                    # Computer(AI) won
-                    self.update_db_game_score(username, 'loss')
-
-                if result == 'stalemate':
-                    # was a draw
-                    self.update_db_game_score(username, 'draw')
-
-    def update_db_game_score(self, user, result):
-        """Gets a copy of the user statistics from the db and updates them according to the result
-
-        :param str user: The name of the user (account) playing, won't have errors because every user is unique
-        :param str result: Can be a win, loss or draw
-        """
-
-        # data
-        original_data = DatabaseBrowser.load(load='statistics', username=user)
-
-        # increase number of games played by one
-        original_data[1] += 1
-
-        # game score
-        if result == 'win':
-            # add 1 more win
-            original_data[2] += 1
-
-            # add points to ranking according to the game difficulty
-            # ranking is basically just points
-            # the amount of points added also depends on the difficulty
-            if self.difficulty == 'Novice':
-                original_data[5] += 1
-
-            if self.difficulty == 'Intermediate':
-                original_data[5] += 2
-
-            if self.difficulty == 'Expert':
-                original_data[5] += 3
-
-        if result == 'loss':
-            # add one more loss
-            original_data[3] += 1
-
-            # ranking doesn't get updated in loss
-
-        if result == 'draw':
-            # add one more draw
-            original_data[4] += 1
-
-            # add points to ranking according to the game difficulty
-            # the amount of points added also depends on the difficulty
-            if self.difficulty == 'Novice':
-                original_data[5] += 0.5
-
-            if self.difficulty == 'Intermediate':
-                original_data[5] += 1
-
-            if self.difficulty == 'Expert':
-                original_data[5] += 1.5
-
-        # finally add the data to the database
-        DatabaseBrowser.save(save='statistics', username=original_data[0], data=original_data)
-
     def build(self, board_type='default', **kwargs):
         """Construct board
 
@@ -1770,21 +1475,12 @@ class Board(Frame):
             # Initialize chess board lib fen
             self.ai_board.set_board_fen(kwargs['fen'])
 
-        if board_type == 'normal_board':
-            # board with no notation
-            self.place_buttons()
-            self.place_default_pieces_on_screen()
-            self.widgets_frame.pack_forget()
-
         # Console
         print('Chess lib board:')
         print(self.ai_board)
         print()
         print('My board')
         print(self)
-
-        # start timer thread after board has been built
-        self.threading()
 
     def __str__(self):
         """Returns a text based unicode representation of game"""
