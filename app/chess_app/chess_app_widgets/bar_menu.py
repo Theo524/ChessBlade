@@ -3,6 +3,7 @@ import os
 
 from database.database import DatabaseBrowser
 from app.chess_app.chess_app_widgets.settings import Settings
+from app.chess_app.chess_app_widgets.minigames import GuessCoordinate, FindCheckmateOneMove, FindCheckmateTwoMoves
 from tkinter import ttk, messagebox, filedialog
 import csv
 from datetime import date, datetime
@@ -48,9 +49,30 @@ class BarMenu(Menu):
         # self.about_menu.add_command(label='Contact us')
         self.about_menu.add_command(label='What\'s this?', command=self.not_available)
         self.about_menu.add_command(label='Author', command=self.show_my_details)
-
         # Name the menu
         self.add_cascade(label='About', menu=self.about_menu)
+
+        # Create another menu
+        self.help_menu = Menu(self, tearoff=0)
+        # Add menu options
+        self.help_menu.add_command(label='Settings', command=self.open_settings)
+        self.help_menu.add_command(label='Help', command=self.not_available)
+        self.help_menu.add_command(label='Chess rules', command=self.not_available)
+        # Name the menu
+        self.add_cascade(label='Help', menu=self.help_menu)
+
+        # Create another menu
+        self.mini_games_menu = Menu(self, tearoff=0)
+        # Add menu options
+        # self.about_menu.add_command(label='Contact us')
+        self.mini_games_menu.add_command(label='Chess coordinate trainer', command=self.guess_the_coordinate_mg)
+        self.mini_games_menu.add_command(label='Find checkmate (1 move)', command=self.find_check_mate_1_mg)
+        self.mini_games_menu.add_command(label='Find checkmate (2 moves)', command=self.find_check_mate_2_mg)
+        self.mini_games_menu.add_command(label='Make the move', command=self.not_available)
+        self.mini_games_menu.add_command(label='Identify the piece', command=self.not_available)
+
+        # Name the menu
+        self.add_cascade(label='Mini Games', menu=self.mini_games_menu)
 
     def save_game(self):
         """Save a game fen string into txt file
@@ -291,6 +313,23 @@ class BarMenu(Menu):
         second_row.pack()
         github_user_intro_2.pack(side=LEFT)
         github_user_text_2.pack()
+
+# minigames
+    @staticmethod
+    def guess_the_coordinate_mg():
+        game = GuessCoordinate()
+        game.mainloop()
+
+    @staticmethod
+    def find_check_mate_1_mg():
+        game = FindCheckmateOneMove()
+        game.mainloop()
+
+    @staticmethod
+    def find_check_mate_2_mg():
+        game = FindCheckmateTwoMoves()
+        game.mainloop()
+# end of minigames
 
     def show_help(self):
         """Help window"""
