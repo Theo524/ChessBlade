@@ -20,7 +20,7 @@ class StartApp(Tk):
         self.protocol("WM_DELETE_WINDOW", self.close_win)
 
         # Attributes
-        self.geometry('1000x620')
+        self.geometry('500x600')
         self.title('Welcome')
 
         # themes
@@ -36,7 +36,8 @@ class StartApp(Tk):
         self.frames = {'start': StartWindow, 'login': LoginSystem, 'register': RegisterSystem}
 
         # starting frame
-        self.switch_frame(self.frames['start'])
+        self._frame = StartWindow(self)
+        self._frame.pack(expand=True, fill='both')
 
         # window icon
         self.tk.call('wm', 'iconphoto', self._w,

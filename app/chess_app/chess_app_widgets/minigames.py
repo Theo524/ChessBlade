@@ -412,7 +412,9 @@ class FindCheckMateBoard(MainChessBoard):
         # CHECKMATE
         if self.ai_board.is_checkmate():
             self.game_over = True
-            messagebox.showinfo('Game over', f'Checkmate', parent=self.master)
+            messagebox.showinfo('Game over', f'Checkmate. Well done, you won!\n'
+                                             f' To play with a different board access this game in mini games again.',
+                                parent=self.master)
             self.enable_board_buttons(False)
             return
 

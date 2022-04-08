@@ -17,62 +17,47 @@ class BarMenu(Menu):
         self.root = root
         self.mode = self.root.mode
 
-        # Create a menu
+        # Create a menu (GAME MENU)
         self.game_menu = Menu(self, tearoff=0)
-
         # Add the game menu options
         if self.mode == 'user':
             # Only user can open and save games
             self.game_menu.add_command(label='Open existing game', command=self.open_file)
             self.game_menu.add_command(label='Save', command=self.save_game)
         self.game_menu.add_command(label='New game', command=self.new_game)
-
         if self.mode == 'user':
             # user can see statistics
             self.game_menu.add_command(label='Player stats', command=self.show_player_stats)
         self.game_menu.add_command(label='Exit', command=lambda: self.master.master.end_game(self.mode))
-        # Name the game menu
-        self.add_cascade(label='Game', menu=self.game_menu)
 
-        # Create another menu
+        # Create another menu (HELP MENU)
         self.help_menu = Menu(self, tearoff=0)
         # Add menu options
         self.help_menu.add_command(label='Settings', command=self.open_settings)
         self.help_menu.add_command(label='Help', command=self.not_available)
         self.help_menu.add_command(label='Chess rules', command=self.not_available)
-        # Name teh menu
-        self.add_cascade(label='Help', menu=self.help_menu)
 
-        # Create another menu
+        # Create another menu (ABOUT MENU)
         self.about_menu = Menu(self, tearoff=0)
         # Add menu options
         # self.about_menu.add_command(label='Contact us')
         self.about_menu.add_command(label='What\'s this?', command=self.not_available)
         self.about_menu.add_command(label='Author', command=self.show_my_details)
-        # Name the menu
-        self.add_cascade(label='About', menu=self.about_menu)
 
-        # Create another menu
-        self.help_menu = Menu(self, tearoff=0)
-        # Add menu options
-        self.help_menu.add_command(label='Settings', command=self.open_settings)
-        self.help_menu.add_command(label='Help', command=self.not_available)
-        self.help_menu.add_command(label='Chess rules', command=self.not_available)
-        # Name the menu
-        self.add_cascade(label='Help', menu=self.help_menu)
-
-        # Create another menu
+        # Create another menu (MINI GAMES MENU)
         self.mini_games_menu = Menu(self, tearoff=0)
         # Add menu options
-        # self.about_menu.add_command(label='Contact us')
         self.mini_games_menu.add_command(label='Chess coordinate trainer', command=self.guess_the_coordinate_mg)
         self.mini_games_menu.add_command(label='Find checkmate (1 move)', command=self.find_check_mate_1_mg)
         self.mini_games_menu.add_command(label='Find checkmate (2 moves)', command=self.find_check_mate_2_mg)
         self.mini_games_menu.add_command(label='Make the move', command=self.not_available)
         self.mini_games_menu.add_command(label='Identify the piece', command=self.not_available)
 
-        # Name the menu
+        # ADD MENUS IN ORDER
+        self.add_cascade(label='Game', menu=self.game_menu)
         self.add_cascade(label='Mini Games', menu=self.mini_games_menu)
+        self.add_cascade(label='Help', menu=self.help_menu)
+        self.add_cascade(label='About', menu=self.about_menu)
 
     def save_game(self):
         """Save a game fen string into txt file
@@ -305,7 +290,7 @@ class BarMenu(Menu):
 
         second_row = Frame(github_frame)
         github_user_intro_2 = Label(second_row,
-                                    text='Github site for this project(private now):',
+                                    text='Github site for this project:',
                                     font='Helvetica 11 bold')
         github_user_text_2 = Label(second_row,
                                    text='https://github.com/Theo524/Chess-game.git',

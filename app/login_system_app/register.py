@@ -14,7 +14,6 @@ class RegisterSystem(ttk.Frame):
         ttk.Frame.__init__(self, master, **kwargs)
 
         self.master = master
-        self.database = self.master.database
 
         self.master.style.configure('error_label.TLabel', foreground='red', font=('Arial', 7))
 
@@ -27,8 +26,7 @@ class RegisterSystem(ttk.Frame):
         self.upper_window.pack()
         # Button to return to start page
         ttk.Button(self.upper_window, text='<--',
-                   command=lambda: self.master.switch_frame(self.master.frames['start']),
-                   cursor='hand2').place(x=0, y=0)
+                   cursor='hand2', command=self.master.go_to_start_page).place(x=0, y=0)
 
         # ----------------------App layout/middle frame----------------------
 
