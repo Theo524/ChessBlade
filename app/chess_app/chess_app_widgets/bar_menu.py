@@ -7,6 +7,7 @@ from app.chess_app.chess_app_widgets.minigames import GuessCoordinate, FindCheck
 from tkinter import ttk, messagebox, filedialog
 import csv
 from datetime import date, datetime
+import json
 
 
 class BarMenu(Menu):
@@ -69,6 +70,7 @@ class BarMenu(Menu):
         board_obj = self.root.main_chess_board
         fen = board_obj.ai_board.fen().split(' ')[0]
         notation = board_obj.chess_notation
+        deleted_pieces = board_obj.deleted_pieces
 
         # user
         with open(os.getcwd()+'\\app\\login_system_app\\temp\\current_user.txt', 'r') as f:
@@ -80,13 +82,13 @@ class BarMenu(Menu):
             os.mkdir(folder_path)
 
         total_files = 0
-        # get game count
+        # get games count
         for base, dirs, files in os.walk(folder_path):
             for _ in files:
                 total_files += 1
 
         # new file name
-        save_name = f'save_{total_files+1}.txt'
+        save_name = f'save_{total_files+1}.json'
 
         # time stuff
         today = date.today()
@@ -100,14 +102,12 @@ class BarMenu(Menu):
         # path
         final_path = f'{folder_path}\\{save_name}'
 
-        # write data
-        with open(final_path, 'w') as f:
-            f.write(f'Owner: {name}\n')
-            f.write(f'Date saved: {date_str}\n')
-            f.write(f'Time saved: {time_str}\n')
-            f.write('\n')
-            f.write(f'GAME FEN:{fen}')
-            f.write(f'\n\nGame Notation: {notation}')
+        # create and write json
+        dictionary = {'Owner': name, 'date_saved': date_str, 'time_saved': time_str,
+                      'fen': fen, 'notation': notation, 'deleted_pieces': deleted_pieces}
+        json_object = json.dumps(dictionary, indent=4)
+        with open(final_path, 'w') as outfile:
+            outfile.write(json_object)
 
         # feedback
         messagebox.showinfo('Saved', 'Game successfully Saved')
@@ -136,32 +136,36 @@ class BarMenu(Menu):
                 return
 
             # file opening
-            filename = filedialog.askopenfilename(initialdir=g_path, title="Select file",
-                                                  filetypes=(("text files", "*.txt"),
-                                                             ("all files", "*.*")))
+            filename = filedialog.askopenfilename(initialdir=g_path, title="Select save",
+                                                  filetypes=(("json files", "*.json"), ("all files", "*.*")))
 
-            with open(filename, 'r') as f:
-                # file
-                file = list(f.readlines())
+            # get data from file
+            with open(filename) as f:
+                data = json.load(f)
+                owner = data['Owner']
+                date_saved = data['date_saved']
+                time_saved = data['time_saved']
+                fen = data['fen']
+                notation = data['notation']
+                deleted_pieces = data['deleted_pieces']
 
-                # get owner
-                owner = file[0].split(':')[1].strip()
+            # check owner is the one opening
+            if owner == name:
+                pass
+            else:
+                messagebox.showerror('Error', 'You can only open games saved in your provided save folder, '
+                                              'do not go outside of it.')
+                return
 
-                # check owner is the one opening
-                if owner == name:
-                    pass
-                else:
-                    messagebox.showerror('Error', 'This file does not belongs to you.\n'
-                                                  'You can only open games saved in your provided save folder, '
-                                                  'do not go outside of it.')
-                    return
-
-                fen = file[4].split(':')[1]
-
-            # write fen to temp file
-            with open(os.getcwd() + '\\app\\chess_app\\all_saved_games\\temp\\temp_file.txt', 'w') as f:
-                # end of file
-                f.write(fen)
+            # write to data from file to temporary new json file
+            dictionary = {
+                "notation": notation,
+                "deleted_pieces": deleted_pieces,
+                "fen": fen,
+            }
+            json_object = json.dumps(dictionary, indent=4)
+            with open(os.getcwd() + '\\app\\chess_app\\all_saved_games\\temp\\temp_file.json', 'w') as outfile:
+                outfile.write(json_object)
 
             # set new window startup
             with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
