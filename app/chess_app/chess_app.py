@@ -42,8 +42,11 @@ class ChessApp(Tk):
         self.widgets_frame = Frame(self.game_frame)
 
         try:
-            fen = kwargs['fen']
-            # Actual game board
+            saved_data = kwargs['saved_data']
+            fen = saved_data[0]
+            notation = saved_data[1]
+            deleted_pieces = saved_data[2]
+            # Actual game board[saved game]
             # It is inside the game frame
             # (we pass the 'widgets frame' instance to be able to create and update chess notation in real time)
             # in case user opens saved game
@@ -51,6 +54,14 @@ class ChessApp(Tk):
             self.main_chess_board.pack(side=LEFT)
             # create board
             self.main_chess_board.build(board_type='saved', fen=fen)
+            # NOTATION
+            # insert notation and pieces
+            self.main_chess_board.chess_notation = notation
+            # The moves variable is updated every turn, so every even number of moves corresponds to a player
+            # add move to notation
+            for n, move in enumerate(notation, start=1):
+                self.main_chess_board.notation_tab.insert('end', f'{n}.{move} ')
+
         except KeyError:
             # build default board if not a saved game
             self.main_chess_board = AppBoard(self.game_frame, widgets_frame=self.widgets_frame)
@@ -168,7 +179,7 @@ class AppBoard(MainChessBoard):
         # game duration
         self.game_duration = None
 
-        # prawn promotion
+        # pawn promotion
         self.promotion_window = None
         self.promotion = False
 
@@ -472,31 +483,52 @@ class AppBoard(MainChessBoard):
 
         # NOTATION
         # determine move or delete piece for notation
-        if self.board[target]['piece']['piece_name'] is None:
-            # a normal move
-            # Add to notation
-            self.update_notation('moved_piece', target, piece_name, new_piece_name='', color=color)
+        try:
+            if self.board[target]['piece']['piece_name'] is None:
+                # a normal move
+                # Add to notation
+                self.update_notation('moved_piece', target, piece_name, new_piece_name='', color=color)
 
-            # fen tab
-            self.board_fen_string_tab.insert('end', f'{self.moves}. {self.get_game_fen_string_original()}\n')
+                # fen tab
+                self.board_fen_string_tab.insert('end', f'{self.moves}. {self.get_game_fen_string_original()}\n')
 
-        elif self.board[target]['piece']['piece_name'] is not None:
-            # deleting a piece
-            # add this deleted piece to the deleted pieces list
-            self.deleted_pieces.append([self.board[target]['piece']['piece_name'],
-                                        self.board[target]['piece']['piece_color']])
-            # Add to notation
-            self.update_notation('deleted_piece', target, piece_name,
-                                 new_piece_name=str(self.board[target]['piece']['piece_name']), color=color)
+            elif self.board[target]['piece']['piece_name'] is not None:
+                # deleting a piece
+                # add this deleted piece to the deleted pieces list
+                self.deleted_pieces.append([self.board[target]['piece']['piece_name'],
+                                            self.board[target]['piece']['piece_color']])
+                # Add to notation
+                self.update_notation('deleted_piece', target, piece_name,
+                                     new_piece_name=str(self.board[target]['piece']['piece_name']), color=color)
 
-            # fen tab
-            self.board_fen_string_tab.insert('end', f'{self.moves}. {self.get_game_fen_string_original()}\n')
+                # fen tab
+                self.board_fen_string_tab.insert('end', f'{self.moves}. {self.get_game_fen_string_original()}\n')
 
-        # CHESS MOVE
-        # place the selected piece in the selected spot
-        self.place_piece(piece_name, color, target)
-        # replace the place where that piece originally was with a blank space img
-        self.place_piece('blank', 'blank', old_position)
+            # CHESS MOVE
+            # place the selected piece in the selected spot
+            self.place_piece(piece_name, color, target)
+            # replace the place where that piece originally was with a blank space img
+            self.place_piece('blank', 'blank', old_position)
+
+        except KeyError:
+            # promotion for enemy prawn
+            if len(target) == 3:
+                # first two letter is position, last part is the piece to be promoted
+                # e.g. 'e1q' prawn to queen in e1
+                temp = {'q': 'queen', 'r': 'rook', 'b': 'bishop', 'n': 'knight'}
+                promotion_str = list(target)
+                promotion_position = promotion_str[0] + promotion_str[1]  # e.g. 'a' + '8' = 'a8'
+                promotion_piece = temp[promotion_str[2]]  # piece letter e.g. 'q', 'queen'
+                # chose piece based on last letter of promotion str
+                # chose position based on first two letter of promotion str
+                self.place_piece(promotion_piece, self.opponent_piece_color, promotion_position)
+                self.place_piece('blank', 'blank', old_position)
+
+                # notation
+                self.chess_notation.append(f'{target}')
+                # The moves variable is updated every turn, so every even number of moves corresponds to a player
+                # add move to notation
+                self.notation_tab.insert('end', f'{self.moves}.{target} ')
 
         try:
             # move for virtual board(chess lib)
@@ -591,7 +623,8 @@ class AppBoard(MainChessBoard):
         :param str new_piece_name: Used for chess notation move
         :param str color: piece_color
         """
-        # since chess notation for prawns have no letter and knights use 'N' this small section will handle that
+        # since chess notation for prawns have no letter and knights use 'N'
+        # this small section will handle that
         piece_letter = ''
         if old_piece_name == 'knight':
             piece_letter = 'N'
@@ -603,7 +636,8 @@ class AppBoard(MainChessBoard):
                 pass
 
             else:
-                piece_letter = str(old_piece_name[0].upper()) if color == 'black' else str(old_piece_name[0].lower())
+                piece_letter = str(old_piece_name[0].upper()) \
+                    if color == 'black' else str(old_piece_name[0].lower())
 
         # actual notation
         if mode == 'moved_piece':
