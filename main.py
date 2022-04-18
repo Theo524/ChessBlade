@@ -3,6 +3,7 @@ from app.chess_app.chess_app import ChessApp
 from database.database import DatabaseBrowser
 
 import os
+import json
 
 # Directory path for the current script
 main_path = os.getcwd()
@@ -76,10 +77,12 @@ def main():
         # Start new chess game
         if saved_game == 'yes':
             # get fen string for saved game to be opened
-            with open(main_path + '\\app\\chess_app\\all_saved_games\\temp\\temp_file.txt', 'r') as f:
-                fen_str = f.read()
+            with open(main_path + '\\app\\chess_app\\all_saved_games\\temp\\temp_file.json') as f:
+                data = json.load(f)
+                saved_data = (data['fen'], data['notation'], data['deleted_pieces'])
+
             # start actual game app
-            ChessApp(mode, fen=fen_str).mainloop()
+            ChessApp(mode, saved_data=saved_data).mainloop()
         if saved_game == 'no':
             # start actual game app
             ChessApp(mode).mainloop()
