@@ -101,6 +101,9 @@ class LoginSystem(ttk.Frame):
     def show(self):
         """Show or hide password entry"""
 
+        if self.password_var.get() == 'Password':
+            return
+
         # if the checkbutton is activated, reveal password
         if self.show_password_var.get() == 1:
             self.password_entry.config(show='')
