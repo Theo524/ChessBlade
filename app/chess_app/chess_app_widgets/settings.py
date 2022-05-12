@@ -92,6 +92,11 @@ class Settings(Toplevel):
                         f.write(f'{difficulty}-{time}-{game_type}-{player_color}-{opponent_color}'
                                 f'-{border_color}-{board_color}')
 
+                        # Confirmation and informative feedback
+                        messagebox.showinfo('Success', 'Settings successfully saved.'
+                                                       ' Click  \'New game\' in the game menu '
+                                                       'to play with these new settings.')
+
                 # if user is in user mode, apply new settings to user account
                 if self.mode == 'user':
                     # data
