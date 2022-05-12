@@ -4,7 +4,7 @@ from database.database import DatabaseBrowser
 
 import os
 import json
-
+from tkinter import *
 # Directory path for the current script
 main_path = os.getcwd()
 
@@ -52,7 +52,8 @@ def load_settings(game_mode):
             f.write(f"{stats[1]}-{stats[2]}-{stats[3]}-{stats[4]}-{stats[5]}")
 
 
-def main():
+def starting_menu():
+    """Starting window for user to access game"""
 
     # Start the initial menu application
     start = StartApp()
@@ -64,8 +65,17 @@ def main():
     # game mode (from Login system)
     mode = start.mode
 
-    # load settings into files
+    # load settings
     load_settings(mode)
+
+    return mode
+
+
+def chess_main(mode, splash):
+    """Chess application initialization"""
+
+    # remove splash screen
+    splash.destroy()
 
     # Defines whether to run game or not
     response = 'yes\n'
@@ -95,5 +105,19 @@ def main():
 
 
 if __name__ == '__main__':
-    # game
-    main()
+    # starting menu
+    game_mode = starting_menu()
+
+    # splash screen
+    splash_root = Tk()
+    splash_root.geometry("670x508")  # Adjust size
+    splash_root.resizable(False, False)
+    photo_image = PhotoImage(file=os.getcwd() + "\\app\\resources\\img\\splash.png")
+    splash_label = Label(splash_root, text="Splash Screen", image=photo_image)  # Set Label
+    splash_label.pack()
+    splash_root.eval('tk::PlaceWindow . center')  # center splash window
+    splash_root.overrideredirect(1)
+    splash_root.after(6000, func=lambda: chess_main(game_mode, splash_root))
+
+    # run splash screen
+    mainloop()
