@@ -157,6 +157,21 @@ class AppBoard(MainChessBoard):
         self.border_color = settings[5]
         self.board_color = settings[6]
 
+        # board look
+        # colors for board
+        self.board_colors = [
+                                'white', self.board_color, 'white', self.board_color, 'white', self.board_color,
+                                'white', self.board_color,
+                                self.board_color, 'white', self.board_color, 'white', self.board_color, 'white',
+                                self.board_color, 'white',
+                            ] * 4
+
+        # make board
+        self.board = self.make_board()
+
+        # Game border
+        self.configure(highlightthickness=5, highlightbackground=self.border_color)
+
         # file paths
         self.settings_file_path = os.getcwd() + '\\app\\chess_app\\all_settings'
 
