@@ -110,7 +110,7 @@ if __name__ == '__main__':
 
     # splash screen
     splash_root = Tk()
-    splash_root.geometry("670x508")  # Adjust size
+    splash_root.geometry("660x470")  # Adjust size
     splash_root.resizable(False, False)
     photo_image = PhotoImage(file=os.getcwd() + "\\app\\resources\\img\\splash.png")
     splash_label = Label(splash_root, text="Splash Screen", image=photo_image)  # Set Label
