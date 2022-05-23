@@ -24,6 +24,9 @@ class ChessApp(Tk):
         # window icon
         self.tk.call('wm', 'iconphoto', self._w,
                      PhotoImage(file=os.getcwd() + '\\app\\resources\\img\\ChessIcon.png'))
+        # center
+        #self.eval('tk::PlaceWindow . center')  # center splash window
+
 
         # The game mode and the path for this chess app settings and files, shown in these variables
         self.mode = mode

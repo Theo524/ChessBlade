@@ -15,13 +15,17 @@ class StartApp(Tk):
 
         self.mode = None
         self.user_entered_game = False
+        self.user_id = None
 
         # command button for window closing
         self.protocol("WM_DELETE_WINDOW", self.close_win)
+        # center
+        #self.eval('tk::PlaceWindow . center')  # center splash window
 
         # Attributes
-        self.geometry('500x600')
+        #self.geometry('500x600')
         self.title('Welcome')
+        self.center()
 
         # themes
         self.style = ThemedStyle(self)
@@ -86,6 +90,18 @@ class StartApp(Tk):
 
         # close win
         self.destroy()
+
+    def center(self):
+        window_width = 800
+        window_height = 500
+        # get the screen size of your computer [width and height using the root object as foolows]
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        # Get the window position from the top dynamically as well as position from left or right as follows
+        position_top = int(screen_height / 2 - window_height / 2)
+        position_right = int(screen_width / 2 - window_width / 2)
+        # this is the line that will center your window
+        self.geometry(f'{window_width}x{window_height}+{position_right}+{position_top}')
 
 
 class StartWindow(ttk.Frame):

@@ -3,7 +3,7 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 from app.login_system_app.register import RegisterSystem
-from app.resources.custom_widgets.placeholder_entry import PlaceholderEntry
+from app.login_system_app.placeholder_entry import PlaceholderEntry
 import hashlib
 import smtplib
 import random
@@ -28,7 +28,7 @@ class LoginSystem(ttk.Frame):
 
         # container
         self.scene = ttk.Frame(self)
-        self.scene.pack(pady=100)
+        self.scene.pack(pady=50)
 
         # files needed
         self.database = self.master.database
@@ -124,22 +124,23 @@ class LoginSystem(ttk.Frame):
         user_hashed_password = hashlib.blake2b(message).hexdigest()
 
         # search for hashed password and username in database
-        found = self.check_data(username, user_hashed_password)
+        found = DatabaseBrowser.verify_user(username, user_hashed_password)
 
         # Check whether the account was found
         if found:
             messagebox.showinfo('Success', 'Successful login')
-
-            # save username to temp files
-            with open(self.temp_files + '//current_user.txt', 'w') as f:
-                f.write(username)
 
             # Set start_new_game to true
             with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
                 f.write('new_game:yes\n')
                 f.write('saved_game:no')
 
+            # save id
+            with open(os.getcwd() + '\\app\\login_system_app\\temp\\current_user_id.txt', 'w') as f:
+                user_id = f.read()
+
             # set game mode as user
+            self.master.user_id = user_id
             self.master.mode = 'user'
             self.master.user_entered_game = True
 
@@ -149,28 +150,6 @@ class LoginSystem(ttk.Frame):
         else:
             # feedback for invalid data
             messagebox.showerror('Error', 'Invalid credentials')
-
-    def check_data(self, username, h_password):
-        """Check credentials are in db"""
-
-        conn = sqlite3.connect(self.database)
-        c = conn.cursor()
-
-        with conn:
-            # sql query to get all usernames and passwords that match the function parameters
-            c.execute("SELECT * FROM users WHERE username=:username AND password=:password",
-                      {'username': username, 'password': h_password})
-
-            # the data, should only be one tuple containing 2 items
-            data = c.fetchall()
-
-            # If there are any values in 'data' it means there is a match with the execute statement from c
-            if data:
-                return True
-
-            else:
-                return False
-
 
 class ForgotPassword(ttk.Frame):
     """Start for password recovery"""

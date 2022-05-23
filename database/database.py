@@ -1,34 +1,75 @@
 import sqlite3
 import os
+import mysql.connector as db
+import random
 
 
 class DatabaseBrowser:
-    def __init__(self):
-        pass
-
     @staticmethod
-    def delete_user(username):
+    def delete_user(user_id):
         """Deletes user from database
 
-        :param str username: User to be deleted
+        :param int user_id: User to be deleted
         """
 
         # Store data into database
-        conn = sqlite3.connect(os.getcwd() + '\\database\\users.db')
-        c = conn.cursor()
+        connection = db.connect(host="localhost", user="TheoAdmin", passwd="524BrownJacobTheophilus",
+                                database='chess_data')
 
-        with conn:
-            # delete general
-            c.execute('DELETE FROM users WHERE username=:username', {'username': username})
+        # deletes
+        user_dlt = f"""
+DELETE FROM user_data WHERE id = "{user_id}"
+"""
+        settings_dlt = f"""
+DELETE FROM user_settings WHERE id = "{user_id}"
+"""
 
-            # delete settings
-            c.execute('DELETE FROM user_settings WHERE user=:user', {'user': username})
+        statistics_dlt = f"""
+DELETE FROM user_statistics WHERE id = "{user_id}"
+"""
 
-            # delete stats
-            c.execute('DELETE FROM user_stats WHERE user=:user', {'user': username})
+        with connection.cursor(buffered=True) as cursor:
+            cursor.execute(user_dlt)
+            cursor.execute(settings_dlt)
+            cursor.execute(statistics_dlt)
+            connection.commit()
 
     @staticmethod
-    def create_new_user(username, hashed_password, email):
+    def id_exists(user_id):
+        """Ensure an id doesnt exists alreday in the database
+
+        :param int user_id: 5 digit id for the user
+        """
+
+        # Store data into database
+        connection = db.connect(host="localhost", user="TheoAdmin", passwd="524BrownJacobTheophilus",
+                                database='chess_data')
+        with connection.cursor(buffered=True) as cursor:
+            cursor.execute("SELECT * FROM user_data")
+            results = cursor.fetchall()
+            for result in results:
+                # select that result
+                if result[0] == user_id:
+                    return True
+
+        # Means all ids were checked and None equal was found
+        return False
+
+    @staticmethod
+    def generate_id():
+        """Create a unique id"""
+        # generate 5 digit id and ensure it doesn't already exists
+        user_id = int(''.join([random.choice([str(i) for i in range(0, 10)]) for i in range(5)]))
+        while True:
+            if DatabaseBrowser.id_exists(user_id):
+                user_id = int(''.join([random.choice([str(i) for i in range(0, 10)]) for i in range(5)]))
+                continue
+
+            else:
+                return user_id
+
+    @staticmethod
+    def create_new_user(username, hashed_password, email, dob):
         """Creates new user
 
         :param str username: username
@@ -37,78 +78,99 @@ class DatabaseBrowser:
         """
 
         # Store data into database
-        conn = sqlite3.connect(os.getcwd() + '\\database\\users.db')
-        c = conn.cursor()
+        connection = db.connect(host="localhost", user="TheoAdmin", passwd="524BrownJacobTheophilus",
+                                database='chess_data')
 
-        with conn:
+        # get unique id
+        user_id = DatabaseBrowser.generate_id()
+
+        with connection.cursor(buffered=True) as cursor:
+
+            # queries
+            user = f"""
+            INSERT INTO user_data (id, username, password, email, dob) VALUES ({user_id}, "{username}", "{hashed_password}", "{email}", "{dob}")
+            """
+
+            settings = f"""
+            INSERT INTO user_settings (id, difficulty, game_mode, player_piece_color, border_color, board_color) VALUES 
+            ({user_id}, "Novice", "two_player", "black", "black", "brown")
+            """
+
+            statistics = f"""
+            INSERT INTO user_statistics (id, games_played, wins, loses, draws, ranking) VALUES 
+            ({user_id}, 0, 0, 0, 0, 0)
+            """
+
             # Insert values into the database (general)
-            c.execute("INSERT INTO users VALUES (:username, :password, :email)",
-                      {'username': username.lower(),
-                       'password': hashed_password,
-                       'email': email})
+            cursor.execute(user)
 
             # Insert values into the database (settings)
-            c.execute("INSERT INTO user_settings VALUES (:user, :difficulty, :time, :game_type, "
-                      ":player_piece_color, :opponent_piece_color, :border_color, :board_color)",
-                      {'user': username.lower(), 'difficulty': 'medium', 'time': '02:30:00',
-                       'game_type': 'two_player', 'player_piece_color': 'black', 'opponent_piece_color': 'white',
-                       'border_color': 'black', 'board_color': 'brown'})
+            cursor.execute(settings)
 
             # Insert values into the database (statistics)
-            c.execute("INSERT INTO user_stats VALUES (:user, :number_of_games_played, :wins, :loses, "
-                      ":draws, :ranking)",
-                      {'user': username.lower(), 'number_of_games_played': 0, 'wins': 0,
-                       'loses': 0, 'draws': 0, 'ranking': 0})
+            cursor.execute(statistics)
 
-            # output database to console
-            #c.execute("SELECT * FROM users")
-            #print(f'User data: {c.fetchall()}')
-            #c.execute("SELECT * FROM user_settings")
-            #print(f'User settings: {c.fetchall()}')
-            #c.execute("SELECT * FROM user_stats")
-            #print(f'User stats: {c.fetchall()}')
+            connection.commit()
 
     @staticmethod
-    def load(load='', username=None):
+    def load(user_id, load=''):
         """Get data from user database
 
         :param str load: Data to be loaded. Must be either 'statistics', 'settings' or 'general'
-        :param str username: the name of the user who's data will be modified
+        :param str user_id: the id of the user who's data will be modified
 
         :return: structure containing data for that user
         """
 
-        if username is not None:
+        connection = db.connect(host="localhost", user="TheoAdmin", passwd="524BrownJacobTheophilus",
+                                database='chess_data')
 
-            # Open the sql database and retrieve all the data this user has
-            # All usernames in the sql file are unique so there won't be any problems
-            conn = sqlite3.connect(os.getcwd() + '\\database\\users.db')
-            c = conn.cursor()
+        # Open the sql database and retrieve all the data this user has
+        # All usernames in the sql file are unique so there won't be any problems
+        with connection.cursor(buffered=True) as cursor:
 
-            with conn:
-                if load.lower() == 'statistics':
-                    c.execute('''SELECT * FROM user_stats WHERE user=:username''',
-                              {'username': username})
+            if load.lower() == 'statistics':
+                cursor.execute(f"SELECT * FROM user_statistics WHERE id = {user_id}")
 
-                    stats = c.fetchall()[0]
+                results = list(cursor.fetchall()[0])
 
-                    return list(stats)
+                return results
 
-                elif load.lower() == 'settings':
-                    c.execute('''SELECT * FROM user_settings WHERE user=:username''',
-                              {'username': username})
+            elif load.lower() == 'settings':
+                cursor.execute(f"SELECT * FROM user_settings WHERE id = {user_id}")
 
-                    settings = c.fetchall()[0]
+                results = list(cursor.fetchall()[0])
 
-                    return list(settings)
+                return results
 
-                elif load.lower() == 'general':
-                    c.execute('''SELECT * FROM users WHERE username=:username''',
-                              {'username': username})
+            elif load.lower() == 'general':
+                cursor.execute(f"SELECT * FROM user_data WHERE id = {user_id}")
 
-                    general = c.fetchall()[0]
+                results = list(cursor.fetchall()[0])
 
-                    return list(general)
+                return results
+
+    @staticmethod
+    def verify_user(username, hashed_password):
+        # Store data into database
+        connection = db.connect(host="localhost", user="TheoAdmin", passwd="524BrownJacobTheophilus",
+                                database='chess_data')
+
+        query = f"""
+        SELECT id FROM user_data WHERE username="{username}" AND password="{hashed_password}"
+"""
+        # find the id for that user
+        with connection.cursor(buffered=True) as cursor:
+            cursor.execute(query)
+            try:
+                results = cursor.fetchall()[0][0]
+                # write id to files
+                with open(os.getcwd() + '\\app\\login_system_app\\temp\\current_user_id.txt', 'w') as f:
+                    f.write(results)
+                return True  # id for that user
+
+            except IndexError:
+                return False
 
     @staticmethod
     def save(save='', username=None, data=None):
@@ -174,32 +236,10 @@ class DatabaseBrowser:
                                'password': data[1],
                                'email': data[2]})
 
-    @staticmethod
-    def username_in_database(username):
-        """Ensure only unique usernames are stored in database"""
 
-        conn = sqlite3.connect(os.getcwd() + '\\database\\users.db')
-        c = conn.cursor()
+#DatabaseBrowser.create_new_user('TestUser', 'dfgddsgfsdfg', 'someone@gmail.com', '08-07-2017')
+#print(DatabaseBrowser.load(14216, load='statistics'))
+#print(DatabaseBrowser.load(14216, load='general'))
+#print(DatabaseBrowser.load(14216, load='settings'))
 
-        with conn:
-            c.execute("SELECT * FROM users")
-
-            data = c.fetchall()
-
-            # if username is in database return True, else False
-            for val in data:
-                if username == val[0]:
-                    return True
-                else:
-                    continue
-
-            return False
-
-    @staticmethod
-    def all_table_names(self):
-        conn = sqlite3.connect(os.getcwd() + '\\database\\users.db')
-        c = conn.cursor()
-        with conn:
-            c.execute('SELECT name from sqlite_master where type= "table"')
-
-            return c.fetchall()
+DatabaseBrowser.verify_user('TestUser', hashed_password='dfgddsgfsdfg')

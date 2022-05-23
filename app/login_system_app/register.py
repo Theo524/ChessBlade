@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import ttk, messagebox
 from tkcalendar import DateEntry
 from datetime import date
-from app.resources.custom_widgets.placeholder_entry import PlaceholderEntry
+from app.login_system_app.placeholder_entry import PlaceholderEntry
 from database.database import DatabaseBrowser
 
 import hashlib
@@ -19,7 +19,7 @@ class RegisterSystem(ttk.Frame):
 
         # container
         self.scene = ttk.Frame(self)
-        self.scene.pack(pady=100)
+        self.scene.pack(pady=50)
 
         # ----------------------App layout/upper frame----------------------
         self.upper_window = ttk.Frame(self.scene, height=50, width=350)
@@ -303,7 +303,9 @@ class RegisterSystem(ttk.Frame):
             hashed_password = self.hash_pass(password)
 
             # create new user
-            DatabaseBrowser.create_new_user(username=username, hashed_password=hashed_password, email=email)
+
+            DatabaseBrowser.create_new_user(username=username, hashed_password=hashed_password, email=email,
+                                            dob=date_of_birth)
 
             # ask user to leave or stay
             answer = messagebox.askyesno('Success', 'Your data has successfully been saved. Do you want to leave?')

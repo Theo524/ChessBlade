@@ -12,6 +12,7 @@ class Settings(Toplevel):
         self.mode = mode
 
         # attributes
+        self.lift(master)
         self.title('Settings')
         self.resizable(0, 0)
         self.protocol('WM_DELETE_WINDOW', self.confirm_exit)
