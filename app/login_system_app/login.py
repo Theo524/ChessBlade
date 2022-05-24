@@ -136,7 +136,7 @@ class LoginSystem(ttk.Frame):
                 f.write('saved_game:no')
 
             # save id
-            with open(os.getcwd() + '\\app\\login_system_app\\temp\\current_user_id.txt', 'w') as f:
+            with open(os.getcwd() + '\\app\\login_system_app\\temp\\current_user_id.txt', 'r') as f:
                 user_id = f.read()
 
             # set game mode as user
@@ -150,6 +150,7 @@ class LoginSystem(ttk.Frame):
         else:
             # feedback for invalid data
             messagebox.showerror('Error', 'Invalid credentials')
+
 
 class ForgotPassword(ttk.Frame):
     """Start for password recovery"""
@@ -240,10 +241,13 @@ class ForgotPassword(ttk.Frame):
         # user data
         email = self.email_recover_password_var.get()
         user = self.user_recover_password_var.get()
+        # id
+        with open(os.getcwd() + '\\app\\login_system_app\\temp\\current_user_id', 'r') as f:
+            user_id = int(f.read())
 
         # check it is in the database
-        data = DatabaseBrowser.load(load='general', username=user)
-        in_database = True if data[2] == email else False
+        data = DatabaseBrowser.load(load='general', user_id=user_id)
+        in_database = True if str(data[3]) == str(email) else False
 
         # if the data is in the database, we send the email verification
         if in_database:
@@ -263,6 +267,10 @@ class ForgotPassword(ttk.Frame):
                 # write username to temp_file
                 with open(self.temp_files + '\\password_recovery\\username.txt', 'w') as f:
                     f.write(user.lower())
+
+                # write id to temp_file
+                with open(self.temp_files + '\\password_recovery\\id.txt', 'w') as f:
+                    f.write(data[0])
 
                 # if nothing went wrong, the message has been sent
                 return True
@@ -445,17 +453,17 @@ class NewPassword(ttk.Frame):
             # hash password
             new_pass = RegisterSystem.hash_pass(password)
 
-            with open(self.temp_files + '\\password_recovery\\username.txt', 'r') as f:
-                username = f.read()
+            with open(self.temp_files + '\\password_recovery\\id.txt', 'r') as f:
+                user_id = int(f.read())
 
             # get user original data to get email
-            data = DatabaseBrowser.load(load='general', username=username)
+            data = DatabaseBrowser.load(load='general', user_id=user_id)
 
-            # make new data list
-            all_data = [username, new_pass, data[2]]
+            # make new data list with new password
+            all_data = [data[1], new_pass, data[3], data[4]]
 
             # save new data
-            DatabaseBrowser.save(save='general', username=username, data=all_data)
+            DatabaseBrowser.save(save='general', user_id=data[0], data=all_data)
 
             messagebox.showinfo('Success', 'Your new password has been set')
 

@@ -303,7 +303,6 @@ class RegisterSystem(ttk.Frame):
             hashed_password = self.hash_pass(password)
 
             # create new user
-
             DatabaseBrowser.create_new_user(username=username, hashed_password=hashed_password, email=email,
                                             dob=date_of_birth)
 

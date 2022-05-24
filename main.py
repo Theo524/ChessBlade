@@ -48,16 +48,11 @@ def load_settings(game_mode, user_id):
         # Apply default settings, to default_settings.csv
         with open(game_settings_path + '\\guest\\default_game_settings.csv', 'w') as file:
             # Apply default game settings
-            file.write('Game_difficulty-game_mode-player_piece_color-border_color-'
-                       'board_color\n')
-            file.write("medium-two_player-black-black-brown")
+            file.write('Game_difficulty-game_mode-player_piece_color-border_color-board_color\n')
+            file.write("Intermediate-two_player-black-black-brown")
 
     if game_mode == 'user':
         # Apply settings specific to that user
-
-        # Retrieve the user name
-        with open(temp_files + '//current_user.txt', 'r') as f:
-            user_name = f.read()
 
         # get settings and statistics for this user
         settings = DatabaseBrowser.load(load='settings', user_id=user_id)

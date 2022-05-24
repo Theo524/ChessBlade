@@ -218,27 +218,26 @@ class BarMenu(Menu):
     def show_player_stats():
         """Shows player data"""
 
-        # We get the name for this current user
-        with open(os.getcwd() + '//app//login_system_app//temp//current_user.txt', 'r') as f:
-            username = f.read()
+        # We get the id for this current user
+        with open(os.getcwd() + '//app//login_system_app//temp//current_user_id.txt', 'r') as f:
+            user_id = int(f.read())
 
         # Get required data
-        data = DatabaseBrowser.load(load='statistics', username=username)
+        data = DatabaseBrowser.load(load='statistics', user_id=user_id)
+
+        # also get the username
+        username = DatabaseBrowser.load(load='general', user_id=user_id)[1]
 
         # load unto files
         with open(os.getcwd() + '\\app\\chess_app\\all_settings\\user\\user_stats.csv', 'w') as f:
             f.write('number_of_games_played-wins-loses-draws-ranking\n')
             f.write(f'{data[1]}-{data[2]}-{data[3]}-{data[4]}-{data[5]}')
 
-        with open(os.getcwd() + '//app//chess_app//all_settings//user//user_stats.csv') as f:
-            reader = csv.reader(f, delimiter='-')  # file separated by '-' rather than comas
-            next(reader)  # skip header
-            for row in reader:
-                # the row is a list containing the data
-                number_of_games_played = row[0]
-                wins = row[1]
-                loses = row[2]
-                draws = row[3]
+        # the statistics
+        number_of_games_played = data[1]
+        wins = data[2]
+        loses = data[3]
+        draws = data[4]
 
         # window
         new_window = Toplevel()

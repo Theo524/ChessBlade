@@ -113,13 +113,13 @@ DELETE FROM user_statistics WHERE id = "{user_id}"
             connection.commit()
 
     @staticmethod
-    def load(user_id, load=''):
+    def load(load='', user_id=None):
         """Get data from user database
 
         :param str load: Data to be loaded. Must be either 'statistics', 'settings' or 'general'
-        :param str user_id: the id of the user who's data will be modified
+        :param int user_id: the id of the user who's data will be modified
 
-        :return: structure containing data for that user
+        :return: structure containing data for that user including id
         """
 
         connection = db.connect(host="localhost", user="TheoAdmin", passwd="524BrownJacobTheophilus",
@@ -152,6 +152,7 @@ DELETE FROM user_statistics WHERE id = "{user_id}"
 
     @staticmethod
     def verify_user(username, hashed_password):
+        """For login into app, verify the user exists"""
         # Store data into database
         connection = db.connect(host="localhost", user="TheoAdmin", passwd="524BrownJacobTheophilus",
                                 database='chess_data')
@@ -163,7 +164,7 @@ DELETE FROM user_statistics WHERE id = "{user_id}"
         with connection.cursor(buffered=True) as cursor:
             cursor.execute(query)
             try:
-                results = cursor.fetchall()[0][0]
+                results = str(cursor.fetchall()[0][0])
                 # write id to files
                 with open(os.getcwd() + '\\app\\login_system_app\\temp\\current_user_id.txt', 'w') as f:
                     f.write(results)
@@ -173,68 +174,60 @@ DELETE FROM user_statistics WHERE id = "{user_id}"
                 return False
 
     @staticmethod
-    def save(save='', username=None, data=None):
+    def save(save='', user_id=None, data=None):
         """Saves data to db
 
         :param str save: must be either 'statistics', 'settings' or 'general'
-        :param str username: the name of the user who's data will be modified
-        :param list data: The data to be stored. For 'statistics' len(6). For 'settings' len(8). For 'general' len(3)
-
+        :param int user_id: User to be deleted
+        :param list data: The data to be stored, takes full record as list excluding the user id
         """
 
-        if username is not None:
+        # Open the sql database and retrieve all the data this user has
+        # All usernames in the sql file are unique so there won't be any problems
+        connection = db.connect(host="localhost", user="TheoAdmin", passwd="524BrownJacobTheophilus",
+                                database='chess_data')
 
-            # Open the sql database and retrieve all the data this user has
-            # All usernames in the sql file are unique so there won't be any problems
-            conn = sqlite3.connect(os.getcwd() + '\\database\\users.db')
-            c = conn.cursor()
+        stats_query = f"""UPDATE user_statistics SET games_played={data[0]}, wins={data[1]}, loses={data[2]}, 
+        draws={data[3]}, ranking={data[4]} WHERE id={user_id}"""
+
+        settings_query = f"""UPDATE user_settings SET difficulty="{data[0]}", game_mode="{data[1]}", player_piece_color="{data[2]}", 
+        border_color="{data[3]}", board_color="{data[4]}" WHERE id={user_id}"""
+
+        user_data_query = f"""UPDATE user_data SET username="{data[0]}", "password={data[1]}", email="{data[2]}", 
+        dob="{data[3]}" WHERE id={user_id}"""
+
+        with connection.cursor(buffered=True) as cursor:
 
             if save.lower() == 'statistics':
-                with conn:
-                    # add new data
-                    c.execute("""UPDATE user_stats SET 
-                    number_of_games_played=:number_of_games_played, 
-                    wins=:wins, loses=:losses, 
-                    draws=:draws, 
-                    ranking=:ranking 
-                    WHERE user=:user""",
-                              {'number_of_games_played': data[1],
-                               'wins': data[2],
-                               'losses': data[3],
-                               'draws': data[4],
-                               'ranking': data[5],
-                               'user': data[0]})
+                cursor.execute(stats_query)
 
             if save.lower() == 'settings':
-                with conn:
-                    # update all user stats
-                    c.execute('''UPDATE user_settings SET 
-                    difficulty=:game_difficulty, 
-                    time=:time, 
-                    game_type=:game_type,  
-                    player_piece_color=:player_piece_color,  
-                    opponent_piece_color=:opponent_piece_color,  
-                    border_color=:border_color, 
-                    board_color=:board_color 
-                    WHERE user=:user''',
-                              {'game_difficulty': data[1],
-                               'time': data[2],
-                               'game_type': data[3],
-                               'player_piece_color': data[4],
-                               'opponent_piece_color': data[5],
-                               'border_color': data[6],
-                               'board_color': data[7],
-                               'user': data[0]})
+                cursor.execute(settings_query)
 
             if save.lower() == 'general':
-                with conn:
-                    c.execute("UPDATE users SET "
-                              " password=:password,"
-                              " email=:email "
-                              "WHERE username=:username",
-                              {'username': data[0],
-                               'password': data[1],
-                               'email': data[2]})
+                cursor.execute(user_data_query)
+
+            connection.commit()
+
+    @staticmethod
+    def username_in_database(username):
+        """Check if the username is in the database"""
+
+        # Store data into database
+        connection = db.connect(host="localhost", user="TheoAdmin", passwd="524BrownJacobTheophilus",
+                                database='chess_data')
+        with connection.cursor(buffered=True) as cursor:
+            cursor.execute("SELECT * FROM user_data")
+            results = cursor.fetchall()
+            for result in results:
+                # select that result
+                if result[1] == username:
+                    return True
+
+        # Means all ids were checked and None equal was found
+        return False
+
+
 
 
 #DatabaseBrowser.create_new_user('TestUser', 'dfgddsgfsdfg', 'someone@gmail.com', '08-07-2017')
@@ -242,4 +235,4 @@ DELETE FROM user_statistics WHERE id = "{user_id}"
 #print(DatabaseBrowser.load(14216, load='general'))
 #print(DatabaseBrowser.load(14216, load='settings'))
 
-DatabaseBrowser.verify_user('TestUser', hashed_password='dfgddsgfsdfg')
+#DatabaseBrowser.verify_user('TestUser', hashed_password='dfgddsgfsdfg')

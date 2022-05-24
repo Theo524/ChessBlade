@@ -5,10 +5,7 @@ from database.database import DatabaseBrowser
 
 from tkinter import *
 from tkinter import messagebox, ttk
-import time as time
-import datetime
 import os
-import threading
 import csv
 import chess
 
@@ -24,9 +21,6 @@ class ChessApp(Tk):
         # window icon
         self.tk.call('wm', 'iconphoto', self._w,
                      PhotoImage(file=os.getcwd() + '\\app\\resources\\img\\ChessIcon.png'))
-        # center
-        #self.eval('tk::PlaceWindow . center')  # center splash window
-
 
         # The game mode and the path for this chess app settings and files, shown in these variables
         self.mode = mode
@@ -39,6 +33,7 @@ class ChessApp(Tk):
         # -------------everything contained here--------------
         # window container
         self.game_frame = Frame(self)
+        self.game_frame.mode = mode
         self.game_frame.place(relx=0.5, rely=0.5, anchor=CENTER)
 
         # Widgets frame, here is where the notation tab is put
@@ -153,12 +148,16 @@ class AppBoard(MainChessBoard):
         # game_settings
         settings = self.get_game_settings(self.mode)  # sets game settings
         self.difficulty = settings[0]
-        self.time = settings[1]
-        self.game_type = settings[2]
-        self.player_piece_color = settings[3]
-        self.opponent_piece_color = settings[4]
-        self.border_color = settings[5]
-        self.board_color = settings[6]
+        self.game_type = settings[1]
+        self.player_piece_color = settings[2]
+        self.border_color = settings[3]
+        self.board_color = settings[4]
+
+        if self.player_piece_color == 'black':
+            self.opponent_piece_color = 'white'
+
+        if self.player_piece_color == 'white':
+            self.opponent_piece_color = 'black'
 
         # board look
         # colors for board
@@ -254,10 +253,16 @@ class AppBoard(MainChessBoard):
         self.deleted_tab_visual.configure(highlightthickness=5, highlightbackground='black')
         self.deleted_tab_visual.pack()
 
+        # fourth tab
+        self.board_game_mini_play_tab = Text(self.notebook)
+        self.board_game_mini_play_tab.pack()
+
+
         # add  tabs to chess notebook
         self.notebook.add(self.notation_tab, text='Notation')
         self.notebook.add(self.deleted_tab_visual, text='Deleted pieces')
         self.notebook.add(self.board_fen_string_tab, text='FEN')
+        self.notebook.add(self.board_game_mini_play_tab, text='Steps')
 
     def update_current_piece(self, position):
         """Command assigned to every button in the board
@@ -474,9 +479,7 @@ class AppBoard(MainChessBoard):
             self.game_score('stalemate')
 
         if self.game_over:
-            new_game = messagebox.askyesno('Game over', f'\nYou predicted this game would end at {self.time}, '
-                                                        f'it actually took {self.game_duration}.\n'
-                                                        f'Do you want to play a again?')
+            new_game = messagebox.askyesno('Game over',  'Do you want to play a again?')
 
             if new_game:
                 # instructions for new game file
@@ -522,6 +525,8 @@ class AppBoard(MainChessBoard):
                 # fen tab
                 self.board_fen_string_tab.insert('end', f'{self.moves}. {self.get_game_fen_string_original()}\n')
 
+                # text image gameplay display
+
             # CHESS MOVE
             # place the selected piece in the selected spot
             self.place_piece(piece_name, color, target)
@@ -564,6 +569,9 @@ class AppBoard(MainChessBoard):
             # we create a fen string from the current board and place it
             fen = self.get_game_fen_string_original()
             self.ai_board = chess.Board(fen=fen)
+
+        # text based game illustration
+        self.board_game_mini_play_tab.insert('end', f'{self.moves}.\n{self}\n\n')
 
         # increase number of moves by one
         self.moves += 1
@@ -688,38 +696,6 @@ class AppBoard(MainChessBoard):
                 self.b_x = 0
                 self.b_y += 1
 
-    def threading(self):
-        """Thread"""
-
-        # Call work function to start thread
-        t1 = threading.Thread(target=self.thread_timer_work)
-        t1.start()
-
-    def thread_timer_work(self):
-        """Thread that deals with background game timer
-
-        The user can use this to see how long the game took
-        """
-
-        # convert time str from db to seconds
-        game_time = self.time
-        date_time = datetime.datetime.strptime(game_time, "%H:%M:%S")
-        time_str = date_time
-        a_timedelta = date_time - datetime.datetime(1900, 1, 1)
-        seconds = int(a_timedelta.total_seconds())
-        time_taken = 0
-
-        for i in range(seconds):
-            # actual timer
-            time.sleep(1)
-            time_taken += 1
-
-            if self.game_over:
-                # convert time taken
-                time_convert = time.gmtime(time_taken)
-                # convert seconds to time str
-                self.game_duration = time.strftime("%H:%M:%S", time_convert)
-
     def game_score(self, result, winner=0):
         """Decides whether the game is a win, loss or draw
 
@@ -728,10 +704,6 @@ class AppBoard(MainChessBoard):
         """
 
         if self.mode == 'user':
-
-            # get the current username
-            with open(os.getcwd() + '\\app\\login_system_app\\temp\\current_user.txt') as f:
-                username = f.read()
 
             if self.game_type == 'two_player':
                 # practice games  (one v one on a single device) aren't scored
@@ -742,25 +714,28 @@ class AppBoard(MainChessBoard):
                 # first get the user name to search database (loaded at login)
                 if result == 'checkmate' and winner == 1:
                     # user won
-                    self.update_db_game_score(username, 'win')
+                    self.update_db_game_score('win')
 
                 if result == 'checkmate' and winner == 2:
                     # Computer(AI) won
-                    self.update_db_game_score(username, 'loss')
+                    self.update_db_game_score('loss')
 
                 if result == 'stalemate':
                     # was a draw
-                    self.update_db_game_score(username, 'draw')
+                    self.update_db_game_score('draw')
 
-    def update_db_game_score(self, user, result):
+    def update_db_game_score(self, result):
         """Gets a copy of the user statistics from the db and updates them according to the result
 
-        :param str user: The name of the user (account) playing, won't have errors because every user is unique
         :param str result: Can be a win, loss or draw
         """
 
+        # get the current user id
+        with open(os.getcwd() + '\\app\\login_system_app\\temp\\current_user_id.txt') as f:
+            user_id = int(f.read())
+
         # data
-        original_data = DatabaseBrowser.load(load='statistics', username=user)
+        original_data = DatabaseBrowser.load(load='statistics', user_id=user_id)
 
         # increase number of games played by one
         original_data[1] += 1
@@ -803,6 +778,6 @@ class AppBoard(MainChessBoard):
             if self.difficulty == 'Expert':
                 original_data[5] += 15
 
+        new_stats = [original_data[1], original_data[2], original_data[3], original_data[4], original_data[5]]
         # finally add the data to the database
-        DatabaseBrowser.save(save='statistics', username=original_data[0], data=original_data)
-
+        DatabaseBrowser.save(save='statistics', user_id=user_id, data=new_stats)
