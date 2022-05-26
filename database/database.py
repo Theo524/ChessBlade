@@ -1,10 +1,22 @@
-import sqlite3
+import hashlib
+import pickle
 import os
 import mysql.connector as db
 import random
 
 
+
 class DatabaseBrowser:
+
+    @staticmethod
+    def start_connection(mode='test'):
+        d = DatabaseBrowser.communication()
+
+        connection = db.connect(host=d['DB_HOST'], user=d['DB_USER'], passwd=d['DB_PASSWORD'],
+                                database='chess_data')
+
+        return connection
+
     @staticmethod
     def delete_user(user_id):
         """Deletes user from database
@@ -13,8 +25,7 @@ class DatabaseBrowser:
         """
 
         # Store data into database
-        connection = db.connect(host="localhost", user="TheoAdmin", passwd="524BrownJacobTheophilus",
-                                database='chess_data')
+        connection = DatabaseBrowser.start_connection()
 
         # deletes
         user_dlt = f"""
@@ -42,8 +53,8 @@ DELETE FROM user_statistics WHERE id = "{user_id}"
         """
 
         # Store data into database
-        connection = db.connect(host="localhost", user="TheoAdmin", passwd="524BrownJacobTheophilus",
-                                database='chess_data')
+        connection = DatabaseBrowser.start_connection()
+
         with connection.cursor(buffered=True) as cursor:
             cursor.execute("SELECT * FROM user_data")
             results = cursor.fetchall()
@@ -69,6 +80,25 @@ DELETE FROM user_statistics WHERE id = "{user_id}"
                 return user_id
 
     @staticmethod
+    def get_id(user):
+
+        # no repeats in usernames
+        if DatabaseBrowser.username_in_database(user):
+            pass
+
+        connection = DatabaseBrowser.start_connection()
+
+        with connection.cursor(buffered=True) as cursor:
+            cursor.execute(f'SELECT id FROM user_data WHERE username="{user}"')
+            results = cursor.fetchall()
+            for result in results:
+                if result is None:
+                    return 0
+
+                else:
+                    return result[0]
+
+    @staticmethod
     def create_new_user(username, hashed_password, email, dob):
         """Creates new user
 
@@ -77,9 +107,12 @@ DELETE FROM user_statistics WHERE id = "{user_id}"
         :param str email: email account that will be used
         """
 
+        # no repeats in usernames
+        if DatabaseBrowser.username_in_database(username):
+            return
+
         # Store data into database
-        connection = db.connect(host="localhost", user="TheoAdmin", passwd="524BrownJacobTheophilus",
-                                database='chess_data')
+        connection = DatabaseBrowser.start_connection()
 
         # get unique id
         user_id = DatabaseBrowser.generate_id()
@@ -113,6 +146,23 @@ DELETE FROM user_statistics WHERE id = "{user_id}"
             connection.commit()
 
     @staticmethod
+    def hash_pass(password):
+        """Hash the password for better security"""
+
+        # password hashing
+        message = password.encode()
+        hashed_password = hashlib.blake2b(message).hexdigest()
+
+        # Return result
+        return hashed_password
+
+    @staticmethod
+    def communication():
+        d = DatabaseBrowser.hash_pass('secret_f') + '.txt'
+        with open(os.getcwd() + f'\\app\\temp\\login_temp\\{d}', 'rb') as f:
+            return pickle.load(f)
+
+    @staticmethod
     def load(load='', user_id=None):
         """Get data from user database
 
@@ -122,8 +172,7 @@ DELETE FROM user_statistics WHERE id = "{user_id}"
         :return: structure containing data for that user including id
         """
 
-        connection = db.connect(host="localhost", user="TheoAdmin", passwd="524BrownJacobTheophilus",
-                                database='chess_data')
+        connection = DatabaseBrowser.start_connection()
 
         # Open the sql database and retrieve all the data this user has
         # All usernames in the sql file are unique so there won't be any problems
@@ -154,8 +203,7 @@ DELETE FROM user_statistics WHERE id = "{user_id}"
     def verify_user(username, hashed_password):
         """For login into app, verify the user exists"""
         # Store data into database
-        connection = db.connect(host="localhost", user="TheoAdmin", passwd="524BrownJacobTheophilus",
-                                database='chess_data')
+        connection = DatabaseBrowser.start_connection()
 
         query = f"""
         SELECT id FROM user_data WHERE username="{username}" AND password="{hashed_password}"
@@ -166,7 +214,7 @@ DELETE FROM user_statistics WHERE id = "{user_id}"
             try:
                 results = str(cursor.fetchall()[0][0])
                 # write id to files
-                with open(os.getcwd() + '\\app\\login_system_app\\temp\\current_user_id.txt', 'w') as f:
+                with open(os.getcwd() + '\\app\\temp\\login_temp\\current_user_id.txt', 'w') as f:
                     f.write(results)
                 return True  # id for that user
 
@@ -184,27 +232,23 @@ DELETE FROM user_statistics WHERE id = "{user_id}"
 
         # Open the sql database and retrieve all the data this user has
         # All usernames in the sql file are unique so there won't be any problems
-        connection = db.connect(host="localhost", user="TheoAdmin", passwd="524BrownJacobTheophilus",
-                                database='chess_data')
-
-        stats_query = f"""UPDATE user_statistics SET games_played={data[0]}, wins={data[1]}, loses={data[2]}, 
-        draws={data[3]}, ranking={data[4]} WHERE id={user_id}"""
-
-        settings_query = f"""UPDATE user_settings SET difficulty="{data[0]}", game_mode="{data[1]}", player_piece_color="{data[2]}", 
-        border_color="{data[3]}", board_color="{data[4]}" WHERE id={user_id}"""
-
-        user_data_query = f"""UPDATE user_data SET username="{data[0]}", "password={data[1]}", email="{data[2]}", 
-        dob="{data[3]}" WHERE id={user_id}"""
+        connection = DatabaseBrowser.start_connection()
 
         with connection.cursor(buffered=True) as cursor:
 
             if save.lower() == 'statistics':
+                stats_query = f"""UPDATE user_statistics SET games_played={data[0]}, wins={data[1]}, loses={data[2]}, 
+                draws={data[3]}, ranking={data[4]} WHERE id={user_id}"""
                 cursor.execute(stats_query)
 
             if save.lower() == 'settings':
+                settings_query = f"""UPDATE user_settings SET difficulty="{data[0]}", game_mode="{data[1]}", player_piece_color="{data[2]}", 
+                border_color="{data[3]}", board_color="{data[4]}" WHERE id={user_id}"""
                 cursor.execute(settings_query)
 
             if save.lower() == 'general':
+                user_data_query = f"""UPDATE user_data SET username="{data[0]}", password="{data[1]}", email="{data[2]}", 
+                dob="{data[3]}" WHERE id={user_id}"""
                 cursor.execute(user_data_query)
 
             connection.commit()
@@ -214,8 +258,7 @@ DELETE FROM user_statistics WHERE id = "{user_id}"
         """Check if the username is in the database"""
 
         # Store data into database
-        connection = db.connect(host="localhost", user="TheoAdmin", passwd="524BrownJacobTheophilus",
-                                database='chess_data')
+        connection = DatabaseBrowser.start_connection()
         with connection.cursor(buffered=True) as cursor:
             cursor.execute("SELECT * FROM user_data")
             results = cursor.fetchall()
@@ -226,13 +269,3 @@ DELETE FROM user_statistics WHERE id = "{user_id}"
 
         # Means all ids were checked and None equal was found
         return False
-
-
-
-
-#DatabaseBrowser.create_new_user('TestUser', 'dfgddsgfsdfg', 'someone@gmail.com', '08-07-2017')
-#print(DatabaseBrowser.load(14216, load='statistics'))
-#print(DatabaseBrowser.load(14216, load='general'))
-#print(DatabaseBrowser.load(14216, load='settings'))
-
-#DatabaseBrowser.verify_user('TestUser', hashed_password='dfgddsgfsdfg')

@@ -89,7 +89,6 @@ class ChessApp(Tk):
         # get settings
         if self.mode == 'user':
             game_type = self.main_chess_board.game_type
-            print(self.main_chess_board.moves)
 
             if game_type == 'computer' and self.main_chess_board.moves > 0:
                 # this means the user is playing against the ai, so it should leave the game
@@ -116,7 +115,7 @@ class ChessApp(Tk):
                 return
 
         # Set start_new_game to false, so the game loop can be ended
-        with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
+        with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\data.txt', 'w') as f:
             f.write('new_game:no\n')
             f.write('saved_game:no')
 
@@ -212,7 +211,7 @@ class AppBoard(MainChessBoard):
         if mode == 'guest':
 
             # open default settings file
-            with open(os.getcwd() + '\\app\\chess_app\\all_settings\\guest\\default_game_settings.csv', 'r') as f:
+            with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\guest\\default_game_settings.csv', 'r') as f:
                 csv_reader = csv.reader(f, delimiter='-')
                 next(csv_reader)
 
@@ -223,7 +222,7 @@ class AppBoard(MainChessBoard):
 
         if mode == 'user':
             # fetch settings for that specific user
-            with open(os.getcwd() + '\\app\\chess_app\\all_settings\\user\\user_game_settings.csv', 'r') as f:
+            with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\user\\user_game_settings.csv', 'r') as f:
                 csv_reader = csv.reader(f, delimiter='-')
                 next(csv_reader)
 
@@ -257,7 +256,6 @@ class AppBoard(MainChessBoard):
         self.board_game_mini_play_tab = Text(self.notebook)
         self.board_game_mini_play_tab.pack()
 
-
         # add  tabs to chess notebook
         self.notebook.add(self.notation_tab, text='Notation')
         self.notebook.add(self.deleted_tab_visual, text='Deleted pieces')
@@ -289,6 +287,7 @@ class AppBoard(MainChessBoard):
                 # If it is player one turn
                 if self.board[position]['piece']['piece_color'] == self.player_piece_color:
                     self.reset_board_colors()
+                    print(self.player_piece_color)
 
                     # We only allow player pieces to be highlighted
                     # rooks
@@ -483,7 +482,7 @@ class AppBoard(MainChessBoard):
 
             if new_game:
                 # instructions for new game file
-                with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
+                with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\data.txt', 'w') as f:
                     f.write('new_game:yes\n')
                     f.write('saved_game:no')
 
@@ -731,7 +730,7 @@ class AppBoard(MainChessBoard):
         """
 
         # get the current user id
-        with open(os.getcwd() + '\\app\\login_system_app\\temp\\current_user_id.txt') as f:
+        with open(os.getcwd() + '\\app\\temp\\login_temp\\current_user_id.txt') as f:
             user_id = int(f.read())
 
         # data

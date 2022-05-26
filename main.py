@@ -26,9 +26,9 @@ def intro_splash():
     except:
         return
 
+DatabaseBrowser.get_id('javie')
 
 # change script path for pyinstaller env
-
 intro_splash()
 resource_path()
 
@@ -36,9 +36,10 @@ resource_path()
 main_path = os.getcwd()
 
 # File paths to be used
-database = main_path + '\\database\\users.db'
-temp_files = main_path + '\\app\\login_system_app\\temp'
-game_settings_path = main_path + '\\app\\chess_app\\all_settings'
+chess_files = os.getcwd() + "\\app\\temp\\chess_temp\\"
+login_system_files = os.getcwd() + "\\app\\temp\\login_temp\\"
+#temp_files = main_path + '\\app\\login_system_app\\temp'
+#game_settings_path = main_path + '\\app\\chess_app\\all_settings'
 
 
 def load_settings(game_mode, user_id):
@@ -46,7 +47,7 @@ def load_settings(game_mode, user_id):
 
     if game_mode == 'guest':
         # Apply default settings, to default_settings.csv
-        with open(game_settings_path + '\\guest\\default_game_settings.csv', 'w') as file:
+        with open(chess_files + '\\all_settings\\guest\\default_game_settings.csv', 'w') as file:
             # Apply default game settings
             file.write('Game_difficulty-game_mode-player_piece_color-border_color-board_color\n')
             file.write("Intermediate-two_player-black-black-brown")
@@ -59,14 +60,14 @@ def load_settings(game_mode, user_id):
         stats = DatabaseBrowser.load(load='statistics', user_id=user_id)
 
         # write all retrieved data to user files
-        with open(game_settings_path + '\\user\\user_game_settings.csv', 'w') as my_file:
+        with open(chess_files + '\\all_settings\\user\\user_game_settings.csv', 'w') as my_file:
             # write the settings to user_settings.csv
             my_file.write('Game_difficulty-game_mode-player_piece_color-border_color-'
                           'board_color\n')
             my_file.write(f"{settings[1]}-{settings[2]}-{settings[3]}-{settings[4]}-{settings[5]}")
 
         # write stats to user_stats.csv file
-        user_stats = game_settings_path + '\\user\\user_stats.csv'
+        user_stats = chess_files + '\\all_settings\\user\\user_stats.csv'
         with open(user_stats, 'w') as f:
             # These are user statistics such as loses, wins, draws and ranking
             f.write('number_of_games_played-wins-loses-draws-ranking\n')
@@ -109,7 +110,7 @@ def chess_main(mode, splash):
         # Start new chess game
         if saved_game == 'yes':
             # get fen string for saved game to be opened
-            with open(main_path + '\\app\\chess_app\\all_saved_games\\temp\\temp_file.json') as f:
+            with open(chess_files + '\\all_saved_games\\temp\\temp_file.json') as f:
                 data = json.load(f)
                 saved_data = (data['fen'], data['notation'], data['deleted_pieces'])
 
@@ -120,7 +121,7 @@ def chess_main(mode, splash):
             ChessApp(mode).mainloop()
 
         # Get new data once the chess app has been closed response on whether to start a new chess game or not
-        with open(main_path + '\\app\\chess_app\\all_settings\\data.txt', 'r') as f:
+        with open(chess_files + '\\all_settings\\data.txt', 'r') as f:
             txt = list(f.readlines())
             response = txt[0].split(':')[1]
             saved_game = txt[1].split(':')[1]

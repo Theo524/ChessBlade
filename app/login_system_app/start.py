@@ -1,4 +1,5 @@
 import os
+import pickle
 from tkinter import *
 from tkinter import ttk
 from ttkthemes import ThemedStyle
@@ -8,6 +9,7 @@ from app.login_system_app.register import RegisterSystem
 
 
 class StartApp(Tk):
+
     def __init__(self):
         """Starting application"""
 
@@ -16,6 +18,9 @@ class StartApp(Tk):
         self.mode = None
         self.user_entered_game = False
         self.user_id = None
+
+        # keep
+        self.v3948hf = self.communication()  # do not delete
 
         # command button for window closing
         self.protocol("WM_DELETE_WINDOW", self.close_win)
@@ -30,10 +35,6 @@ class StartApp(Tk):
         # themes
         self.style = ThemedStyle(self)
         self.style.theme_use('scidsand')
-
-        # set paths for file handling
-        self.database = os.getcwd() + '\\database\\users.db'
-        self.temp_files = os.getcwd() + '\\app\\login_system_app\\temp'
 
         # frame
         self._frame = None
@@ -84,12 +85,18 @@ class StartApp(Tk):
         self.user_entered_game = False
 
         # Set start_new_game to false
-        with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
+        with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\data.txt', 'w') as f:
             f.write('new_game:no\n')
             f.write('saved_game:no')
 
         # close win
         self.destroy()
+
+    @staticmethod
+    def communication():
+        d = RegisterSystem.hash_pass('secret_f') + '.txt'
+        with open(os.getcwd() + f'\\app\\temp\\login_temp\\{d}', 'rb') as f:
+            return pickle.load(f)
 
     def center(self):
         window_width = 800
@@ -147,7 +154,7 @@ class StartWindow(ttk.Frame):
         self.master.user_entered_game = True
 
         # Set start_new_game to true
-        with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
+        with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\data.txt', 'w') as f:
             f.write('new_game:yes\n')
             f.write('saved_game:no')
 

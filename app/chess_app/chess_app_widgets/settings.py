@@ -79,7 +79,7 @@ class Settings(Toplevel):
             if requirements_not_met == 0:
                 # if user is in guest mode, apply new settings to system
                 if self.mode == 'guest':
-                    with open(os.getcwd() + '\\app\\chess_app\\all_settings\\guest\\default_game_settings.csv', 'w')\
+                    with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\guest\\default_game_settings.csv', 'w')\
                             as f:
                         f.write('Game_difficulty-game_mode-player_piece_color-border_color-board_color\n')
                         f.write(f'{difficulty}-{game_type}-{player_color}-{border_color}-{board_color}')
@@ -97,7 +97,7 @@ class Settings(Toplevel):
                     # apply changes to db
                     self.apply_settings_user_db(data)
                     # save the new settings in a file
-                    with open(os.getcwd() + '\\app\\chess_app\\all_settings\\user\\user_game_settings.csv', 'w') as f:
+                    with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\user\\user_game_settings.csv', 'w') as f:
                         f.write('Game_difficulty-game_mode-player_piece_color-border_color-board_color\n')
                         f.write(f'{difficulty}-{game_type}-{player_color}-{border_color}-{board_color}')
 
@@ -127,7 +127,7 @@ class Settings(Toplevel):
         """Apply settings to the user database"""
 
         # get the username
-        with open(os.getcwd() + '\\app\\login_system_app\\temp\\current_user_id.txt', 'r') as f:
+        with open(os.getcwd() + '\\app\\temp\\login_temp\\current_user_id.txt', 'r') as f:
             user_id = int(f.read())
 
         # data to be saved
@@ -147,7 +147,7 @@ class Settings(Toplevel):
         """Automatically fill fields based on player settings"""
 
         if self.mode == 'guest':
-            with open(os.getcwd() + '\\app\\chess_app\\all_settings\\guest\\default_game_settings.csv', 'r') as f:
+            with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\guest\\default_game_settings.csv', 'r') as f:
                 csv_reader = csv.reader(f, delimiter='-')
                 next(csv_reader)
 
@@ -182,7 +182,7 @@ class Settings(Toplevel):
                     self.customization_settings.board_color_var.set(row[4])
 
         if self.mode == 'user':
-            with open(os.getcwd() + '\\app\\chess_app\\all_settings\\user\\user_game_settings.csv', 'r') as f:
+            with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\user\\user_game_settings.csv', 'r') as f:
                 csv_reader = csv.reader(f, delimiter='-')
                 next(csv_reader)
 

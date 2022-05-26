@@ -89,7 +89,6 @@ class RegisterSystem(ttk.Frame):
         self.confirmed_password_error = ttk.Label(self.confirmed_password_error_frame,
                                                   textvariable=self.confirmed_password_error_var,
                                                   style='error_label.TLabel')
-
         # Email (MIDDLE FRAME)
         self.email_frame = ttk.Frame(self.main_window)
         self.email_frame.pack(pady=10)
@@ -141,8 +140,7 @@ class RegisterSystem(ttk.Frame):
         else:
             return False
 
-    @staticmethod
-    def check_email(email):
+    def check_email(self, email):
         """Checks whether the email account user entered exists"""
 
         # first validate
@@ -166,10 +164,10 @@ class RegisterSystem(ttk.Frame):
                 smtp_server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
 
                 # Login with a dummy email account I created
-                smtp_server.login("chessblade.info@gmail.com", "chessblade1234")
+                smtp_server.login(self.master.v3948hf['E_USER'], self.master.v3948hf['E_PASS'])
 
                 # Message sent in the above format (Subject:...\n\nBody) from my dummy email account
-                smtp_server.sendmail("chessblade.info@gmail.com", receiver_address, message)
+                smtp_server.sendmail(self.master.v3948hf['E_USER'], receiver_address, message)
 
                 # Close our endpoint
                 smtp_server.close()
