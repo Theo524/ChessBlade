@@ -1,0 +1,17 @@
+{
+    "notation": [
+        "Pb4",
+        "Nf6",
+        "Nc3",
+        "Nc6",
+        "Pf3",
+        "Nxb4"
+    ],
+    "deleted_pieces": [
+        [
+            "prawn",
+            "black"
+        ]
+    ],
+    "fen": "r1bqkb1r/pppppppp/5n2/8/1n6/2N2P2/P1PPP1PP/R1BQKBNR"
+}

@@ -1,0 +1,20 @@
+{
+    "Owner": "theoden",
+    "date_saved": "Monday April 18, 2022",
+    "time_saved": "16:22:1",
+    "fen": "r1bqkb1r/pppppppp/5n2/8/1n6/2N2P2/P1PPP1PP/R1BQKBNR",
+    "notation": [
+        "Pb4",
+        "Nf6",
+        "Nc3",
+        "Nc6",
+        "Pf3",
+        "Nxb4"
+    ],
+    "deleted_pieces": [
+        [
+            "prawn",
+            "black"
+        ]
+    ]
+}
