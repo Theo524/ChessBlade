@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import ttk, messagebox
 from tkcalendar import DateEntry
 from datetime import date
-from app.resources.custom_widgets.placeholder_entry import PlaceholderEntry
+from app.login_system_app.placeholder_entry import PlaceholderEntry
 from database.database import DatabaseBrowser
 
 import hashlib
@@ -19,14 +19,19 @@ class RegisterSystem(ttk.Frame):
 
         # container
         self.scene = ttk.Frame(self)
-        self.scene.pack(pady=100)
+        self.scene.pack(pady=50)
 
         # ----------------------App layout/upper frame----------------------
         self.upper_window = ttk.Frame(self.scene, height=50, width=350)
-        self.upper_window.pack()
+        self.upper_window.pack(pady=15)
+        self.inner_upper = ttk.Frame(self.upper_window)
+        self.inner_upper.pack(side=LEFT)
+        self.air = ttk.Frame(self.inner_upper, width=270)
         # Button to return to start page
-        ttk.Button(self.upper_window, text='<--',
-                   cursor='hand2', command=self.master.go_to_start_page).place(x=0, y=0)
+        ttk.Button(self.inner_upper,
+                   cursor='hand2', command=self.master.go_to_start_page, image=self.master.back_btn_photo).pack(side=LEFT, ipady=5, ipadx=5)
+
+        self.air.pack(side=LEFT)
 
         # ----------------------App layout/middle frame----------------------
 
@@ -89,7 +94,6 @@ class RegisterSystem(ttk.Frame):
         self.confirmed_password_error = ttk.Label(self.confirmed_password_error_frame,
                                                   textvariable=self.confirmed_password_error_var,
                                                   style='error_label.TLabel')
-
         # Email (MIDDLE FRAME)
         self.email_frame = ttk.Frame(self.main_window)
         self.email_frame.pack(pady=10)
@@ -141,8 +145,7 @@ class RegisterSystem(ttk.Frame):
         else:
             return False
 
-    @staticmethod
-    def check_email(email):
+    def check_email(self, email):
         """Checks whether the email account user entered exists"""
 
         # first validate
@@ -163,13 +166,16 @@ class RegisterSystem(ttk.Frame):
                 message = f"Subject: {subject}\n\n{body}"
 
                 # Endpoint for the SMTP Gmail server
-                smtp_server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
+                smtp_server = smtplib.SMTP('smtp-mail.outlook.com', 587)
+                smtp_server.ehlo()
+                smtp_server.starttls()
+                smtp_server.ehlo()
 
                 # Login with a dummy email account I created
-                smtp_server.login("chessblade.info@gmail.com", "chessblade1234")
+                smtp_server.login(self.master.v3948hf['E_USER'], self.master.v3948hf['E_PASS'])
 
                 # Message sent in the above format (Subject:...\n\nBody) from my dummy email account
-                smtp_server.sendmail("chessblade.info@gmail.com", receiver_address, message)
+                smtp_server.sendmail(self.master.v3948hf['E_USER'], receiver_address, message)
 
                 # Close our endpoint
                 smtp_server.close()
@@ -303,7 +309,8 @@ class RegisterSystem(ttk.Frame):
             hashed_password = self.hash_pass(password)
 
             # create new user
-            DatabaseBrowser.create_new_user(username=username, hashed_password=hashed_password, email=email)
+            DatabaseBrowser.create_new_user(username=username, hashed_password=hashed_password, email=email,
+                                            dob=date_of_birth)
 
             # ask user to leave or stay
             answer = messagebox.askyesno('Success', 'Your data has successfully been saved. Do you want to leave?')

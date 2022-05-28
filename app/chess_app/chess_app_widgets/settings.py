@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import ttk, messagebox, colorchooser
 import os
 from database.database import DatabaseBrowser
+import csv
 
 
 class Settings(Toplevel):
@@ -12,13 +13,16 @@ class Settings(Toplevel):
         self.mode = mode
 
         # attributes
+        self.lift(master)
         self.title('Settings')
         self.resizable(0, 0)
         self.protocol('WM_DELETE_WINDOW', self.confirm_exit)
+        scene = Frame(self, )
+        scene.pack(padx=10, pady=5)
 
         # All the game settings will be contained within this notebook
-        notebook = ttk.Notebook(self)
-        notebook.pack()
+        notebook = ttk.Notebook(scene)
+        notebook.pack(pady=(0, 5))
 
         # tabs
         # Place the custom frame classes I made previously
@@ -32,12 +36,15 @@ class Settings(Toplevel):
         self.customization_settings.pack(pady=10, expand=True, fill=BOTH)
 
         # Button which allows to apply the settings made (saves settings to file)
-        apply_settings_button = ttk.Button(self, text='Apply settings', command=self.save_settings)
-        apply_settings_button.pack(padx=(190, 0), pady=5)
+        apply_settings_button = ttk.Button(scene, text='Apply settings', command=self.save_settings)
+        apply_settings_button.pack(side=RIGHT)
 
         # add notebook tabs
         notebook.add(self.general_settings, text='General')
         notebook.add(self.customization_settings, text='Customization')
+
+        # fill user settings
+        self.auto_fill()
 
     def save_settings(self):
         """Saves settings too file"""
@@ -48,24 +55,12 @@ class Settings(Toplevel):
         if type(difficulty) != str or len(difficulty) < 1:
             requirements_not_met += 1
 
-        time = self.general_settings.get_time()
-        if type(time) != str or len(time) != 8:
-            requirements_not_met += 1
-
         game_type = self.general_settings.get_gamemode()
         if type(game_type) != str or len(game_type) < 1:
             requirements_not_met += 1
 
         player_color = self.customization_settings.get_piece_color()
         if player_color not in ['black', 'white']:
-            requirements_not_met += 1
-
-        if player_color == 'black':
-            opponent_color = 'white'
-        else:
-            opponent_color = 'black'
-
-        if opponent_color not in ['black', 'white']:
             requirements_not_met += 1
 
         border_color = self.customization_settings.get_border_color()
@@ -84,13 +79,10 @@ class Settings(Toplevel):
             if requirements_not_met == 0:
                 # if user is in guest mode, apply new settings to system
                 if self.mode == 'guest':
-                    with open(os.getcwd() + '\\app\\chess_app\\all_settings\\guest\\default_game_settings.csv', 'w')\
+                    with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\guest\\default_game_settings.csv', 'w')\
                             as f:
-                        f.write('Game_difficulty, time, game_mode, player_piece_color, opponent_piece_color,'
-                                ' border_color,'
-                                'board_color\n')
-                        f.write(f'{difficulty}-{time}-{game_type}-{player_color}-{opponent_color}'
-                                f'-{border_color}-{board_color}')
+                        f.write('Game_difficulty-game_mode-player_piece_color-border_color-board_color\n')
+                        f.write(f'{difficulty}-{game_type}-{player_color}-{border_color}-{board_color}')
 
                         # Confirmation and informative feedback
                         messagebox.showinfo('Success', 'Settings successfully saved.'
@@ -100,17 +92,16 @@ class Settings(Toplevel):
                 # if user is in user mode, apply new settings to user account
                 if self.mode == 'user':
                     # data
-                    data = [difficulty, time, game_type, player_color, opponent_color, border_color, board_color]
+                    data = [difficulty, game_type, player_color, border_color, board_color]
 
                     # apply changes to db
                     self.apply_settings_user_db(data)
                     # save the new settings in a file
-                    with open(os.getcwd() + '\\app\\chess_app\\all_settings\\user\\user_game_settings.csv', 'w') as f:
-                        f.write('Game_difficulty-time-game_mode-player_piece_color-opponent_piece_color-border_color-'
-                                'board_color\n')
-                        f.write(f'{difficulty}-{time}-{game_type}-{player_color}-{opponent_color}'
-                                f'-{border_color}-{board_color}')
+                    with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\user\\user_game_settings.csv', 'w') as f:
+                        f.write('Game_difficulty-game_mode-player_piece_color-border_color-board_color\n')
+                        f.write(f'{difficulty}-{game_type}-{player_color}-{border_color}-{board_color}')
 
+                    # ensure the user does not leave if playing vs ai
                     game_type = self.master.main_chess_board.game_type
                     if game_type == 'computer':
                         # Confirmation and informative feedback
@@ -136,14 +127,14 @@ class Settings(Toplevel):
         """Apply settings to the user database"""
 
         # get the username
-        with open(os.getcwd() + '\\app\\login_system_app\\temp\\current_user.txt', 'r') as f:
-            username = f.read()
+        with open(os.getcwd() + '\\app\\temp\\login_temp\\current_user_id.txt', 'r') as f:
+            user_id = int(f.read())
 
         # data to be saved
-        data = [username, data[0], data[1], data[2], data[3], data[4], data[5], data[6]]
+        data = [data[0], data[1], data[2], data[3], data[4]]
 
         # save user settings to database
-        DatabaseBrowser.save(save='settings', username=username, data=data)
+        DatabaseBrowser.save(save='settings', user_id=user_id, data=data)
 
     def confirm_exit(self):
         """Confirms whether user wants to exit window"""
@@ -152,14 +143,90 @@ class Settings(Toplevel):
         if confirm:
             self.destroy()
 
+    def auto_fill(self):
+        """Automatically fill fields based on player settings"""
+
+        if self.mode == 'guest':
+            with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\guest\\default_game_settings.csv', 'r') as f:
+                csv_reader = csv.reader(f, delimiter='-')
+                next(csv_reader)
+
+                for row in csv_reader:
+                    print(f'Guest settings : {row}')
+                    # retrieve settings in file
+                    # difficulty
+                    if row[0] == 'Novice':
+                        self.general_settings.difficulty_var.set(1)
+                    if row[0] == 'Intermediate':
+                        self.general_settings.difficulty_var.set(2)
+                    if row[0] == 'Expert':
+                        self.general_settings.difficulty_var.set(3)
+
+                    # game type
+                    if row[1] == 'two_player':
+                        self.general_settings.gamemode_var.set(1)
+                    if row[1] == 'computer':
+                        self.general_settings.gamemode_var.set(2)
+
+                    # player piece color
+                    if row[2] == 'black':
+                        self.customization_settings.player_color_var.set(1)
+                    if row[2] == 'white':
+                        self.customization_settings.player_color_var.set(2)
+
+                    # border color var and combobox
+                    self.customization_settings.border_colors.set(row[3])
+                    self.customization_settings.border_color_var.set(row[3])
+
+                    # board colors
+                    self.customization_settings.board_color_var.set(row[4])
+
+        if self.mode == 'user':
+            with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\user\\user_game_settings.csv', 'r') as f:
+                csv_reader = csv.reader(f, delimiter='-')
+                next(csv_reader)
+
+                for row in csv_reader:
+                    print(f'Guest settings : {row}')
+                    # retrieve settings in file
+                    # difficulty
+                    if row[0] == 'Novice':
+                        self.general_settings.difficulty_var.set(1)
+                    if row[0] == 'Intermediate':
+                        self.general_settings.difficulty_var.set(2)
+                    if row[0] == 'Expert':
+                        self.general_settings.difficulty_var.set(3)
+
+                    # game type
+                    if row[1] == 'two_player':
+                        self.general_settings.gamemode_var.set(1)
+                    if row[1] == 'computer':
+                        self.general_settings.gamemode_var.set(2)
+
+                    # player piece color
+                    if row[2] == 'black':
+                        self.customization_settings.player_color_var.set(1)
+                    if row[2] == 'white':
+                        self.customization_settings.player_color_var.set(2)
+
+                    # border color var and combobox
+                    self.customization_settings.border_colors.set(row[3])
+                    self.customization_settings.border_color_var.set(row[3])
+
+                    # board colors
+                    self.customization_settings.board_color_var.set(row[4])
+
 
 class GeneralSettings(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
 
+        scene = Frame(self, height=5, width=100)
+        scene.pack()
+
         # --------------DIFFICULTY--------------
-        difficulty_frame = ttk.LabelFrame(self, text="Difficulty")
-        difficulty_frame.pack(fill="both", expand="yes", pady=5, padx=5)
+        difficulty_frame = ttk.LabelFrame(scene, text="Difficulty")
+        difficulty_frame.pack(fill="both", expand="yes", padx=5, pady=5)
 
         # we store the difficulty here
         self.difficulty_var = IntVar()
@@ -188,34 +255,8 @@ class GeneralSettings(ttk.Frame):
                                  command=self.get_difficulty)
         expert.pack(side=LEFT)
 
-        # --------------TIME--------------
-        time_frame = ttk.LabelFrame(self, text="Time you think the game will take")
-        time_frame.pack(fill="both", expand="yes", pady=5, padx=5)
-
-        # variables
-        self.time_in_hours = StringVar()
-        self.time_in_minutes = StringVar()
-        self.time_in_seconds = StringVar()
-
-        # hours entry
-        Label(time_frame, text='Hours').pack(side=LEFT)
-        time_limit_hours = ttk.Spinbox(time_frame, width=3, from_=0, to=8, textvariable=self.time_in_hours, wrap=True)
-        time_limit_hours.pack(side=LEFT, padx=3)
-
-        # minutes entry
-        Label(time_frame, text='Minutes').pack(side=LEFT)
-        time_limit_minutes = ttk.Spinbox(time_frame, width=3, from_=1, to=59, textvariable=self.time_in_minutes,
-                                         wrap=True)
-        time_limit_minutes.pack(side=LEFT, padx=3)
-
-        # seconds entry
-        Label(time_frame, text='Seconds').pack(side=LEFT)
-        time_limit_seconds = ttk.Spinbox(time_frame, width=3, from_=30, to=59, textvariable=self.time_in_seconds,
-                                         wrap=True)
-        time_limit_seconds.pack(side=LEFT, padx=3)
-
         # --------------GAME_TYPE--------------
-        gamemode_frame = ttk.LabelFrame(self, text='Game mode')
+        gamemode_frame = ttk.LabelFrame(scene, text='Game mode')
         gamemode_frame.pack(fill="both", expand="yes", pady=5, padx=5)
         self.gamemode_var = IntVar()
 
@@ -245,27 +286,6 @@ class GeneralSettings(ttk.Frame):
         elif self.difficulty_var.get() == 3:
             return 'Expert'
 
-    def get_time(self):
-        """Get time"""
-
-        # All the time fractions
-        all_time = [self.time_in_hours.get()] + [self.time_in_minutes.get()] + [self.time_in_seconds.get()]
-        new = []
-
-        # Format the time
-        # Converting all 1 digit number to 2 digit, e.g. '1' to '01'
-        for i in all_time:
-            if len(i) == 1:
-                substitute = i.replace(i, f'0{i}')
-                new.append(substitute)
-            else:
-                new.append(i)
-
-        #  final string in format hh:mm:ss
-        full_str = f'{new[0]}:{new[1]}:{new[2]}'
-
-        return full_str
-
     def get_gamemode(self):
         """Get game mode"""
 
@@ -279,8 +299,11 @@ class CustomizationSettings(ttk.Frame):
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
 
+        scene = Frame(self, height=5, width=100)
+        scene.pack()
+
         # --------------PLAYER_COLOR--------------
-        player_color_frame = ttk.LabelFrame(self, text='User piece color')
+        player_color_frame = ttk.LabelFrame(scene, text='User piece color')
         player_color_frame.pack(fill="both", pady=5, padx=5)
 
         # variables to store color val
@@ -306,7 +329,7 @@ class CustomizationSettings(ttk.Frame):
         self.player_color_var.set(0)
 
         # ----------------BORDER_COLORS-----------------
-        border_color_frame = ttk.LabelFrame(self, text='Border colors')
+        border_color_frame = ttk.LabelFrame(scene, text='Border colors')
         border_color_frame.pack(fill="both", pady=5, padx=5)
 
         Label(border_color_frame, text='Chose border color').pack(side=LEFT, padx=5)
@@ -321,7 +344,7 @@ class CustomizationSettings(ttk.Frame):
         self.border_colors.pack(pady=(0, 6))
 
         # ----------------BOARD_COLORS-----------------
-        board_color_frame = ttk.LabelFrame(self, text='Board colors')
+        board_color_frame = ttk.LabelFrame(scene, text='Board colors')
         board_color_frame.pack(fill="both", pady=5, padx=5)
 
         Label(board_color_frame, text='Chose board color').pack(side=LEFT, padx=5)

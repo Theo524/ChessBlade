@@ -1,11 +1,16 @@
 import os
+import pickle
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
+
+import mysql.connector
+
 from app.login_system_app.register import RegisterSystem
-from app.resources.custom_widgets.placeholder_entry import PlaceholderEntry
+from app.login_system_app.placeholder_entry import PlaceholderEntry
 import hashlib
 import smtplib
+import ssl
 import random
 import sqlite3
 from database.database import DatabaseBrowser
@@ -28,18 +33,19 @@ class LoginSystem(ttk.Frame):
 
         # container
         self.scene = ttk.Frame(self)
-        self.scene.pack(pady=100)
-
-        # files needed
-        self.database = self.master.database
-        self.temp_files = self.master.temp_files
+        self.scene.pack(pady=50)
 
         # ----------------------app layout/upper frame----------------------
         self.upper_window = ttk.Frame(self.scene, height=50, width=300)
-        self.upper_window.pack()
-        # button to return to start page
-        ttk.Button(self.upper_window, text='<--', cursor="hand2",
-                   command=self.master.go_to_start_page).place(x=0, y=0)
+        self.upper_window.pack(pady=15)
+        self.inner_upper = ttk.Frame(self.upper_window)
+        self.inner_upper.pack(side=LEFT)
+        self.air = ttk.Frame(self.inner_upper, width=270)
+        # Button to return to start page
+        ttk.Button(self.inner_upper,
+                   cursor='hand2', command=self.master.go_to_start_page, image=self.master.back_btn_photo).pack(side=LEFT, ipady=5, ipadx=5)
+
+        self.air.pack(side=LEFT)
 
         # ----------------------app layout/middle frame(main data)----------------------
         # every item is placed inside this frame
@@ -124,22 +130,23 @@ class LoginSystem(ttk.Frame):
         user_hashed_password = hashlib.blake2b(message).hexdigest()
 
         # search for hashed password and username in database
-        found = self.check_data(username, user_hashed_password)
+        found = DatabaseBrowser.verify_user(username, user_hashed_password)
 
         # Check whether the account was found
         if found:
             messagebox.showinfo('Success', 'Successful login')
 
-            # save username to temp files
-            with open(self.temp_files + '//current_user.txt', 'w') as f:
-                f.write(username)
-
             # Set start_new_game to true
-            with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
+            with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\data.txt', 'w') as f:
                 f.write('new_game:yes\n')
                 f.write('saved_game:no')
 
+            # save id
+            with open(os.getcwd() + '\\app\\temp\\login_temp\\current_user_id.txt', 'r') as f:
+                user_id = f.read()
+
             # set game mode as user
+            self.master.user_id = user_id
             self.master.mode = 'user'
             self.master.user_entered_game = True
 
@@ -150,36 +157,12 @@ class LoginSystem(ttk.Frame):
             # feedback for invalid data
             messagebox.showerror('Error', 'Invalid credentials')
 
-    def check_data(self, username, h_password):
-        """Check credentials are in db"""
-
-        conn = sqlite3.connect(self.database)
-        c = conn.cursor()
-
-        with conn:
-            # sql query to get all usernames and passwords that match the function parameters
-            c.execute("SELECT * FROM users WHERE username=:username AND password=:password",
-                      {'username': username, 'password': h_password})
-
-            # the data, should only be one tuple containing 2 items
-            data = c.fetchall()
-
-            # If there are any values in 'data' it means there is a match with the execute statement from c
-            if data:
-                return True
-
-            else:
-                return False
-
 
 class ForgotPassword(ttk.Frame):
     """Start for password recovery"""
 
     def __init__(self, master, **kwargs):
         ttk.Frame.__init__(self, master, **kwargs)
-
-        self.database = self.master.database
-        self.temp_files = self.master.temp_files
 
         # title
         self.master.title('Recover password')
@@ -193,9 +176,14 @@ class ForgotPassword(ttk.Frame):
 
         # ---------------------App layout/upper frame---------------------
         self.upper_window = ttk.Frame(self.scene, height=50, width=300)
-        self.upper_window.pack()
-        ttk.Button(self.upper_window, text='<--',
-                   command=self.master.go_to_login, cursor='hand2').place(x=0, y=0)
+        self.upper_window.pack(pady=15)
+        self.inner_upper = ttk.Frame(self.upper_window)
+        self.inner_upper.pack(side=LEFT)
+        self.air = ttk.Frame(self.inner_upper, width=270)
+        ttk.Button(self.inner_upper,
+                   command=self.master.go_to_login, cursor='hand2', image=self.master.back_btn_photo).pack(side=LEFT, ipady=5, ipadx=5)
+
+        self.air.pack(side=LEFT)
 
         # ---------------------App layout/middle frame---------------------
         self.main_window = ttk.Frame(self.scene)
@@ -262,14 +250,24 @@ class ForgotPassword(ttk.Frame):
         email = self.email_recover_password_var.get()
         user = self.user_recover_password_var.get()
 
+        # id
+        user_id = DatabaseBrowser.get_id(user)
+        print(user_id)
+        if user_id == 0:
+            return False
+
         # check it is in the database
-        data = DatabaseBrowser.load(load='general', username=user)
-        in_database = True if data[2] == email else False
+        try:
+            data = DatabaseBrowser.load(load='general', user_id=user_id)
+        except mysql.connector.errors.ProgrammingError:
+            return False
+
+        in_database = True if str(data[3]) == str(email) else False
 
         # if the data is in the database, we send the email verification
         if in_database:
             # Generate 4 digit random number
-            code = [str(random.randint(0, 10)) for _ in range(4)]
+            code = [str(random.randint(0, 9)) for _ in range(4)]
             passcode = ''.join(code)
 
             # Send passcode to user email
@@ -278,12 +276,16 @@ class ForgotPassword(ttk.Frame):
             if successfully_sent_email:
 
                 # if email exists, we store passcode in temporal file
-                with open(self.temp_files + '\\password_recovery\\passcode.txt', 'w') as f:
+                with open(os.getcwd() + '\\app\\temp\\login_temp\\password_recovery\\passcode.txt', 'w') as f:
                     f.write(passcode)
 
                 # write username to temp_file
-                with open(self.temp_files + '\\password_recovery\\username.txt', 'w') as f:
+                with open(os.getcwd() + '\\app\\temp\\login_temp\\password_recovery\\username.txt', 'w') as f:
                     f.write(user.lower())
+
+                # write id to temp_file
+                with open(os.getcwd() + '\\app\\temp\\login_temp\\password_recovery\\id.txt', 'w') as f:
+                    f.write(str(data[0]))
 
                 # if nothing went wrong, the message has been sent
                 return True
@@ -291,9 +293,9 @@ class ForgotPassword(ttk.Frame):
             else:
                 return False
 
-    @staticmethod
-    def send_email(passcode, email, user):
+    def send_email(self, passcode, email, user):
         """Send email message to an account"""
+        context = ssl.create_default_context()
 
         try:
             # Send passcode to user email
@@ -302,24 +304,26 @@ class ForgotPassword(ttk.Frame):
             body = f"Hello {user}!\nHere is your passcode\n{passcode}\nWith regards,\n\nChessBlade"
 
             # Endpoint for the SMTP Gmail server
-            smtp_server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+            smtp_server = smtplib.SMTP('smtp-mail.outlook.com', 587)
+            smtp_server.ehlo()
+            smtp_server.starttls()
             smtp_server.ehlo()
 
-            # Login with dummy Gmail account I created using SMTP
-            smtp_server.login("chessblade.info@gmail.com", "chessblade1234")
-
+            # Login with Gmail
+            smtp_server.login(self.master.v3948hf['E_USER'], self.master.v3948hf["E_PASS"])
             # Combine the subject and the body onto a single message
             message = f"Subject: {subject}\n\n{body}"
 
             # We'll be sending this message in the above format (Subject:...\n\nBody)
-            smtp_server.sendmail("chessblade.info@gmail.com", receiver_address, message)
+            smtp_server.sendmail(self.master.v3948hf['E_USER'], receiver_address, message)
 
             # Close our endpoint
             smtp_server.close()
 
             return True
 
-        except smtplib.SMTPAuthenticationError:
+        except smtplib.SMTPAuthenticationError as e:
+            print(e)
             # if the email does not work return false
             return False
 
@@ -347,13 +351,17 @@ class VerifyPasscode(ttk.Frame):
     def __init__(self, master, **kwargs):
         ttk.Frame.__init__(self, master, **kwargs)
 
-        self.temp_files = self.master.temp_files
-
         # ---------------------App layout/upper frame---------------------
         self.upper_window = ttk.Frame(self, height=50, width=350)
-        self.upper_window.pack()
-        ttk.Button(self.upper_window, text='<--', cursor='hand2',
-                   command=self.master.go_to_login).place(x=0, y=0)
+        self.upper_window.pack(pady=15)
+        self.inner_upper = ttk.Frame(self.upper_window)
+        self.inner_upper.pack(side=LEFT)
+        self.air = ttk.Frame(self.inner_upper, width=270)
+        # Button to return to start page
+        ttk.Button(self.inner_upper,
+                   cursor='hand2', command=self.master.go_to_login, image=self.master.back_btn_photo).pack(side=LEFT, ipady=5, ipadx=5)
+
+        self.air.pack(side=LEFT)
 
         # ---------------------App layout/middle frame---------------------
         self.main_window = ttk.Frame(self)
@@ -384,7 +392,7 @@ class VerifyPasscode(ttk.Frame):
         """Check if the passcode is correct"""
 
         # Get passcode from file
-        passcode_file = self.temp_files + '\\password_recovery\\passcode.txt'
+        passcode_file = os.getcwd() + '\\app\\temp\\login_temp\\password_recovery\\passcode.txt'
         with open(passcode_file, 'r') as f:
             stored_passcode = f.read()
 
@@ -403,15 +411,17 @@ class NewPassword(ttk.Frame):
     def __init__(self, master):
         ttk.Frame.__init__(self, master)
 
-        # files
-        self.database = self.master.database
-        self.temp_files = self.master.temp_files
-
         # ---------------------App layout/upper frame---------------------
         self.upper_window = ttk.Frame(self, height=50, width=350)
-        self.upper_window.pack()
-        ttk.Button(self.upper_window, text='<--', cursor='hand2',
-                   command=self.master.go_to_start_page).place(x=0, y=0)
+        self.upper_window.pack(pady=15)
+        self.inner_upper = ttk.Frame(self.upper_window)
+        self.inner_upper.pack(side=LEFT)
+        self.air = ttk.Frame(self.inner_upper, width=270)
+        # Button to return to start page
+        ttk.Button(self.inner_upper,
+                   cursor='hand2', command=self.master.go_to_start_page, image=self.master.back_btn_photo).pack(side=LEFT, ipady=5, ipadx=5)
+
+        self.air.pack(side=LEFT)
 
         # ---------------------App layout/middle frame---------------------
         self.main_window = ttk.Frame(self)
@@ -466,18 +476,17 @@ class NewPassword(ttk.Frame):
             # hash password
             new_pass = RegisterSystem.hash_pass(password)
 
-            with open(self.temp_files + '\\password_recovery\\username.txt', 'r') as f:
-                username = f.read()
+            with open(os.getcwd() + '\\app\\temp\\login_temp\\password_recovery\\id.txt', 'r') as f:
+                user_id = int(f.read())
 
             # get user original data to get email
-            data = DatabaseBrowser.load(load='general', username=username)
+            data = DatabaseBrowser.load(load='general', user_id=user_id)
 
-            # make new data list
-            all_data = [username, new_pass, data[2]]
+            # make new data list with new password
+            all_data = [data[1], new_pass, data[3], data[4]]
 
             # save new data
-            DatabaseBrowser.save(save='general', username=username, data=all_data)
-
+            DatabaseBrowser.save(save='general', user_id=data[0], data=all_data)
             messagebox.showinfo('Success', 'Your new password has been set')
 
             # Return to login page
@@ -486,4 +495,3 @@ class NewPassword(ttk.Frame):
         else:
             messagebox.showerror('Error', 'The password should contain at least 1 of each:\n- Upper case leters'
                                  '\n- Lower case letters\n- Numbers\n- Symbols')
-

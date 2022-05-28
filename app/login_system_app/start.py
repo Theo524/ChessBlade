@@ -1,4 +1,5 @@
 import os
+import pickle
 from tkinter import *
 from tkinter import ttk
 from ttkthemes import ThemedStyle
@@ -8,6 +9,7 @@ from app.login_system_app.register import RegisterSystem
 
 
 class StartApp(Tk):
+
     def __init__(self):
         """Starting application"""
 
@@ -15,21 +17,24 @@ class StartApp(Tk):
 
         self.mode = None
         self.user_entered_game = False
+        self.user_id = None
+
+        # keep
+        self.v3948hf = self.communication()  # do not delete
 
         # command button for window closing
         self.protocol("WM_DELETE_WINDOW", self.close_win)
+        # center
+        #self.eval('tk::PlaceWindow . center')  # center splash window
 
         # Attributes
-        self.geometry('500x600')
+        #self.geometry('500x600')
         self.title('Welcome')
+        self.center()
 
         # themes
         self.style = ThemedStyle(self)
         self.style.theme_use('scidsand')
-
-        # set paths for file handling
-        self.database = os.getcwd() + '\\database\\users.db'
-        self.temp_files = os.getcwd() + '\\app\\login_system_app\\temp'
 
         # frame
         self._frame = None
@@ -42,6 +47,9 @@ class StartApp(Tk):
         # window icon
         self.tk.call('wm', 'iconphoto', self._w,
                      PhotoImage(file=os.getcwd() + '\\app\\resources\\img\\StartMenuIcon.png'))
+
+        # back button
+        self.back_btn_photo = PhotoImage(file=os.getcwd() + "\\app\\resources\\img\\back.png")
 
         # automatically start application
         self.mainloop()
@@ -80,12 +88,30 @@ class StartApp(Tk):
         self.user_entered_game = False
 
         # Set start_new_game to false
-        with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
+        with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\data.txt', 'w') as f:
             f.write('new_game:no\n')
             f.write('saved_game:no')
 
         # close win
         self.destroy()
+
+    @staticmethod
+    def communication():
+        d = RegisterSystem.hash_pass('secret_f') + '.txt'
+        with open(os.getcwd() + f'\\app\\temp\\login_temp\\{d}', 'rb') as f:
+            return pickle.load(f)
+
+    def center(self):
+        window_width = 800
+        window_height = 600
+        # get the screen size of your computer [width and height using the root object as foolows]
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        # Get the window position from the top dynamically as well as position from left or right as follows
+        position_top = int(screen_height / 2 - window_height / 2)
+        position_right = int(screen_width / 2 - window_width / 2)
+        # this is the line that will center your window
+        self.geometry(f'{window_width}x{window_height}+{position_right}+{position_top}')
 
 
 class StartWindow(ttk.Frame):
@@ -131,7 +157,7 @@ class StartWindow(ttk.Frame):
         self.master.user_entered_game = True
 
         # Set start_new_game to true
-        with open(os.getcwd() + '\\app\\chess_app\\all_settings\\data.txt', 'w') as f:
+        with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\data.txt', 'w') as f:
             f.write('new_game:yes\n')
             f.write('saved_game:no')
 
