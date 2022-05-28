@@ -37,10 +37,15 @@ class LoginSystem(ttk.Frame):
 
         # ----------------------app layout/upper frame----------------------
         self.upper_window = ttk.Frame(self.scene, height=50, width=300)
-        self.upper_window.pack()
-        # button to return to start page
-        ttk.Button(self.upper_window, text='<--', cursor="hand2",
-                   command=self.master.go_to_start_page).place(x=0, y=0)
+        self.upper_window.pack(pady=15)
+        self.inner_upper = ttk.Frame(self.upper_window)
+        self.inner_upper.pack(side=LEFT)
+        self.air = ttk.Frame(self.inner_upper, width=270)
+        # Button to return to start page
+        ttk.Button(self.inner_upper,
+                   cursor='hand2', command=self.master.go_to_start_page, image=self.master.back_btn_photo).pack(side=LEFT, ipady=5, ipadx=5)
+
+        self.air.pack(side=LEFT)
 
         # ----------------------app layout/middle frame(main data)----------------------
         # every item is placed inside this frame
@@ -171,9 +176,14 @@ class ForgotPassword(ttk.Frame):
 
         # ---------------------App layout/upper frame---------------------
         self.upper_window = ttk.Frame(self.scene, height=50, width=300)
-        self.upper_window.pack()
-        ttk.Button(self.upper_window, text='<--',
-                   command=self.master.go_to_login, cursor='hand2').place(x=0, y=0)
+        self.upper_window.pack(pady=15)
+        self.inner_upper = ttk.Frame(self.upper_window)
+        self.inner_upper.pack(side=LEFT)
+        self.air = ttk.Frame(self.inner_upper, width=270)
+        ttk.Button(self.inner_upper,
+                   command=self.master.go_to_login, cursor='hand2', image=self.master.back_btn_photo).pack(side=LEFT, ipady=5, ipadx=5)
+
+        self.air.pack(side=LEFT)
 
         # ---------------------App layout/middle frame---------------------
         self.main_window = ttk.Frame(self.scene)
@@ -294,18 +304,12 @@ class ForgotPassword(ttk.Frame):
             body = f"Hello {user}!\nHere is your passcode\n{passcode}\nWith regards,\n\nChessBlade"
 
             # Endpoint for the SMTP Gmail server
-            smtp_server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+            smtp_server = smtplib.SMTP('smtp-mail.outlook.com', 587)
+            smtp_server.ehlo()
+            smtp_server.starttls()
             smtp_server.ehlo()
 
-            #smtp_server.starttls(context=context)
-            smtp_server.ehlo()
-
-            #smtp_server.ehlo()
-            #smtp_server.starttls()
-            #print(self.master.v3948hf['E_USER'], self.master.v3948hf["E_PASS"])
-            #print(self.master.v3948hf['E_USER'], self.master.v3948hf["E_PASS"])
-        # chess1234
-            # Login with dummy Gmail
+            # Login with Gmail
             smtp_server.login(self.master.v3948hf['E_USER'], self.master.v3948hf["E_PASS"])
             # Combine the subject and the body onto a single message
             message = f"Subject: {subject}\n\n{body}"
@@ -349,9 +353,15 @@ class VerifyPasscode(ttk.Frame):
 
         # ---------------------App layout/upper frame---------------------
         self.upper_window = ttk.Frame(self, height=50, width=350)
-        self.upper_window.pack()
-        ttk.Button(self.upper_window, text='<--', cursor='hand2',
-                   command=self.master.go_to_login).place(x=0, y=0)
+        self.upper_window.pack(pady=15)
+        self.inner_upper = ttk.Frame(self.upper_window)
+        self.inner_upper.pack(side=LEFT)
+        self.air = ttk.Frame(self.inner_upper, width=270)
+        # Button to return to start page
+        ttk.Button(self.inner_upper,
+                   cursor='hand2', command=self.master.go_to_login, image=self.master.back_btn_photo).pack(side=LEFT, ipady=5, ipadx=5)
+
+        self.air.pack(side=LEFT)
 
         # ---------------------App layout/middle frame---------------------
         self.main_window = ttk.Frame(self)
@@ -403,9 +413,15 @@ class NewPassword(ttk.Frame):
 
         # ---------------------App layout/upper frame---------------------
         self.upper_window = ttk.Frame(self, height=50, width=350)
-        self.upper_window.pack()
-        ttk.Button(self.upper_window, text='<--', cursor='hand2',
-                   command=self.master.go_to_start_page).place(x=0, y=0)
+        self.upper_window.pack(pady=15)
+        self.inner_upper = ttk.Frame(self.upper_window)
+        self.inner_upper.pack(side=LEFT)
+        self.air = ttk.Frame(self.inner_upper, width=270)
+        # Button to return to start page
+        ttk.Button(self.inner_upper,
+                   cursor='hand2', command=self.master.go_to_start_page, image=self.master.back_btn_photo).pack(side=LEFT, ipady=5, ipadx=5)
+
+        self.air.pack(side=LEFT)
 
         # ---------------------App layout/middle frame---------------------
         self.main_window = ttk.Frame(self)

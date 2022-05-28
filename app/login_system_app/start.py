@@ -48,6 +48,9 @@ class StartApp(Tk):
         self.tk.call('wm', 'iconphoto', self._w,
                      PhotoImage(file=os.getcwd() + '\\app\\resources\\img\\StartMenuIcon.png'))
 
+        # back button
+        self.back_btn_photo = PhotoImage(file=os.getcwd() + "\\app\\resources\\img\\back.png")
+
         # automatically start application
         self.mainloop()
 
@@ -100,7 +103,7 @@ class StartApp(Tk):
 
     def center(self):
         window_width = 800
-        window_height = 500
+        window_height = 600
         # get the screen size of your computer [width and height using the root object as foolows]
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
