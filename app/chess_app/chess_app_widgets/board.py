@@ -44,7 +44,7 @@ class MainChessBoard(Frame):
                             ] * 4
 
         # file paths
-        self.pieces_file_path = os.getcwd() + '\\app\\chess_app\\pieces'
+        self.pieces_file_path = os.getcwd() + '\\app\\resources\\pieces_img'
 
         # data structures
         # 2d array of all chess positions, 1d array of all chess positions and the same one reversed
@@ -1209,26 +1209,30 @@ class MainChessBoard(Frame):
             return all_possible_prawn_moves
         print()
 
-    def get_piece_img(self):
+    def get_piece_img(self, piece_format='default'):
         """Easy way to access file paths for pieces
 
         :returns: A dictionary containing the file paths for the chess pieces, thus making them easily accessible
         :rtype: dict
         """
 
+        # default, fantasy, spatial
+
+        pieces_path = self.pieces_file_path + f'\\{piece_format}'
+
         # Get the name for all the black pieces and white pieces paths in lists
         # Format of each piece name is 'piece.png'
-        black = [piece for (root, dirs, piece) in os.walk(self.pieces_file_path + '//black')]
-        white = [piece for (root, dirs, piece) in os.walk(self.pieces_file_path + '//white')]
+        black = [piece for (root, dirs, piece) in os.walk(pieces_path + '\\black')]
+        white = [piece for (root, dirs, piece) in os.walk(pieces_path + '\\white')]
 
         # Create a dictionary were the key is the name of the piece and the value is the file path
         # Each loop in the list comprehension returns the file path e.g. 'piece.png'
         # To shorten this we slice this name and remove 4 characters from the end: '.png' in the key
         # The value is simply the full path
         black_pieces = {f'{str(piece[:len(piece) - 4])}':
-                            f'{self.pieces_file_path}\\black\\{piece}' for piece in black[0]}
+                            f'{pieces_path}\\black\\{piece}' for piece in black[0]}
         white_pieces = {f'{str(piece[:len(piece) - 4])}':
-                            f'{self.pieces_file_path}\\white\\{piece}' for piece in white[0]}
+                            f'{pieces_path}\\white\\{piece}' for piece in white[0]}
 
         # We return both lists, now we can access any image
         # For example, black rook would be 'black_pieces['rook']', this returns its file path
