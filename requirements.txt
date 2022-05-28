@@ -1,0 +1,6 @@
+chess
+future
+ttkthemes
+Pillow
+mysql-connector-python
+tkcalendar
