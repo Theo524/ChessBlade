@@ -141,7 +141,7 @@ class StartWindow(ttk.Frame):
                    style='start_page.TButton', cursor='hand2').pack(pady=20, ipady=5, ipadx=10)
 
         # Guest mode button
-        ttk.Button(self.scene, text="Enter as guest", command=self.set_mode_guest, style='start_page.TButton',
+        ttk.Button(self.scene, text="Enter game", command=self.set_mode_guest, style='start_page.TButton',
                    cursor='hand2').pack(pady=20, ipady=5, ipadx=10)
 
         # Just my name at the bottom

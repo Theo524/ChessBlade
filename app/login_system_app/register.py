@@ -3,7 +3,7 @@ from tkinter import ttk, messagebox
 from tkcalendar import DateEntry
 from datetime import date
 from app.login_system_app.placeholder_entry import PlaceholderEntry
-from database.database import DatabaseBrowser
+from app.resources.database.database import SQLite3DatabaseBrowser
 
 import hashlib
 import smtplib
@@ -248,7 +248,7 @@ class RegisterSystem(ttk.Frame):
             self.new_user_name_error.pack(expand=True)
         else:
             # If the username has appropriate length, check if it is in the database
-            if DatabaseBrowser.username_in_database(username):
+            if SQLite3DatabaseBrowser.username_in_database(username):
                 self.new_user_name_error_var.set('Username already exists')
                 self.new_user_name_error.pack(expand=True)
 
@@ -309,8 +309,8 @@ class RegisterSystem(ttk.Frame):
             hashed_password = self.hash_pass(password)
 
             # create new user
-            DatabaseBrowser.create_new_user(username=username, hashed_password=hashed_password, email=email,
-                                            dob=date_of_birth)
+            SQLite3DatabaseBrowser.create_new_user(username=username, hashed_password=hashed_password, email=email,
+                                                   dob=date_of_birth)
 
             # ask user to leave or stay
             answer = messagebox.askyesno('Success', 'Your data has successfully been saved. Do you want to leave?')

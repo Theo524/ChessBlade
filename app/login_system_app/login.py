@@ -1,5 +1,4 @@
 import os
-import pickle
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
@@ -12,8 +11,7 @@ import hashlib
 import smtplib
 import ssl
 import random
-import sqlite3
-from database.database import DatabaseBrowser
+from app.resources.database.database import SQLite3DatabaseBrowser
 
 
 class LoginSystem(ttk.Frame):
@@ -130,7 +128,7 @@ class LoginSystem(ttk.Frame):
         user_hashed_password = hashlib.blake2b(message).hexdigest()
 
         # search for hashed password and username in database
-        found = DatabaseBrowser.verify_user(username, user_hashed_password)
+        found = SQLite3DatabaseBrowser.verify_user(username, user_hashed_password)
 
         # Check whether the account was found
         if found:
@@ -251,14 +249,13 @@ class ForgotPassword(ttk.Frame):
         user = self.user_recover_password_var.get()
 
         # id
-        user_id = DatabaseBrowser.get_id(user)
-        print(user_id)
+        user_id = SQLite3DatabaseBrowser.get_id(user)
         if user_id == 0:
             return False
 
         # check it is in the database
         try:
-            data = DatabaseBrowser.load(load='general', user_id=user_id)
+            data = SQLite3DatabaseBrowser.load(load='general', user_id=user_id)
         except mysql.connector.errors.ProgrammingError:
             return False
 
@@ -323,7 +320,6 @@ class ForgotPassword(ttk.Frame):
             return True
 
         except smtplib.SMTPAuthenticationError as e:
-            print(e)
             # if the email does not work return false
             return False
 
@@ -480,13 +476,13 @@ class NewPassword(ttk.Frame):
                 user_id = int(f.read())
 
             # get user original data to get email
-            data = DatabaseBrowser.load(load='general', user_id=user_id)
+            data = SQLite3DatabaseBrowser.load(load='general', user_id=user_id)
 
             # make new data list with new password
             all_data = [data[1], new_pass, data[3], data[4]]
 
             # save new data
-            DatabaseBrowser.save(save='general', user_id=data[0], data=all_data)
+            SQLite3DatabaseBrowser.save(save='general', user_id=data[0], data=all_data)
             messagebox.showinfo('Success', 'Your new password has been set')
 
             # Return to login page

@@ -34,6 +34,7 @@ class MainChessBoard(Frame):
         self.opponent_piece_color = 'white'  ##settings[4]
         self.border_color = 'black'  ##settings[5]
         self.board_color = 'brown'  # settings[6]
+        self.piece_format = 'default'
 
         # colors for board
         self.board_colors = [
@@ -1209,7 +1210,7 @@ class MainChessBoard(Frame):
             return all_possible_prawn_moves
         print()
 
-    def get_piece_img(self, piece_format='default'):
+    def get_piece_img(self):
         """Easy way to access file paths for pieces
 
         :returns: A dictionary containing the file paths for the chess pieces, thus making them easily accessible
@@ -1217,8 +1218,7 @@ class MainChessBoard(Frame):
         """
 
         # default, fantasy, spatial
-
-        pieces_path = self.pieces_file_path + f'\\{piece_format}'
+        pieces_path = self.pieces_file_path + f'\\{self.piece_format}'
 
         # Get the name for all the black pieces and white pieces paths in lists
         # Format of each piece name is 'piece.png'
