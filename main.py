@@ -1,12 +1,14 @@
 from app.login_system_app.start import StartApp
 from app.chess_app.chess_app import ChessApp
-from database.database import DatabaseBrowser
+from app.resources.database.database import SQLite3DatabaseBrowser
 
 import os
 import json
 from tkinter import *
 import time
 import traceback
+
+
 def resource_path():
     """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
@@ -26,7 +28,6 @@ def intro_splash():
     except:
         return
 
-DatabaseBrowser.get_id('javie')
 
 # change script path for pyinstaller env
 intro_splash()
@@ -38,33 +39,41 @@ main_path = os.getcwd()
 # File paths to be used
 chess_files = os.getcwd() + "\\app\\temp\\chess_temp\\"
 login_system_files = os.getcwd() + "\\app\\temp\\login_temp\\"
-#temp_files = main_path + '\\app\\login_system_app\\temp'
-#game_settings_path = main_path + '\\app\\chess_app\\all_settings'
 
 
 def load_settings(game_mode, user_id):
     """Load settings from db to files, depending on game mode"""
 
     if game_mode == 'guest':
-        # Apply default settings, to default_settings.csv
-        with open(chess_files + '\\all_settings\\guest\\default_game_settings.csv', 'w') as file:
-            # Apply default game settings
-            file.write('Game_difficulty-game_mode-player_piece_color-border_color-board_color\n')
-            file.write("Intermediate-two_player-black-black-brown")
+        # read file to see if user has saved settings (basically not their first entering the game)
+        with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\guest\\settings_saved.txt', 'r') as f:
+            data = f.read()
+
+        if data == 'n':
+            # means the user has not set new settings (first time entering game)
+            # Apply default settings, to default_settings.csv
+            with open(chess_files + '\\all_settings\\guest\\default_game_settings.csv', 'w') as file:
+                # Apply default game settings
+                file.write('Game_difficulty-game_mode-player_piece_color-border_color-board_color-piece_format\n')
+                file.write("Intermediate-two_player-black-black-brown-default")
+
+        if data == 'y':
+            # user has set new settings for guest previously so do nothing
+            pass
 
     if game_mode == 'user':
         # Apply settings specific to that user
 
         # get settings and statistics for this user
-        settings = DatabaseBrowser.load(load='settings', user_id=user_id)
-        stats = DatabaseBrowser.load(load='statistics', user_id=user_id)
+        settings = SQLite3DatabaseBrowser.load(load='settings', user_id=user_id)
+        stats = SQLite3DatabaseBrowser.load(load='statistics', user_id=user_id)
 
         # write all retrieved data to user files
         with open(chess_files + '\\all_settings\\user\\user_game_settings.csv', 'w') as my_file:
             # write the settings to user_settings.csv
             my_file.write('Game_difficulty-game_mode-player_piece_color-border_color-'
-                          'board_color\n')
-            my_file.write(f"{settings[1]}-{settings[2]}-{settings[3]}-{settings[4]}-{settings[5]}")
+                          'board_color-piece_format\n')
+            my_file.write(f"{settings[1]}-{settings[2]}-{settings[3]}-{settings[4]}-{settings[5]}-{settings[6]}")
 
         # write stats to user_stats.csv file
         user_stats = chess_files + '\\all_settings\\user\\user_stats.csv'
@@ -72,6 +81,7 @@ def load_settings(game_mode, user_id):
             # These are user statistics such as loses, wins, draws and ranking
             f.write('number_of_games_played-wins-loses-draws-ranking\n')
             f.write(f"{stats[1]}-{stats[2]}-{stats[3]}-{stats[4]}-{stats[5]}")
+
 
 
 def starting_menu():
@@ -132,6 +142,7 @@ if __name__ == '__main__':
     try:
         # starting menu
         game_mode = starting_menu()
+        print(game_mode)
 
         if game_mode:
             # splash screen
@@ -144,7 +155,7 @@ if __name__ == '__main__':
             splash_root.eval('tk::PlaceWindow . center')  # center splash window
             splash_root.overrideredirect(1)
             # chess application after splash screen
-            splash_root.after(3000, func=lambda: chess_main(game_mode, splash_root))
+            splash_root.after(2000, func=lambda: chess_main(game_mode, splash_root))
 
             # run splash screen
             mainloop()

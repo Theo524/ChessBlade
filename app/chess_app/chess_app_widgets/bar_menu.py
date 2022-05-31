@@ -1,7 +1,7 @@
 from tkinter import *
 import os
 
-from database.database import DatabaseBrowser
+from app.resources.database.database import SQLite3DatabaseBrowser
 from app.chess_app.chess_app_widgets.settings import Settings
 from app.chess_app.chess_app_widgets.minigames import GuessCoordinate, FindCheckmateOneMove, FindCheckmateTwoMoves
 from tkinter import ttk, messagebox, filedialog
@@ -222,10 +222,10 @@ class BarMenu(Menu):
             user_id = int(f.read())
 
         # Get required data
-        data = DatabaseBrowser.load(load='statistics', user_id=user_id)
+        data = SQLite3DatabaseBrowser.load(load='statistics', user_id=user_id)
 
         # also get the username
-        username = DatabaseBrowser.load(load='general', user_id=user_id)[1]
+        username = SQLite3DatabaseBrowser.load(load='general', user_id=user_id)[1]
 
         # load unto files
         with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\user\\user_stats.csv', 'w') as f:

@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import ttk, messagebox, colorchooser
 import os
-from database.database import DatabaseBrowser
+from app.resources.database.database import SQLite3DatabaseBrowser
 import csv
 
 
@@ -71,6 +71,10 @@ class Settings(Toplevel):
         if type(board_color) != str or len(board_color) < 1:
             requirements_not_met += 1
 
+        piece_format = self.customization_settings.get_piece_format()
+        if type(piece_format) != str or len(piece_format) < 1:
+            requirements_not_met += 1
+
         # Confirmation message
         confirm = messagebox.askyesno('Confirmation', 'Are you sure you want to apply these settings?')
         # if the user accepts, store settings, show informative feedback and destroy settings window
@@ -81,25 +85,29 @@ class Settings(Toplevel):
                 if self.mode == 'guest':
                     with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\guest\\default_game_settings.csv', 'w')\
                             as f:
-                        f.write('Game_difficulty-game_mode-player_piece_color-border_color-board_color\n')
-                        f.write(f'{difficulty}-{game_type}-{player_color}-{border_color}-{board_color}')
+                        f.write('Game_difficulty-game_mode-player_piece_color-border_color-board_color-piece_format\n')
+                        f.write(f'{difficulty}-{game_type}-{player_color}-{border_color}-{board_color}-{piece_format}')
 
-                        # Confirmation and informative feedback
-                        messagebox.showinfo('Success', 'Settings successfully saved.'
-                                                       ' Click  \'New game\' in the game menu '
-                                                       'to play with these new settings.')
+                    # also set second read so that settings are saved on device
+                    with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\guest\\settings_saved.txt', 'w') as f:
+                        f.write('y')
+
+                    # Confirmation and informative feedback
+                    messagebox.showinfo('Success', 'Settings successfully saved.'
+                                                   ' Click  \'New game\' in the game menu '
+                                                   'to play with these new settings.')
 
                 # if user is in user mode, apply new settings to user account
                 if self.mode == 'user':
                     # data
-                    data = [difficulty, game_type, player_color, border_color, board_color]
+                    data = [difficulty, game_type, player_color, border_color, board_color, piece_format]
 
                     # apply changes to db
                     self.apply_settings_user_db(data)
                     # save the new settings in a file
                     with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\user\\user_game_settings.csv', 'w') as f:
-                        f.write('Game_difficulty-game_mode-player_piece_color-border_color-board_color\n')
-                        f.write(f'{difficulty}-{game_type}-{player_color}-{border_color}-{board_color}')
+                        f.write('Game_difficulty-game_mode-player_piece_color-border_color-board_color-piece_format\n')
+                        f.write(f'{difficulty}-{game_type}-{player_color}-{border_color}-{board_color}-{piece_format}')
 
                     # ensure the user does not leave if playing vs ai
                     game_type = self.master.main_chess_board.game_type
@@ -131,10 +139,10 @@ class Settings(Toplevel):
             user_id = int(f.read())
 
         # data to be saved
-        data = [data[0], data[1], data[2], data[3], data[4]]
+        data = [data[0], data[1], data[2], data[3], data[4], data[5]]
 
         # save user settings to database
-        DatabaseBrowser.save(save='settings', user_id=user_id, data=data)
+        SQLite3DatabaseBrowser.save(save='settings', user_id=user_id, data=data)
 
     def confirm_exit(self):
         """Confirms whether user wants to exit window"""
@@ -152,7 +160,7 @@ class Settings(Toplevel):
                 next(csv_reader)
 
                 for row in csv_reader:
-                    print(f'Guest settings : {row}')
+                    # print(f'Guest settings : {row}')
                     # retrieve settings in file
                     # difficulty
                     if row[0] == 'Novice':
@@ -180,6 +188,14 @@ class Settings(Toplevel):
 
                     # board colors
                     self.customization_settings.board_color_var.set(row[4])
+
+                    # piece format
+                    if row[5] == 'spatial':
+                        self.customization_settings.piece_format_var.set(1)
+                    if row[5] == 'default':
+                        self.customization_settings.piece_format_var.set(2)
+                    if row[5] == 'spatial':
+                        self.customization_settings.piece_format_var.set(3)
 
         if self.mode == 'user':
             with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\user\\user_game_settings.csv', 'r') as f:
@@ -187,7 +203,7 @@ class Settings(Toplevel):
                 next(csv_reader)
 
                 for row in csv_reader:
-                    print(f'Guest settings : {row}')
+                    # print(f'User settings : {row}')
                     # retrieve settings in file
                     # difficulty
                     if row[0] == 'Novice':
@@ -215,6 +231,14 @@ class Settings(Toplevel):
 
                     # board colors
                     self.customization_settings.board_color_var.set(row[4])
+
+                    # piece format
+                    if row[5] == 'spatial':
+                        self.customization_settings.piece_format_var.set(1)
+                    if row[5] == 'default':
+                        self.customization_settings.piece_format_var.set(2)
+                    if row[5] == 'spatial':
+                        self.customization_settings.piece_format_var.set(3)
 
 
 class GeneralSettings(ttk.Frame):
@@ -237,7 +261,7 @@ class GeneralSettings(ttk.Frame):
                                  variable=self.difficulty_var,
                                  value=1,
                                  command=self.get_difficulty)
-        novice.pack(side=LEFT)
+        novice.pack(side=LEFT, padx=10)
 
         # intermediate button
         intermediate = ttk.Radiobutton(difficulty_frame,
@@ -245,7 +269,7 @@ class GeneralSettings(ttk.Frame):
                                        variable=self.difficulty_var,
                                        value=2,
                                        command=self.get_difficulty)
-        intermediate.pack(side=LEFT)
+        intermediate.pack(side=LEFT, padx=5)
 
         # expert button
         expert = ttk.Radiobutton(difficulty_frame,
@@ -253,7 +277,7 @@ class GeneralSettings(ttk.Frame):
                                  variable=self.difficulty_var,
                                  value=3,
                                  command=self.get_difficulty)
-        expert.pack(side=LEFT)
+        expert.pack(side=LEFT, padx=10)
 
         # --------------GAME_TYPE--------------
         gamemode_frame = ttk.LabelFrame(scene, text='Game mode')
@@ -355,6 +379,37 @@ class CustomizationSettings(ttk.Frame):
         board_color_button = Button(board_color_frame, text="Select board color", command=self.set_board_color)
         board_color_button.pack(side=LEFT, pady=(0, 6), padx=(15, 0))
 
+        # --------------PIECE FORMAT--------------
+        piece_format_frame = ttk.LabelFrame(scene, text="Piece format")
+        piece_format_frame.pack(fill="both", expand="yes", padx=5, pady=5)
+
+        # we store the difficulty here
+        self.piece_format_var = IntVar()
+
+        # spatial button
+        spatial = ttk.Radiobutton(piece_format_frame,
+                                  text="Spatial",
+                                  variable=self.piece_format_var,
+                                  value=1,
+                                  command=self.get_piece_format)
+        spatial.pack(side=LEFT, padx=10)
+
+        # default button
+        default = ttk.Radiobutton(piece_format_frame,
+                                  text="Default",
+                                  variable=self.piece_format_var,
+                                  value=2,
+                                  command=self.get_piece_format)
+        default.pack(side=LEFT, padx=5)
+
+        # fantasy button
+        fantasy = ttk.Radiobutton(piece_format_frame,
+                                  text="Fantasy",
+                                  variable=self.piece_format_var,
+                                  value=3,
+                                  command=self.get_piece_format)
+        fantasy.pack(side=LEFT, padx=10)
+
     def get_piece_color(self):
         """Get the piece color"""
         if self.player_color_var.get() == 2:
@@ -366,7 +421,7 @@ class CustomizationSettings(ttk.Frame):
     def set_board_color(self):
         """Chose a color for the board"""
 
-        board_color_code = colorchooser.askcolor(title="Choose color")
+        board_color_code = colorchooser.askcolor(title="Choose a board color")
         self.board_color_var.set(board_color_code[1])
 
     def get_board_color(self):
@@ -377,3 +432,14 @@ class CustomizationSettings(ttk.Frame):
     def get_border_color(self):
         """Get the border color"""
         return self.border_colors.get()
+
+    def get_piece_format(self):
+        """Get the piece color"""
+        if self.piece_format_var.get() == 1:
+            return 'spatial'
+
+        if self.piece_format_var.get() == 2:
+            return 'default'
+
+        if self.piece_format_var.get() == 3:
+            return 'fantasy'
