@@ -1,7 +1,7 @@
 from app.chess_app.chess_app_widgets.board import MainChessBoard
 from app.chess_app.chess_app_widgets.bar_menu import BarMenu
 from app.chess_app.chess_app_widgets.chess_ai import AI
-from database.database import DatabaseBrowser
+from app.resources.database.database import SQLite3DatabaseBrowser
 
 from tkinter import *
 from tkinter import messagebox, ttk
@@ -151,6 +151,7 @@ class AppBoard(MainChessBoard):
         self.player_piece_color = settings[2]
         self.border_color = settings[3]
         self.board_color = settings[4]
+        self.piece_format = settings[5]
 
         if self.player_piece_color == 'black':
             self.opponent_piece_color = 'white'
@@ -166,6 +167,9 @@ class AppBoard(MainChessBoard):
                                 self.board_color, 'white', self.board_color, 'white', self.board_color, 'white',
                                 self.board_color, 'white',
                             ] * 4
+
+        # Dictionaries storing piece images file names
+        self.black_pieces, self.white_pieces = self.get_piece_img()
 
         # make board
         self.board = self.make_board()
@@ -287,7 +291,6 @@ class AppBoard(MainChessBoard):
                 # If it is player one turn
                 if self.board[position]['piece']['piece_color'] == self.player_piece_color:
                     self.reset_board_colors()
-                    print(self.player_piece_color)
 
                     # We only allow player pieces to be highlighted
                     # rooks
@@ -734,7 +737,7 @@ class AppBoard(MainChessBoard):
             user_id = int(f.read())
 
         # data
-        original_data = DatabaseBrowser.load(load='statistics', user_id=user_id)
+        original_data = SQLite3DatabaseBrowser.load(load='statistics', user_id=user_id)
 
         # increase number of games played by one
         original_data[1] += 1
@@ -779,4 +782,4 @@ class AppBoard(MainChessBoard):
 
         new_stats = [original_data[1], original_data[2], original_data[3], original_data[4], original_data[5]]
         # finally add the data to the database
-        DatabaseBrowser.save(save='statistics', user_id=user_id, data=new_stats)
+        SQLite3DatabaseBrowser.save(save='statistics', user_id=user_id, data=new_stats)
