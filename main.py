@@ -45,9 +45,14 @@ def load_settings(game_mode, user_id):
     """Load settings from db to files, depending on game mode"""
 
     if game_mode == 'guest':
-        # read file to see if user has saved settings (basically not their first entering the game)
-        with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\guest\\settings_saved.txt', 'r') as f:
-            data = f.read()
+        try:
+            # read file to see if user has saved settings (basically not their first entering the game)
+            with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\guest\\settings_saved.txt', 'r') as f:
+                data = f.read()
+        except FileNotFoundError:
+            with open(os.getcwd() + '\\app\\temp\\chess_temp\\all_settings\\guest\\settings_saved.txt', 'w') as f:
+                data = 'n'
+                f.write(data)
 
         if data == 'n':
             # means the user has not set new settings (first time entering game)
