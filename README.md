@@ -2,19 +2,10 @@
 
 This is a user based chess game made with python tkinter I made for a school project.
 
-### Requirements:
-- Python 3
+### Download
+You can download this via Github releases by clicking [here](https://github.com/Theo524/Chess-game/releases)
 
-To install the other requirements run this on command line:
-```
-pip install -r requirements.txt
-```
-
-### How to play
-To play run main.py, you will then be presented with a Login system. You can create an account and login or you can just enter the game as guest. 
-A diiferent alternative is to download the release executable or zip file.
-
-### Features
+### Game features
 - Login system with password recovery
 - Play as user/guest
 - Database to store user stats, settings and general data
