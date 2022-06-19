@@ -70,6 +70,9 @@ class MainChessBoard(Frame):
         self.promotion_window = None
         self.promotion = False
 
+        # kin gin check
+        self.king_in_check = []
+
     def add_chess_pieces_positions(self):
         """Populate 1d and 2d array chess"""
 
@@ -532,6 +535,23 @@ class MainChessBoard(Frame):
 
         messagebox.showerror('Error', 'You must select one the options')
 
+    def locate_piece(self, piece, color):
+        """Locate a piece on the board"""
+
+        matches = []
+
+        for item in self.board.items():
+            # We access the dict item
+            # position
+            position = item[0]  # str
+            position_piece_name = item[1]['piece']['piece_name']  # str
+            position_piece_color = item[1]['piece']['piece_color'] # str
+
+            if position_piece_color == color and position_piece_name == piece:
+                matches.append(position)
+
+        return matches
+
     def make_move(self, piece_name, color, old_position, target=''):
         """Make a move in the chess board
 
@@ -563,6 +583,9 @@ class MainChessBoard(Frame):
             # if there was an error is because of the promotion
             # pushes an invalid piece to the board so to avoid that
             # we create a fen string from the current board and place it
+            # fen = self.get_game_fen_string_original()
+            # self.ai_board = chess.Board(fen=fen)
+            # always set a successful move in lib board for more security
             fen = self.get_game_fen_string_original()
             self.ai_board = chess.Board(fen=fen)
 
@@ -644,11 +667,41 @@ class MainChessBoard(Frame):
         coordinates.reverse()
         # iterate through the entire board and set the color of each button back to its corresponding one
         # by iterating over the board colors at the same time
+        # do not reset checked king
+
+        # reset board color
         for row in coordinates:
             for col in row:
                 self.board[col]['button'].configure(bg=self.board_colors[i])
                 self.board[col]['color'] = self.board_colors[i]
                 i += 1
+
+        # mark king in red if in check
+        self.king_color_highlight()
+
+    def king_color_highlight(self):
+        """Mark king in red if in check"""
+        # put king in check color if needed after resetting board colors
+        try:
+            if self.king_in_check[1]:
+                king_in_check_pos = self.king_in_check[0]
+                # set red (lighter tone) hex code
+                #
+                self.board[king_in_check_pos]['button'].configure(bg='red')
+            if not self.king_in_check[1]:
+                # reset board colors function remade
+                # not called to avoid recursion
+                i = 0
+                coordinates = self.coordinates[:]
+                coordinates.reverse()
+                # reset board color
+                for row in coordinates:
+                    for col in row:
+                        self.board[col]['button'].configure(bg=self.board_colors[i])
+                        self.board[col]['color'] = self.board_colors[i]
+                        i += 1
+        except IndexError:
+            pass
 
     def enable_board_buttons(self, flag):
         """Disable or enable board buttons
@@ -1029,6 +1082,34 @@ class MainChessBoard(Frame):
             # set the board piece color to None
             self.board[position]['piece']['piece_color'] = None
 
+    def get_all_legal_moves(self, piece, piece_position):
+        """Get all legal moves from a specific board position"""
+
+        # determine piece color based on turn
+        color = ''
+        if self.ai_board.turn:
+            color = 'black'
+        else:
+            color = 'white'
+
+        # list for all legal moves found
+        all_moves = []
+
+        # all available legal moves in the current board
+        all_legal_moves = list(self.ai_board.legal_moves)
+
+        for move in all_legal_moves:
+            # the move look like this usually e.g. 'g3h5'
+            # the first two letters are the board coordinates and the second two letters the target
+            position = str(move)[:2]
+            target = str(move)[2:]
+
+            # with the coordinate being used, find all the targets it has and return that
+            if piece == self.board[position]['piece']['piece_name'] and self.board[position]['piece']['piece_color'] == color and position == piece_position:
+                all_moves.append(target)
+
+        return all_moves
+
     def get_all_possible_moves(self, piece, piece_color, position):
         """Generates a list of all possible moves for a piece based on its color and board position
 
@@ -1049,6 +1130,8 @@ class MainChessBoard(Frame):
         index_in_col = full_column.index(position)
         index_in_row = full_row.index(position)
 
+        final = []
+
         if piece == 'rook':
             # up
             rook_up = [f'{i}' for i in full_column[index_in_col + 1:]]
@@ -1066,8 +1149,13 @@ class MainChessBoard(Frame):
 
             # all possible moves combined
             all_possible_rook_moves = [rook_up] + [rook_down] + [rook_left] + [rook_right]
+            # legal moves
+            legal_moves = self.get_all_legal_moves('rook', position)
 
-            return all_possible_rook_moves
+            # moves based on legal moves and all possible moves
+            final = self.remove_illegal_moves(all_possible_rook_moves, legal_moves)
+
+            #return all_possible_rook_moves
 
         if piece == 'bishop':
             # up right diagonal
@@ -1086,7 +1174,13 @@ class MainChessBoard(Frame):
             all_possible_bishop_moves = [bishop_up_right] + [bishop_down_right] + \
                                         [bishop_up_left] + [bishop_down_left]
 
-            return all_possible_bishop_moves
+            # legal moves
+            legal_moves = self.get_all_legal_moves('bishop', position)
+
+            # moves based on legal moves and all possible moves
+            final = self.remove_illegal_moves(all_possible_bishop_moves, legal_moves)
+
+            #return all_possible_bishop_moves
 
         if piece == 'knight':
             # Generate moves, by moving positions in board (clockwise)
@@ -1109,7 +1203,13 @@ class MainChessBoard(Frame):
                                         [move_six] + [move_seven] + [move_eight]
             all_possible_knight_moves = [[move] for move in all_possible_knight_moves if move is not None]
 
-            return all_possible_knight_moves
+            # legal
+            legal_moves = self.get_all_legal_moves('knight', position)
+
+            # moves based on legal moves and all possible moves
+            final = self.remove_illegal_moves(all_possible_knight_moves, legal_moves)
+
+            #return all_possible_knight_moves
 
         if piece == 'queen':
             # basically a copy of the rook and the bishops moves
@@ -1143,7 +1243,13 @@ class MainChessBoard(Frame):
             all_possible_queen_moves = [queen_down_right] + [queen_right] + [queen_up_right] + [queen_up] + \
                                        [queen_up_left] + [queen_left] + [queen_down_left] + [queen_down]
 
-            return all_possible_queen_moves
+            # legal moves
+            legal_moves = self.get_all_legal_moves('queen', position)
+
+            # moves based on legal moves and all possible moves
+            final = self.remove_illegal_moves(all_possible_queen_moves, legal_moves)
+
+            #return all_possible_queen_moves
 
         if piece == 'king':
             # clockwise pattern for king
@@ -1161,7 +1267,13 @@ class MainChessBoard(Frame):
                                       [move_six] + [move_seven] + [move_eight]
             all_possible_king_moves = [[move] for move in all_possible_king_moves if move is not None]
 
-            return all_possible_king_moves
+            # legal moves
+            legal_moves = self.get_all_legal_moves('king', position)
+
+            # moves based on legal moves and all possible moves
+            final = self.remove_illegal_moves(all_possible_king_moves, legal_moves)
+
+            #return all_possible_king_moves
 
         if piece == 'prawn' and piece_color == self.player_piece_color:
             up_one = self.move_row(position, 'increase')
@@ -1180,13 +1292,13 @@ class MainChessBoard(Frame):
 
             all_possible_prawn_moves = [prawn_up] + [right_diagonal] + [left_diagonal]
 
-            #
-            # check it is not the last row
-            # if int(position[1]) == 8:
-            # return 'end'
+            # legal
+            legal_moves = self.get_all_legal_moves('prawn', position)
 
-            # all
-            return all_possible_prawn_moves
+            # moves based on legal moves and all possible moves
+            final = self.remove_illegal_moves(all_possible_prawn_moves, legal_moves)
+
+            #return all_possible_prawn_moves
 
         if piece == 'prawn' and piece_color == self.opponent_piece_color:
             # up
@@ -1206,9 +1318,32 @@ class MainChessBoard(Frame):
 
             all_possible_prawn_moves = [prawn_up] + [right_diagonal] + [left_diagonal]
 
-            # all
-            return all_possible_prawn_moves
-        print()
+            # legal moves
+            legal_moves = self.get_all_legal_moves('prawn', position)
+
+            # moves based on legal moves and all possible moves
+            final = self.remove_illegal_moves(all_possible_prawn_moves, legal_moves)
+
+            #return all_possible_prawn_moves
+
+        print(self.ai_board.legal_moves)
+        return final
+
+    @staticmethod
+    def remove_illegal_moves(all_possible_moves, legal_moves):
+        """Delete illegal moves from all generated moves by filtering"""
+
+        all_moves = []
+        for move_set in all_possible_moves:
+            temp = []
+            for move in move_set:
+                if move in legal_moves:
+                    temp.append(move)
+            all_moves.append(temp)
+
+        #print(f'All moves: {all_possible_moves}\nFiltered from legal moves: {legal_moves}\n\nResulting in: {all_moves}')
+
+        return all_moves
 
     def get_piece_img(self):
         """Easy way to access file paths for pieces
@@ -1269,9 +1404,19 @@ class MainChessBoard(Frame):
             if copy_of_board[position]['piece']['piece_name'] is None:
                 first_list.append('1')
             else:
-                first_list.append(copy_of_board[position]['piece']['piece_name'][0].upper()
-                                  if copy_of_board[position]['piece']['piece_color'] == 'black'
-                                  else copy_of_board[position]['piece']['piece_name'][0].lower())
+                if copy_of_board[position]['piece']['piece_color'] == 'black':
+                    if copy_of_board[position]['piece']['piece_name'] == 'knight':
+                        letter = 'N'
+                    else:
+                        letter = copy_of_board[position]['piece']['piece_name'][0].upper()
+                    first_list.append(letter)
+                else:
+                    if copy_of_board[position]['piece']['piece_name'] == 'knight':
+                        letter = 'n'
+
+                    else:
+                        letter = copy_of_board[position]['piece']['piece_name'][0].lower()
+                    first_list.append(letter)
 
             i += 1
             if i == 8:
@@ -1287,32 +1432,28 @@ class MainChessBoard(Frame):
                 temp = []
             temp.append(i)
 
+        # solution to last element auto deleting bug
+        second_list += ['/', 'R', 'N', 'B', 'Q', 'K', 'B', 'N', '1']
+
         # classify each row by spaces and pieces
         main = []
         third_list = []
         count = 0
         for row in second_list:
-            try:
-                for value in row:
-                    if value == '1':
-                        count += 1
-                    if value != '1':
-                        if count != 0:
-                            third_list.append(str(count))
-                        third_list.append(value)
-                        count = 0
+            for value in row:
+                if value == '1':
+                    count += 1
+                if value != '1':
+                    if count != 0:
+                        third_list.append(str(count))
+                    third_list.append(value)
+                    count = 0
+            main.append(third_list)
 
-                main.append(third_list)
-            except IndexError:
-                pass
+        last_index = len(third_list) - 1 - third_list[::-1].index('/')
+        final_fen = ''.join(third_list[:last_index])
 
-        # join everything together
-        joined_lists = [''.join(lst) for lst in third_list]
-        final_fen_str = ''.join(joined_lists)
-        if len(final_fen_str.split('/')) != 8 or final_fen_str.split('/')[-1] == '':
-            final_fen_str += '8'
-
-        return final_fen_str
+        return final_fen
 
     def move_row(self, position, operation):
         """Returns position above to or below parameter
@@ -1485,6 +1626,8 @@ class MainChessBoard(Frame):
         print()
         print('My board')
         print(self)
+
+        #print(self.locate_piece('prawn', 'black'))
 
     def __str__(self):
         """Returns a text based unicode representation of game"""

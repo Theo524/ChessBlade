@@ -1,2 +1,2 @@
-new_game:no
+new_game:yes
 saved_game:no

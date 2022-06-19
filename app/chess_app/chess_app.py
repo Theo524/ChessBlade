@@ -190,6 +190,8 @@ class AppBoard(MainChessBoard):
 
         # ai board
         self.ai_board = chess.Board()
+        #self.ai_board.turn = False  # starting move black
+        #self.ai_board.set_fen(f'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1')
         # the actual ai
         self.ai = AI(self.ai_board)
 
@@ -202,6 +204,9 @@ class AppBoard(MainChessBoard):
         # pawn promotion
         self.promotion_window = None
         self.promotion = False
+
+        # king in check
+        self.king_in_check = []
 
     @staticmethod
     def get_game_settings(mode):
@@ -529,12 +534,6 @@ class AppBoard(MainChessBoard):
 
                 # text image gameplay display
 
-            # CHESS MOVE
-            # place the selected piece in the selected spot
-            self.place_piece(piece_name, color, target)
-            # replace the place where that piece originally was with a blank space img
-            self.place_piece('blank', 'blank', old_position)
-
         except KeyError:
             # promotion for enemy prawn
             if len(target) == 3:
@@ -559,18 +558,46 @@ class AppBoard(MainChessBoard):
             # move for virtual board(chess lib)
             move = chess.Move.from_uci(f'{old_position}{target}')
 
-            # legal moves available
-            # legal_moves = list(self.ai_board.legal_moves)
-            # print(self.ai_board.is_legal(move))
+            # legal moves
+            # false black (down)
+            # true white (up)
+            if self.ai_board.is_legal(move):
+                self.ai_board.push(move)
 
-            # Make move in virtual board
-            self.ai_board.push(move)
-        except AssertionError:
+                # CHESS MOVE IF LEGAL
+                # place the selected piece in the selected spot
+                self.place_piece(piece_name, color, target)
+                # replace the place where that piece originally was with a blank space img
+                self.place_piece('blank', 'blank', old_position)
+
+            ########### KING CHECK START #############
+            if self.ai_board.is_check():
+                if self.player_one_turn:
+                    king_position = self.locate_piece('king', self.opponent_piece_color)[0]
+
+                    # set king in check variable
+                    self.king_in_check = [king_position, True]
+                if self.player_two_turn:
+                    king_position = self.locate_piece('king', self.player_piece_color)[0]
+                    # set king in check variable
+                    self.king_in_check = [king_position, True]
+            if not self.ai_board.is_check():
+                # set king in check variable
+                self.king_in_check = ['', False]
+
+            ########### KING CHECK END ###############
+
+        except AssertionError as e:
+            print('Prawn error')
             # if there was an error is because of the promotion
             # pushes an invalid piece to the board so to avoid that
             # we create a fen string from the current board and place it
             fen = self.get_game_fen_string_original()
             self.ai_board = chess.Board(fen=fen)
+
+        # always set a successful move in lib board for more security
+        #fen = self.get_game_fen_string_original()
+        #self.ai_board = chess.Board(fen=fen)
 
         # text based game illustration
         self.board_game_mini_play_tab.insert('end', f'{self.moves}.\n{self}\n\n')
