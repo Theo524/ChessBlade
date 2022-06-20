@@ -1,4 +1,4 @@
-# Chess-game
+# ChessBlade
 
 This is a user based chess game made with python tkinter I made for a school project.
 
